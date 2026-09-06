@@ -35,7 +35,8 @@ test.describe('unknown routes', () => {
 
     await page.getByRole('link', { name: 'Back to Today' }).click()
     await page.waitForURL('**/today')
-    await expect(page.getByRole('heading', { level: 1, name: /Day \d+ of 180/ })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
+    await expect(page.getByText(/Day \d+ of 180/)).toBeVisible()
   })
 
   test('an unknown route does not repaint the app in the wrong theme', async ({ page }) => {

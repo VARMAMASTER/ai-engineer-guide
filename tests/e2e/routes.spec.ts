@@ -86,7 +86,26 @@ test.describe('every route loads', () => {
 
   test('the seeded day is the one Today renders', async ({ page }) => {
     await page.goto('/today')
-    await expect(page.getByRole('heading', { level: 1, name: 'Day 1 of 180' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
+    await expect(page.getByText('Day 1 of 180')).toBeVisible()
     expect(todayIso()).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  test('every route ships a real h1 in its server HTML, before any JavaScript runs', async ({
+    request,
+  }) => {
+    // The gap this closes: every check above drives a hydrated page — Playwright
+    // always waits for the client to take over before it looks at the DOM. That
+    // is exactly the view a crawler, a screen reader on a slow connection, or a
+    // visitor whose JS failed to load never gets. Fetching the route directly
+    // (no browser, no script execution) inspects the same bytes those visitors
+    // are stuck with, which is the only way to catch a page that ships a real
+    // heading only after hydration completes.
+    for (const route of ALL_ROUTES) {
+      const response = await request.get(route)
+      expect(response.status(), `${route} should answer 200`).toBe(200)
+      const html = await response.text()
+      expect(html, `${route} should ship an <h1> in its initial HTML`).toMatch(/<h1[\s>]/)
+    }
   })
 })

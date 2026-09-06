@@ -69,21 +69,55 @@ export default function TodayTasks() {
 
   const ready = hydrated
 
+  // The page's structure — the "Today" heading, and the two meter sections
+  // below — is knowable with no data at all, so it is server-rendered every
+  // time. Only the numbers inside it are client-dependent (the day count,
+  // the streak, the meter fills, the task list), and only those wait behind
+  // `ready`. The guard itself stays: without it the server's "unknown yet"
+  // render and the client's first (pre-hydration) render would diverge the
+  // moment real data is available, which is exactly the mismatch it exists
+  // to prevent.
   if (!ready) {
     return (
-      <div className="flex flex-col gap-4">
-        <SkeletonRow width="w-40" />
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1>Today</h1>
+          <SkeletonRow width="w-48" />
+        </div>
+
         <div className="panel flex flex-col gap-2 p-4">
           <SkeletonRow />
           <SkeletonRow />
           <SkeletonRow />
         </div>
+
+        <section className="panel flex flex-col gap-4 p-4">
+          <h2>Streak and hours</h2>
+          <SkeletonRow />
+        </section>
+
+        <section className="panel flex flex-col gap-4 p-4">
+          <h2>Month 1 checks</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </div>
+        </section>
       </div>
     )
   }
 
   if (startDate === null) {
-    return <StartDateSetup />
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1>Today</h1>
+        </div>
+        <StartDateSetup />
+      </div>
+    )
   }
 
   const day = dayNumber(startDate, today)!
@@ -123,10 +157,10 @@ export default function TodayTasks() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1>
-          Day {day} of {TOTAL_DAYS}
-        </h1>
+        <h1>Today</h1>
         <p className="readout mt-1 text-[var(--text-muted)]">
+          Day {day} of {TOTAL_DAYS}
+          <span className="mx-2 text-[var(--text-faint)]">·</span>
           Week {week}
           <span className="mx-2 text-[var(--text-faint)]">·</span>
           <span className={days > 0 ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}>

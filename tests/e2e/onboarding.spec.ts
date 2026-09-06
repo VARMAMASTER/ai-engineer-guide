@@ -9,7 +9,8 @@ test.describe('onboarding', () => {
   test('no start date shows the setup card and the top bar prompt', async ({ page }) => {
     await page.goto('/today')
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Set your start date' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'Set your start date' })).toBeVisible()
     await expect(page.getByText('Day 1 must be a Monday so the weekly rhythm lines up.')).toBeVisible()
     await expect(page.getByRole('link', { name: 'SET START DATE' })).toBeVisible()
 
@@ -48,8 +49,9 @@ test.describe('onboarding', () => {
     await page.getByRole('button', { name: /Next week/ }).click()
 
     await waitForToday(page)
-    await expect(page.getByRole('heading', { level: 1, name: 'Day 1 of 180' })).toBeVisible()
-    await expect(page.getByText(/^Week 1/)).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
+    await expect(page.getByText('Day 1 of 180')).toBeVisible()
+    await expect(page.getByText(/Week 1/)).toBeVisible()
 
     for (const name of DAY_1.problems) {
       await expect(page.locator('label[data-item-id]').filter({ hasText: name })).toBeVisible()
@@ -70,7 +72,8 @@ test.describe('onboarding', () => {
     await page.reload()
     await waitForToday(page)
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Set your start date' })).toHaveCount(0)
-    await expect(page.getByRole('heading', { level: 1, name: 'Day 1 of 180' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'Set your start date' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
+    await expect(page.getByText('Day 1 of 180')).toBeVisible()
   })
 })

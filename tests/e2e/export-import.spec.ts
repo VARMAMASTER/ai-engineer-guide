@@ -64,7 +64,7 @@ test.describe('export, import and reset', () => {
     expect((await readStoredBlob(page)).startDate).toBeNull()
 
     await navigateInApp(page, testInfo, '/today')
-    await expect(page.getByRole('heading', { level: 1, name: 'Set your start date' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: 'Set your start date' })).toBeVisible()
 
     // --- import ------------------------------------------------------------
     await navigateInApp(page, testInfo, '/settings')

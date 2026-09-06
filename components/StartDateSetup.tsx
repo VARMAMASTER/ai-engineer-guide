@@ -17,7 +17,7 @@ export default function StartDateSetup() {
   return (
     <div className="panel flex flex-col gap-4 p-5">
       <div>
-        <h1>Set your start date</h1>
+        <h2>Set your start date</h2>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           Day 1 must be a Monday so the weekly rhythm lines up.
         </p>

@@ -149,10 +149,16 @@ export async function navigateInApp(page: Page, testInfo: TestInfo, href: string
   await page.waitForURL(`**${href}`)
 }
 
-/** The Today page is hydrated once its heading (or the setup card) is on screen. */
+/**
+ * The Today page is hydrated once its day readout (or the setup card) is on
+ * screen. The page's own `h1` ("Today") is static and server-rendered, so it
+ * is visible before hydration too and cannot be used as the ready signal.
+ */
 export async function waitForToday(page: Page): Promise<void> {
   await expect(
-    page.getByRole('heading', { level: 1, name: /Day \d+ of 180|Set your start date/ }),
+    page
+      .getByText(/Day \d+ of 180/)
+      .or(page.getByRole('heading', { name: 'Set your start date' })),
   ).toBeVisible()
 }
 
