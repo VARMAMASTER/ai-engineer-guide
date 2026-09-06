@@ -1,23 +1,28 @@
 import type { FeedItem } from './types'
 
 /**
- * Build the HN Algolia search URL for recent AI-engineering stories.
+ * Build the HN Algolia search URL for recent, well-received AI-engineering
+ * stories.
  *
  * Verified against the live API: without Algolia's `advancedSyntax`, a
  * plain multi-word query is scored as an OR of terms, but empirically
  * adding a third or later OR'd keyword (e.g. "LLM OR RAG OR transformer")
  * collapses real result counts to zero far more often than a two-term
  * query does — confirmed by hand against the live endpoint while building
- * this feed. A `points` floor above single digits has the same effect:
- * combined with the 7-day window it frequently zeroes out real results.
- * Two terms plus the recency filter is the combination that reliably
- * returned live, on-topic hits during testing.
+ * this feed. Two terms plus the recency filter is the combination that
+ * reliably returned live, on-topic hits during testing.
+ *
+ * The `points>20` floor was re-verified against the live 2-term query
+ * (probed at 20/15/10/5): all four floors returned the same 2 hits at
+ * test time, so 20 is kept — it's the highest floor that still returns a
+ * usable result set, and it keeps low-signal (1-2 point) stories out of
+ * the feed.
  */
 export function hnUrl(now: Date): string {
   const weekAgo = Math.floor(now.getTime() / 1000) - 7 * 86_400
   const query = encodeURIComponent('LLM OR RAG')
   return `https://hn.algolia.com/api/v1/search_by_date?query=${query}&tags=story` +
-    `&numericFilters=created_at_i>${weekAgo}&hitsPerPage=40`
+    `&numericFilters=points>20,created_at_i>${weekAgo}&hitsPerPage=40`
 }
 
 interface Hit {
