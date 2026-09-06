@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { NAV_ITEMS } from '@/lib/nav'
 
 describe('nav', () => {
-  it('has the ten sections in rail order', () => {
+  it('has every section in rail order', () => {
     expect(NAV_ITEMS.map((i) => i.href)).toEqual([
       '/today', '/roadmap', '/dsa', '/system-design', '/projects',
-      '/lld', '/ai-ml', '/reading', '/revise', '/settings',
+      '/lld', '/ai-ml', '/reading', '/behavioural', '/companies',
+      '/mock', '/revise', '/settings',
     ])
   })
 

@@ -21,6 +21,9 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/lld', label: 'Low-Level Design', short: 'LLD', primary: false },
   { href: '/ai-ml', label: 'AI / ML', short: 'AI/ML', primary: false },
   { href: '/reading', label: 'Reading', short: 'Reading', primary: false },
+  { href: '/behavioural', label: 'Behavioural', short: 'Stories', primary: false },
+  { href: '/companies', label: 'Companies', short: 'Loops', primary: false },
+  { href: '/mock', label: 'Mock', short: 'Mock', primary: false },
   { href: '/revise', label: 'Revise', short: 'Revise', primary: false },
   { href: '/settings', label: 'Settings', short: 'Settings', primary: false },
 ]

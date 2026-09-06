@@ -18,6 +18,9 @@ export const STATIC_ROUTES = [
   '/ai-ml',
   '/projects',
   '/reading',
+  '/behavioural',
+  '/companies',
+  '/mock',
   '/revise',
   '/revise/sheets',
   '/settings',
@@ -31,6 +34,7 @@ export const DYNAMIC_ROUTES = [
   '/ai-ml/transformers',
   '/projects/rag',
   '/revise/transformers',
+  '/companies/google',
 ] as const
 
 export const ALL_ROUTES = [...STATIC_ROUTES, ...DYNAMIC_ROUTES]
@@ -137,7 +141,16 @@ export function isMobile(testInfo: TestInfo): boolean {
  * client-side transition, and a `goto` would hide a store that only agrees
  * because it re-read storage.
  */
-export const SECONDARY_HREFS = ['/ai-ml', '/reading', '/settings']
+export const SECONDARY_HREFS = [
+  '/lld',
+  '/ai-ml',
+  '/reading',
+  '/behavioural',
+  '/companies',
+  '/mock',
+  '/revise',
+  '/settings',
+]
 
 export async function navigateInApp(page: Page, testInfo: TestInfo, href: string): Promise<void> {
   if (isMobile(testInfo)) {

@@ -23,6 +23,16 @@ export const dsaProblemSchema = z.object({
   core: z.boolean(),
   companies: z.array(companySchema),
   minutes: z.number().int().positive(),
+  // Study material. Optional until the solutions pass populates all 150, then required.
+  // `approach` is the idea in prose; `solution` is runnable Python; `complexity` states
+  // both bounds WITH the reason, because "O(n)" without the why teaches nothing.
+  approach: z.string().min(1).optional(),
+  solution: z.string().min(1).optional(),
+  complexity: z.object({ time: z.string().min(1), space: z.string().min(1) }).optional(),
+  // The signal in the problem statement that should make you reach for this pattern.
+  signal: z.string().min(1).optional(),
+  // The interviewer's second question, where a medium turns into a hard.
+  followUps: z.array(z.string().min(1)).optional(),
 })
 
 export const sdPatternSchema = z.object({
@@ -236,6 +246,74 @@ export const daySchema = z.object({
   tasks: z.array(dayTaskSchema).min(1),
 })
 
+/**
+ * Behavioural rounds. Over half of an Amazon loop and a full round at Google and
+ * Meta, and the guide had nothing for them.
+ */
+export const behaviouralPrincipleSchema = z.object({
+  id: z.string().regex(/^bp-[a-z0-9-]+$/),
+  company: z.enum(['amazon', 'google', 'meta', 'general']),
+  name: z.string().min(1),
+  order: z.number().int().positive(),
+  // What the principle actually means in an interview, not the marketing line.
+  meaning: z.string().min(1),
+  // What a weak answer sounds like against this principle.
+  weakAnswer: z.string().min(1),
+  // What the interviewer is scoring.
+  lookingFor: z.array(z.string().min(1)).min(2),
+})
+
+export const behaviouralQuestionSchema = z.object({
+  id: z.string().regex(/^bq-[a-z0-9-]+$/),
+  principleIds: z.array(z.string().regex(/^bp-[a-z0-9-]+$/)).min(1),
+  prompt: z.string().min(1),
+  // The follow-ups that come after your first answer. This is where the round is decided.
+  probes: z.array(z.string().min(1)).min(2),
+  // Concrete traps for THIS question.
+  traps: z.array(z.string().min(1)).min(1),
+  minutes: z.number().int().positive(),
+})
+
+/** A STAR story the user drafts once and reuses across many questions. */
+export const storySlotSchema = z.object({
+  id: z.string().regex(/^story-[a-z0-9-]+$/),
+  title: z.string().min(1),
+  // Which of the six build projects or which kind of work experience this draws on.
+  source: z.string().min(1),
+  // The principles this story can credibly answer.
+  covers: z.array(z.string().regex(/^bp-[a-z0-9-]+$/)).min(1),
+  prompts: z.object({
+    situation: z.string().min(1),
+    task: z.string().min(1),
+    action: z.string().min(1),
+    result: z.string().min(1),
+  }),
+})
+
+/**
+ * One page per target company: what the loop actually is, how it is weighted,
+ * and what to drill. Company tags exist on problems but nothing explained the loop.
+ */
+export const companyGuideSchema = z.object({
+  id: z.string().regex(/^co-[a-z0-9-]+$/),
+  name: z.string().min(1),
+  order: z.number().int().positive(),
+  // Realistic level for ~2.5 years of experience.
+  level: z.string().min(1),
+  rounds: z.array(z.object({
+    name: z.string().min(1),
+    count: z.number().int().positive(),
+    minutes: z.number().int().positive(),
+    what: z.string().min(1),
+  })).min(3),
+  // Where candidates most often fail this specific loop.
+  failsOn: z.array(z.string().min(1)).min(2),
+  // What to drill in the two weeks before, referencing real content ids where possible.
+  drill: z.array(z.string().min(1)).min(3),
+  // Honest note on hiring in the user's market.
+  marketNote: z.string().min(1),
+})
+
 export type DsaPattern = z.infer<typeof dsaPatternSchema>
 export type DsaProblem = z.infer<typeof dsaProblemSchema>
 export type SdPattern = z.infer<typeof sdPatternSchema>
@@ -254,11 +332,15 @@ export type Milestone = z.infer<typeof milestoneSchema>
 export type Doc = z.infer<typeof docSchema>
 export type ReadingSummary = z.infer<typeof readingSummarySchema>
 export type Reading = z.infer<typeof readingSchema>
+export type BehaviouralPrinciple = z.infer<typeof behaviouralPrincipleSchema>
+export type BehaviouralQuestion = z.infer<typeof behaviouralQuestionSchema>
+export type StorySlot = z.infer<typeof storySlotSchema>
+export type CompanyGuide = z.infer<typeof companyGuideSchema>
 export type Week = z.infer<typeof weekSchema>
 export type Day = z.infer<typeof daySchema>
 export type DayTask = z.infer<typeof dayTaskSchema>
 
 export type ContentItem =
   | DsaPattern | DsaProblem | SdPattern | SdQuestion | LldPattern | LldQuestion
-  | Topic | TopicQuestion
+  | Topic | TopicQuestion | BehaviouralPrinciple | BehaviouralQuestion | StorySlot | CompanyGuide
   | Project | Milestone | Doc | Reading | Week | Day
