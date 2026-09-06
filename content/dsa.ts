@@ -297,13 +297,15 @@ return dist`,
       'The question asks for a count, min cost, or max value over sequences ending at each index.',
     ],
     template: `# Bottom-up DP where dp[i] depends on dp[i-1] and dp[i-2].
+if n <= 1:
+    return 1
 dp = [0] * (n + 1)
 dp[0], dp[1] = 1, 1
 for i in range(2, n + 1):
     dp[i] = dp[i - 1] + dp[i - 2]
 return dp[n]`,
     pitfalls: [
-      'Recomputing the naive recursion without memoization, causing exponential blowup.',
+      'Sizing dp as [0] * (n + 1) and then writing dp[0], dp[1] = 1, 1 without a base-case guard, which throws an IndexError as soon as n is 0.',
       'Off-by-one errors in the base cases, especially dp[0] vs dp[1], that silently shift every later value.',
     ],
   },
@@ -348,7 +350,7 @@ for i, x in enumerate(nums):
     farthest = max(farthest, i + x)
 return True`,
     pitfalls: [
-      'Assuming a greedy choice is optimal without proving the exchange argument, and silently getting a suboptimal answer.',
+      'Updating farthest with max(farthest, i + x) but never checking i > farthest first, so the loop walks past a gap it could never have reached and returns the wrong answer instead of failing fast.',
       'Forgetting to sort by the right key (start time vs end time) before the greedy scan.',
     ],
   },
@@ -362,6 +364,8 @@ return True`,
       'The question is about scheduling rooms, meetings, or resource conflicts.',
     ],
     template: `# Merge overlapping intervals after sorting by start.
+if not intervals:
+    return []
 intervals.sort(key=lambda iv: iv[0])
 merged = [intervals[0]]
 for start, end in intervals[1:]:
@@ -373,6 +377,7 @@ return merged`,
     pitfalls: [
       'Forgetting to sort the intervals first, so the merge scan misses overlaps that are out of order.',
       'Using < instead of <= when checking overlap, mishandling intervals that touch exactly at the boundary.',
+      'Indexing intervals[0] to seed merged before checking whether intervals is empty, which throws an IndexError on an empty input.',
     ],
   },
   {
@@ -412,7 +417,7 @@ for x in nums:
 return result`,
     pitfalls: [
       "Assuming Python integers wrap like fixed-width ints, forgetting to mask with 0xFFFFFFFF for 32-bit results.",
-      'Using arithmetic (+/-) where a bitwise trick (n & (n-1) to clear the lowest set bit) would be clearer and faster.',
+      'Returning a masked value like x & 0xFFFFFFFF directly as a negative number without converting back through two’s complement, so a result that should be negative in 32-bit arithmetic instead prints as a large positive Python int.',
     ],
   },
 ]
