@@ -6,6 +6,7 @@ function base(): ValidatableContent {
   return {
     dsaPatterns: [], dsaProblems: [],
     sdPatterns: [], sdQuestions: [],
+    lldPatterns: [], lldQuestions: [],
     topics: [], topicQuestions: [],
     projects: [], milestones: [], docs: [],
     readings: [], weeks: [], days: [],
@@ -122,6 +123,40 @@ describe('validate', () => {
       constraints: ['c'], defense: ['d'],
     }]
     expect(validate(c).some((e) => e.includes('proj-rag: has 0 milestones, expected 4'))).toBe(true)
+  })
+
+  it('reports an lld question pointing at a pattern that does not exist', () => {
+    const c = base()
+    c.lldQuestions = [{
+      id: 'lldq-parking-lot', name: 'Parking Lot', statement: 's',
+      clarify: ['a', 'b', 'c'], entities: ['e1', 'e2'], solution: 'x'.repeat(200),
+      diagram: 'classDiagram', patterns: ['lldp-nope'], extensions: ['a', 'b'],
+      minutes: 60, companies: ['amazon'],
+    }]
+    expect(validate(c).some((e) => e.includes('lldq-parking-lot: unknown lld pattern lldp-nope'))).toBe(true)
+  })
+
+  it('reports a duplicate lld pattern id', () => {
+    const c = base()
+    const p = (order: number) => ({
+      id: 'lldp-solid', name: 'SOLID', order, solves: 's', whenWrong: 'w',
+      notes: ['n1', 'n2'], example: 'def f(): pass', pitfalls: ['p1', 'p2'],
+    })
+    c.lldPatterns = [p(1), p(2)]
+    const errs = validate(c)
+    expect(errs.some((e) => e.includes('duplicate lld pattern id: lldp-solid'))).toBe(true)
+    expect(errs.some((e) => e.includes('duplicate id: lldp-solid'))).toBe(true)
+  })
+
+  it('reports the wrong lld bank sizes once either half is populated', () => {
+    const c = base()
+    c.lldPatterns = [{
+      id: 'lldp-solid', name: 'SOLID', order: 1, solves: 's', whenWrong: 'w',
+      notes: ['n1', 'n2'], example: 'def f(): pass', pitfalls: ['p1', 'p2'],
+    }]
+    const errs = validate(c)
+    expect(errs.some((e) => e.includes('lld bank has 1 patterns, expected 8'))).toBe(true)
+    expect(errs.some((e) => e.includes('lld bank has 0 questions, expected 25'))).toBe(true)
   })
 
   it('passes clean content', () => {

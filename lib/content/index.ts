@@ -1,5 +1,6 @@
 import { dsaPatterns, dsaProblems } from '@/content/dsa'
 import { sdPatterns, sdQuestions } from '@/content/system-design'
+import { lldPatterns, lldQuestions } from '@/content/lld'
 import { topics, topicQuestions } from '@/content/ai-ml'
 import { projects, milestones } from '@/content/projects'
 import { readings } from '@/content/readings'
@@ -29,6 +30,7 @@ export function docsForProject(projectId: string): Doc[] {
 export const content = {
   dsaPatterns, dsaProblems,
   sdPatterns, sdQuestions,
+  lldPatterns, lldQuestions,
   topics, topicQuestions,
   projects, milestones, docs: allDocs,
   readings, weeks, days,
@@ -38,6 +40,7 @@ export const byId: Map<string, ContentItem> = new Map(
   [
     ...dsaPatterns, ...dsaProblems,
     ...sdPatterns, ...sdQuestions,
+    ...lldPatterns, ...lldQuestions,
     ...topics, ...topicQuestions,
     ...projects, ...milestones, ...allDocs,
     ...readings, ...weeks, ...days,

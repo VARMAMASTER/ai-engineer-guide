@@ -105,6 +105,7 @@ describe('system design bank', () => {
   it('passes schema validation', () => {
     const c = {
       dsaPatterns: [], dsaProblems: [], sdPatterns, sdQuestions,
+      lldPatterns: [], lldQuestions: [],
       topics: [], topicQuestions: [], projects: [], milestones: [],
       docs: [], readings: [], weeks: [], days: [],
     } as ValidatableContent

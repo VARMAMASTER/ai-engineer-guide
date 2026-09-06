@@ -37,7 +37,8 @@ describe('dsa bank', () => {
   it('passes schema and url validation', () => {
     const c = {
       dsaPatterns, dsaProblems,
-      sdPatterns: [], sdQuestions: [], topics: [], topicQuestions: [],
+      sdPatterns: [], sdQuestions: [], lldPatterns: [], lldQuestions: [],
+      topics: [], topicQuestions: [],
       projects: [], milestones: [], docs: [], readings: [], weeks: [], days: [],
     } as ValidatableContent
     expect(validate(c)).toEqual([])

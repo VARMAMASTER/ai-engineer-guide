@@ -1,17 +1,19 @@
 import { content, REVIEW_IDS, completionKey } from '@/lib/content/index'
 import {
   dsaPatternSchema, dsaProblemSchema, sdPatternSchema, sdQuestionSchema,
+  lldPatternSchema, lldQuestionSchema,
   topicSchema, topicQuestionSchema, projectSchema, milestoneSchema,
   docSchema, readingSchema, weekSchema, daySchema,
 } from '@/lib/content/schema'
 import type {
-  DsaPattern, DsaProblem, SdPattern, SdQuestion, Topic, TopicQuestion,
-  Project, Milestone, Doc, Reading, Week, Day,
+  DsaPattern, DsaProblem, SdPattern, SdQuestion, LldPattern, LldQuestion,
+  Topic, TopicQuestion, Project, Milestone, Doc, Reading, Week, Day,
 } from '@/lib/content/schema'
 
 export interface ValidatableContent {
   dsaPatterns: DsaPattern[]; dsaProblems: DsaProblem[]
   sdPatterns: SdPattern[]; sdQuestions: SdQuestion[]
+  lldPatterns: LldPattern[]; lldQuestions: LldQuestion[]
   topics: Topic[]; topicQuestions: TopicQuestion[]
   projects: Project[]; milestones: Milestone[]; docs: Doc[]
   readings: Reading[]; weeks: Week[]; days: Day[]
@@ -20,6 +22,10 @@ export interface ValidatableContent {
 const WEEK_MIN = 1290
 const WEEK_MAX = 1410
 const LEETCODE_URL = /^https:\/\/leetcode\.com\/problems\/[a-z0-9-]+\/$/
+const LLD_PATTERNS_EXPECTED = 8
+const LLD_QUESTIONS_EXPECTED = 25
+const LLD_PATTERN_ID = /^lldp-[a-z0-9-]+$/
+const LLD_QUESTION_ID = /^lldq-[a-z0-9-]+$/
 
 export function validate(c: ValidatableContent): string[] {
   const errors: string[] = []
@@ -28,6 +34,7 @@ export function validate(c: ValidatableContent): string[] {
   const shapes = [
     [c.dsaPatterns, dsaPatternSchema], [c.dsaProblems, dsaProblemSchema],
     [c.sdPatterns, sdPatternSchema], [c.sdQuestions, sdQuestionSchema],
+    [c.lldPatterns, lldPatternSchema], [c.lldQuestions, lldQuestionSchema],
     [c.topics, topicSchema], [c.topicQuestions, topicQuestionSchema],
     [c.projects, projectSchema], [c.milestones, milestoneSchema],
     [c.docs, docSchema], [c.readings, readingSchema],
@@ -46,7 +53,7 @@ export function validate(c: ValidatableContent): string[] {
   // 2. Global id uniqueness.
   const all = [
     ...c.dsaPatterns, ...c.dsaProblems, ...c.sdPatterns, ...c.sdQuestions,
-    ...c.topics, ...c.topicQuestions, ...c.projects, ...c.milestones,
+    ...c.lldPatterns, ...c.lldQuestions, ...c.topics, ...c.topicQuestions, ...c.projects, ...c.milestones,
     ...c.docs, ...c.readings, ...c.weeks, ...c.days,
   ]
   const seen = new Set<string>()
@@ -63,6 +70,12 @@ export function validate(c: ValidatableContent): string[] {
   }
   for (const q of c.sdQuestions) {
     if (!c.sdPatterns.some((x) => x.id === q.patternId)) errors.push(`${q.id}: unknown patternId ${q.patternId}`)
+  }
+  const lldPatternIds = new Set(c.lldPatterns.map((p) => p.id))
+  for (const q of c.lldQuestions) {
+    for (const ref of q.patterns) {
+      if (!lldPatternIds.has(ref)) errors.push(`${q.id}: unknown lld pattern ${ref}`)
+    }
   }
   for (const q of c.topicQuestions) {
     if (!c.topics.some((x) => x.id === q.topicId)) errors.push(`${q.id}: unknown topicId ${q.topicId}`)
@@ -85,11 +98,38 @@ export function validate(c: ValidatableContent): string[] {
     if (!LEETCODE_URL.test(p.url)) errors.push(`${p.id}: invalid LeetCode url ${p.url}`)
   }
 
+  // 4b. LLD ids: prefix-shaped, and unique within their own bank as well as globally.
+  // The global check in step 2 catches a collision across banks; these two catch the
+  // likelier mistake of pasting a problem twice inside `content/lld.ts`.
+  const lldPatternSeen = new Set<string>()
+  for (const p of c.lldPatterns) {
+    if (!LLD_PATTERN_ID.test(p.id)) errors.push(`${p.id}: lld pattern id must match ${LLD_PATTERN_ID}`)
+    if (lldPatternSeen.has(p.id)) errors.push(`duplicate lld pattern id: ${p.id}`)
+    lldPatternSeen.add(p.id)
+  }
+  const lldQuestionSeen = new Set<string>()
+  for (const q of c.lldQuestions) {
+    if (!LLD_QUESTION_ID.test(q.id)) errors.push(`${q.id}: lld question id must match ${LLD_QUESTION_ID}`)
+    if (lldQuestionSeen.has(q.id)) errors.push(`duplicate lld question id: ${q.id}`)
+    lldQuestionSeen.add(q.id)
+  }
+
   // 5. Bank sizes. Only enforced once the bank is being populated.
   if (c.dsaProblems.length > 0) {
     if (c.dsaProblems.length !== 150) errors.push(`dsa bank has ${c.dsaProblems.length} problems, expected 150`)
     const core = c.dsaProblems.filter((p) => p.core).length
     if (core !== 75) errors.push(`dsa bank has ${core} core problems, expected 75`)
+  }
+  // Either half being non-empty means the LLD bank is in play, so both halves must be
+  // complete. A half-populated bank is the failure this catches: 25 questions pointing at
+  // an empty pattern list would otherwise only surface as reference errors.
+  if (c.lldPatterns.length > 0 || c.lldQuestions.length > 0) {
+    if (c.lldPatterns.length !== LLD_PATTERNS_EXPECTED) {
+      errors.push(`lld bank has ${c.lldPatterns.length} patterns, expected ${LLD_PATTERNS_EXPECTED}`)
+    }
+    if (c.lldQuestions.length !== LLD_QUESTIONS_EXPECTED) {
+      errors.push(`lld bank has ${c.lldQuestions.length} questions, expected ${LLD_QUESTIONS_EXPECTED}`)
+    }
   }
 
   // 6. Every project has exactly four milestones and seven docs.
@@ -143,7 +183,12 @@ function main(): void {
     for (const e of errors) console.error(`  - ${e}`)
     process.exit(1)
   }
-  console.log(`content validation passed: ${content.dsaProblems.length} problems, ${content.days.length} days`)
+  console.log(
+    `content validation passed: ${content.dsaProblems.length} problems, ` +
+      `${content.sdQuestions.length} system design questions, ` +
+      `${content.lldPatterns.length} lld patterns, ${content.lldQuestions.length} lld questions, ` +
+      `${content.days.length} days`,
+  )
 }
 
 if (process.argv[1]?.includes('validate-content')) main()
