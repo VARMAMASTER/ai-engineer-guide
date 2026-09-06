@@ -64,17 +64,20 @@ describe('parseArxiv', () => {
 })
 
 describe('hnUrls', () => {
-  it('builds one URL per search term, each with a points floor and recency filter', () => {
+  it('builds one URL per search term, each with typoTolerance off, a points floor, and a recency filter', () => {
     const urls = hnUrls(new Date('2026-09-06T00:00:00Z'))
-    expect(urls.length).toBeGreaterThan(1)
+    expect(urls).toHaveLength(6)
     for (const url of urls) {
       expect(url).toContain('tags=story')
+      expect(url).toContain('typoTolerance=false')
       expect(url).toMatch(/numericFilters=points>20,created_at_i>\d+/)
     }
-    expect(urls.some((u) => u.includes('query=LLM'))).toBe(true)
-    expect(urls.some((u) => u.includes('query=RAG'))).toBe(true)
-    expect(urls.some((u) => u.includes('query=transformer'))).toBe(true)
-    expect(urls.some((u) => u.includes(encodeURIComponent('AI agents')))).toBe(true)
+    const terms = ['LLM', 'OpenAI', 'Anthropic', 'AI agents', 'language model', 'transformer']
+    for (const term of terms) {
+      expect(urls.some((u) => u.includes(`query=${encodeURIComponent(term)}`))).toBe(true)
+    }
+    // RAG was dropped as pure noise (see hn.ts comment) — must not silently reappear.
+    expect(urls.some((u) => /query=RAG(&|$)/.test(u))).toBe(false)
   })
 })
 
