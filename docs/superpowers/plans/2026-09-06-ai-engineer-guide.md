@@ -2454,16 +2454,50 @@ export const NAV_ITEMS: NavItem[] = [
 Run: `pnpm test tests/unit/nav.test.ts`
 Expected: PASS, 3 tests.
 
-- [ ] **Step 5: Load the frontend-design skill and set the theme tokens**
+- [ ] **Step 5: Load the frontend-design skill and build the glass theme system**
 
-Invoke the `frontend-design` skill before writing any styling. Then define the palette in `app/globals.css` using the Tailwind convention Task 1 recorded.
+Invoke the `frontend-design` skill BEFORE writing any styling. Then read spec section 13 in full — it was
+rewritten and is the binding requirement. Define tokens in `app/globals.css` using the Tailwind v4
+CSS-first convention (`@theme`), since Task 1 confirmed v4 with no config file.
 
-Requirements the design must satisfy:
-- Dark is the default. Light theme is supported through `:root[data-theme="light"]` and `prefers-color-scheme`.
-- Tokens for: background, surface, surface-raised, border, text, text-muted, accent, accent-muted, success, warning.
-- One accent used for progress fills and the current-day highlight, nothing else.
-- Monospace face for ids, LeetCode numbers, day and week counters, and minute counts.
-- Completion is never signalled by color alone. Completed rows also get a check glyph and reduced text emphasis.
+Build exactly three surface tiers and no more:
+
+| Tier | Use | Treatment |
+|---|---|---|
+| Ground | page background | Opaque base plus one soft radial gradient wash. Never translucent. |
+| Panel | cards, nav rail, tab bar, question rows | Translucent fill, `backdrop-filter: blur()`, 1px hairline border, subtle inner top highlight |
+| Raised | modals, popovers, More sheet, hover | Panel plus more blur, stronger border, drop shadow |
+
+Hard requirements, each of which is separately testable:
+
+- **Contrast survives the blur.** Body text on a Panel clears 4.5:1 and large text 3:1, against the busiest
+  ground beneath it. If a fill is too transparent to hold that, raise the fill — do not lower the text.
+- **At most two stacked blurred layers** anywhere on screen. `backdrop-filter` is the most expensive thing
+  on the page and stacking it drops scroll framerate on mid-range phones.
+- **Graceful degradation.** `@supports not (backdrop-filter: blur(1px))` raises fill opacity to a solid tint.
+  Honour `prefers-reduced-transparency` the same way, and `prefers-reduced-motion` by disabling transitions.
+- **Borders carry the shape.** In light mode a glass panel is nearly invisible without its hairline border,
+  so the border is required, not decorative.
+- **Two real themes.** Dark ground is a deep desaturated blue-grey, never pure black, so translucent panels
+  have something to pick up. Light ground is a warm off-white with a soft tint wash, never pure white, and
+  its panels need a stronger border because translucency alone reads as nothing on a light ground. The
+  accent must clear contrast on BOTH grounds; if one accent cannot, that theme defines its own accent step.
+- **Token structure.** Every colour is a token on bare `:root`. Dark overrides appear under BOTH
+  `@media (prefers-color-scheme: dark)` and `:root[data-theme="dark"]`, so an explicit choice wins in
+  either direction and the system default still works. Never define a colour only inside a media block.
+- **Code blocks are solid, not glass.** Blur behind code is unreadable.
+
+- [ ] **Step 5b: Build the theme toggle with no flash of wrong theme**
+
+Add a toggle in the top bar cycling dark / light / system, persisted to the progress blob's `settings.theme`.
+
+The hard part is first paint. Emit a small blocking inline script in `app/layout.tsx` `<head>` that reads
+the stored theme and stamps `data-theme` on `<html>` BEFORE the page renders. Without it the page paints
+dark, then snaps to light, which looks broken. Read the raw `localStorage` key directly in that script —
+do not wait for the zustand store to hydrate, which is far too late.
+
+Write a test asserting the resolved theme survives a reload, and one asserting the toggle cycles all three
+states in order.
 
 - [ ] **Step 6: Implement `components/StorageBanner.tsx`**
 
@@ -3676,68 +3710,34 @@ git commit -m "feat: settings with start date, export, import, and guarded reset
 - Consumes: every page from Tasks 10 to 17.
 - Produces: a passing e2e suite at both viewports and a live Vercel URL.
 
-- [ ] **Step 1: Write the e2e spec**
+- [ ] **Step 1: Write the end-to-end suite**
 
-Create `tests/e2e/progress.spec.ts`:
+Spec section 11.2 was rewritten and is the binding requirement — read it. This is a real suite, not a smoke
+test. Write one spec FILE per area under `tests/e2e/`. Every spec runs at BOTH configured viewports
+(1280x800 desktop, 390x844 mobile) unless the area is explicitly viewport-specific.
 
-```ts
-import { test, expect } from '@playwright/test'
+Add `data-testid="side-nav"` to SideNav's root and `data-testid="bottom-nav"` to BottomNav's root.
 
-test('progress survives a reload and round-trips through export and import', async ({ page }) => {
-  await page.goto('/settings')
-  await page.getByRole('button', { name: /^\d{4}-\d{2}-\d{2}$/ }).first().click()
+| File | Area | What it must assert |
+|---|---|---|
+| `onboarding.spec.ts` | first run | No start date shows the setup card; picking a date snaps to Monday; Today then renders day 1's tasks |
+| `persistence.spec.ts` | progress | Check a task, reload, still checked; streak reads 1 |
+| `export-import.spec.ts` | data | Export downloads a file named for today; reset clears; re-importing restores every checked item; a malformed file shows an alert and changes nothing |
+| `cross-page.spec.ts` | shared identity | Checking a problem on a DSA pattern page marks it done on Today AND moves the month-1 problems meter. **This is the most important test in the suite** — it is the behaviour most likely to break silently. |
+| `routes.spec.ts` | coverage | Walk all 13 routes plus one example of each of the 4 dynamic routes: HTTP 200, a visible `h1`, and zero console errors |
+| `navigation.spec.ts` | shell | Desktop shows the rail and hides the tab bar; mobile the reverse; the More sheet opens and reaches all three secondary pages; the active item carries `aria-current` |
+| `dsa.spec.ts` | filters | All / Core / company chips change the visible count; a pattern page shows signals, template, pitfalls and the right problem count; the LeetCode link href matches the data |
+| `system-design.spec.ts` | framework | Expanding a question reveals all six steps; an ML question and a general question show DIFFERENT step headings |
+| `reading.spec.ts` | feeds | Curated groups by week and toggles. Live renders items with both routes stubbed to succeed via `page.route`, and shows a per-column empty state with both stubbed to fail. Never hit the real APIs — the suite must pass offline. |
+| `theme.spec.ts` | appearance | Toggle cycles dark / light / system; choice survives reload; no wrong-theme flash on first paint; body text over a glass panel passes a computed contrast assertion in BOTH themes |
+| `responsive.spec.ts` | mobile | At 390px NO page scrolls horizontally, across all 13 routes, not one sample. Every interactive target is at least 44px. |
+| `not-found.spec.ts` | errors | A bad dynamic slug renders the not-found page rather than crashing |
 
-  await page.goto('/today')
-  const first = page.getByRole('checkbox').first()
-  await first.check()
-  await expect(first).toBeChecked()
+- [ ] **Step 1b: Add the accessibility pass**
 
-  await page.reload()
-  await expect(page.getByRole('checkbox').first()).toBeChecked()
-  await expect(page.getByText(/streak/i)).toContainText('1')
-
-  const download = await Promise.all([
-    page.waitForEvent('download'),
-    page.goto('/settings').then(() => page.getByRole('button', { name: /export progress/i }).click()),
-  ]).then(([d]) => d)
-  const path = await download.path()
-
-  await page.getByRole('button', { name: /^reset progress$/i }).click()
-  await page.getByRole('button', { name: /yes, erase everything/i }).click()
-
-  await page.goto('/today')
-  await expect(page.getByRole('checkbox').first()).not.toBeChecked()
-
-  await page.goto('/settings')
-  await page.setInputFiles('input[type=file]', path!)
-
-  await page.goto('/today')
-  await expect(page.getByRole('checkbox').first()).toBeChecked()
-})
-
-test('mobile shows the tab bar, hides the sidebar, and never scrolls sideways', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'mobile', 'mobile viewport only')
-
-  await page.goto('/dsa/arrays-hashing')
-  await expect(page.getByTestId('bottom-nav')).toBeVisible()
-  await expect(page.getByTestId('side-nav')).toBeHidden()
-
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  )
-  expect(overflow).toBeLessThanOrEqual(0)
-})
-
-test('desktop shows the sidebar and hides the tab bar', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'desktop', 'desktop viewport only')
-
-  await page.goto('/today')
-  await expect(page.getByTestId('side-nav')).toBeVisible()
-  await expect(page.getByTestId('bottom-nav')).toBeHidden()
-})
-```
-
-Add `data-testid="side-nav"` to `SideNav`'s root and `data-testid="bottom-nav"` to `BottomNav`'s root.
+Install `@axe-core/playwright`. Add `tests/e2e/a11y.spec.ts` running axe against Today, a DSA pattern page,
+and Reading, in BOTH themes. The bar is zero critical violations. Also assert keyboard-only traversal
+reaches every control on Today and Settings.
 
 - [ ] **Step 2: Run the e2e suite**
 

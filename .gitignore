@@ -46,3 +46,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Windows: `> nul` in Git Bash creates a real file instead of discarding
+/nul

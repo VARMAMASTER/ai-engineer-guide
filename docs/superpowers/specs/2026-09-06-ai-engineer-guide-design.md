@@ -170,7 +170,8 @@ week-<nn>                     week-01 … week-26
 ### Schemas (zod, in `lib/content/schema.ts`)
 
 ```ts
-DsaPattern { id, name, order, signals: string[], template: string, pitfalls: string[] }
+DsaPattern { id, name, order, signals: string[], template: string, templateCpp?: string,
+             pitfalls: string[] }
 DsaProblem { id, patternId, name, leetcodeNumber, url, difficulty: 'easy'|'medium'|'hard',
              core: boolean, companies: ('google'|'meta'|'amazon')[], minutes: number }
 
@@ -321,6 +322,22 @@ The four meters count, respectively: completed ids with the `dsa-` prefix that a
 Each week lists 10 DSA problems (by pattern), 2 SD items, 2 AI/ML sub-topics, 2 readings, 1 milestone. Pattern order continues: week 5 trees (remaining 5 hard/medium) and heap; weeks 6–7 graphs; week 8 advanced graphs; weeks 9–10 backtracking and tries; weeks 11–13 1-D DP; weeks 14–16 2-D DP; week 17 greedy; weeks 18–19 intervals and math; week 20 bit manipulation; weeks 21–26 mixed review by company tag. SD patterns continue in the order of section 6.6, two per week, finishing all 20 by week 14, then question drills. AI/ML topics continue in the order of section 6.7. Readings continue from section 6.9. Milestones are the four per project in section 6.8.
 
 The exact per-week item lists for weeks 5–26 are authored in `content/weeks.ts` during implementation following these rules; they are not enumerated here because they are mechanical and the validation script guarantees hour totals and reference integrity.
+
+### 6.4b Code language policy
+
+Amended 2026-09-06 at the user's request. **Python is primary and required.** Every pattern template,
+solution, and code example is written in Python first, and Python alone is sufficient.
+
+**C++ is optional and additive**, present only where it teaches something Python hides: bit-level work,
+tight inner loops where Python's abstractions obscure the cost, and advanced graph or DP algorithms where
+the competitive-programming idiom is the thing being learned. `DsaPattern.templateCpp` is where it lives.
+It never replaces the Python template and never appears alone. A pattern with no such need has no C++ at all.
+
+Expected C++ coverage: `dsap-bit-manipulation`, `dsap-advanced-graphs`, `dsap-dp-2d`, `dsap-heap`,
+`dsap-tries`. The other thirteen patterns are Python-only unless a specific case argues otherwise.
+
+Rendering: the pattern page shows Python by default with a "C++" toggle appearing only when
+`templateCpp` exists. System design and AI/ML code examples are Python, with no C++ variant.
 
 ### 6.5 DSA bank
 
@@ -509,16 +526,54 @@ Both handlers set `Cache-Control: public, s-maxage=21600, stale-while-revalidate
 
 ## 11. Testing
 
-Written test-first during implementation.
+Amended 2026-09-06 at the user's request: the system gets a real test suite, not a smoke test. Written
+test-first during implementation. Every page and every user-visible flow is covered end to end.
 
-Unit (Vitest):
-- Content validation rules, each with a passing fixture and a failing fixture.
-- Store: `toggle` idempotence, `streak` across day boundaries and gaps, `dayNumber` and `weekNumber` from a Monday start, export-import round trip, migration from a synthetic version 0 blob, import rejection on a malformed blob.
-- Feed parsers: arXiv Atom fixture to items, HN JSON fixture to items, 7-day filtering, empty and malformed inputs.
+### 11.1 Unit (Vitest)
 
-End-to-end (Playwright, one spec, run at two viewports: 1280x800 and 390x844):
-- Open `/settings`, set the start date, open `/today`, check the first task, reload, confirm it is still checked, confirm the streak reads 1, export, reset, import the exported file, confirm the task is checked again.
-- At the mobile viewport, additionally confirm the bottom tab bar is visible, the sidebar is not, and the page has no horizontal scroll on `/dsa/arrays-hashing`.
+- Content validation: every rule has a passing fixture AND a failing fixture, asserting the exact error string.
+- Content banks: counts, id conventions, cross-references, and per-collection invariants (150/75 DSA,
+  20 system design patterns, 10 topics, 24 milestones, 42 generated docs, reading minutes by kind).
+- Plan integrity: weekly minute totals, per-day task composition, unique completion keys, 40 scheduled problems.
+- Store: `toggle` idempotence, `streak` across day boundaries and gaps including a DST-adjacent day pair,
+  `dayNumber`/`weekNumber` from a Monday start, export-import round trip, version-0 migration,
+  malformed-import rejection leaving state untouched, storage-throws fallback to in-memory.
+- Feed parsers: fixture to items for both sources, recency filtering in both directions, empty and
+  malformed inputs, and the HN permalink fallback when a story has no url.
+- Components: every page component renders from an empty store and from a populated store.
+
+### 11.2 End-to-end (Playwright), run at 1280x800 AND 390x844
+
+One spec file per area. Every spec runs at both viewports unless it is explicitly viewport-specific.
+
+1. **Onboarding** — no start date shows the setup card; setting a date snaps to Monday; Today then renders
+   day 1's tasks.
+2. **Progress persistence** — check a task, reload, still checked; streak reads 1; check a second task on a
+   different page and confirm the Today meters move.
+3. **Export / import / reset** — export downloads a file named for today; reset clears; importing the file
+   restores every checked item; importing a malformed file shows an alert and changes nothing.
+4. **Cross-page identity** — checking a problem on a DSA pattern page marks the same item complete on Today
+   and moves the month-1 problems meter. This is the single most important behavioural test in the suite.
+5. **Every route loads** — walk all 13 routes plus 4 dynamic examples, assert HTTP 200, a visible `h1`,
+   and zero console errors.
+6. **Navigation** — desktop shows the rail and hides the tab bar; mobile does the reverse; the More sheet
+   opens and reaches the three secondary pages; the active item carries `aria-current`.
+7. **DSA filters** — All / Core / company chips change the visible count; a pattern page shows signals,
+   template, pitfalls, and the right number of problems; the LeetCode link has the expected href.
+8. **System design framework** — expanding a question reveals all six steps; an ML question and a general
+   question show different step headings.
+9. **Reading tabs** — Curated groups by week and toggles; Live renders items with both feeds stubbed to
+   succeed, and shows a per-column empty state with both stubbed to fail.
+10. **Theme** — toggle cycles dark / light / system; the choice survives reload; no wrong-theme flash on
+    first paint; both themes pass an automated contrast assertion on body text over a glass panel.
+11. **Responsive integrity** — at 390px no page scrolls horizontally, and every interactive target is at
+    least 44px. Runs across all 13 routes, not a single sample page.
+12. **Unknown route** — a bad dynamic slug renders the not-found page, not a crash.
+
+### 11.3 Accessibility
+
+An automated axe-core pass on Today, a DSA pattern page, and Reading, in both themes. Zero critical
+violations is the bar. Keyboard-only traversal of Today and Settings must reach every control.
 
 ## 12. Deploy and release
 
@@ -529,7 +584,64 @@ End-to-end (Playwright, one spec, run at two viewports: 1280x800 and 390x844):
 
 ## 13. Visual direction
 
-Dark-first with full light-theme support. One strong accent color used for progress and the current day, a neutral scale for everything else. Monospace for ids, LeetCode numbers, day and week counters, hours. Type scale with one display size for page titles and a compact body size to keep question tables dense. Cards have visible completion state without relying on color alone. No decorative illustration. The reference feeling is a well-made internal engineering dashboard. Final choices are made during implementation using the frontend-design skill and recorded in the implementation plan.
+Amended 2026-09-06 at the user's request: the interface must read as modern and attractive, not as a plain
+utility. Glassmorphism is the chosen idiom. Dark mode and light mode are BOTH first-class — neither is an
+afterthought or a filter over the other, and every component is designed twice.
+
+### 13.1 The glass system
+
+Three surface tiers, and only three. More tiers make a page look muddy.
+
+| Tier | Use | Treatment |
+|---|---|---|
+| Ground | page background | Opaque base colour plus one soft radial gradient wash. Never translucent. |
+| Panel | cards, nav rail, tab bar, question rows | Translucent fill, `backdrop-filter: blur(...)`, 1px hairline border, subtle inner top highlight |
+| Raised | modals, popovers, the mobile More sheet, hover state | Same as Panel with more blur, stronger border, and a drop shadow |
+
+Rules that keep it from becoming unreadable:
+- **Text never sits directly on blur.** Every glass panel carries a solid-enough fill behind its text that
+  body copy clears 4.5:1 contrast and large text clears 3:1, measured against the busiest ground beneath it.
+- **Blur is capped.** No more than two stacked blurred layers anywhere on screen, because `backdrop-filter`
+  is the most expensive thing on the page and stacking it visibly drops scroll framerate on mid-range phones.
+- **Every glass surface degrades.** `@supports not (backdrop-filter: blur(1px))` raises the fill opacity to
+  a solid tint so the design still reads on browsers without support. Also honour
+  `prefers-reduced-transparency`, dropping to solid fills.
+- **Borders carry the shape, not the shadow.** In light mode a glass panel is nearly invisible without its
+  hairline border, so the border is required, not decorative.
+
+### 13.2 Two themes, designed separately
+
+Dark is the default. Light is a real design, not inverted tokens.
+
+- Dark ground is a deep desaturated blue-grey, never pure black, so translucent panels have something to
+  pick up. Panels lift with a low-opacity white fill.
+- Light ground is a warm off-white with a soft tint wash, never pure white. Panels lift with a low-opacity
+  white fill plus a stronger border, because on light grounds translucency alone reads as nothing.
+- Accent must satisfy contrast on BOTH grounds. If one accent cannot, the theme defines its own accent step.
+- Every colour is a token on `:root`. Dark overrides live under both `@media (prefers-color-scheme: dark)`
+  and `:root[data-theme="dark"]`, so an explicit toggle wins in either direction and the system default works.
+- A visible theme toggle sits in the top bar, cycling dark / light / system, persisted in the progress blob's
+  `settings.theme`. It must not flash the wrong theme on load: resolve the stored theme in a blocking inline
+  script before first paint.
+
+### 13.3 Component treatment
+
+- **Cards** (pattern, topic, project) — glass Panel, rounded, hairline border, hover lifts to Raised with a
+  short transform. A completion ring or bar sits in the corner using the accent.
+- **Checkbox rows** — the whole 44px row is the target. Completed rows dim, gain a check glyph, and desaturate.
+  Never colour alone.
+- **Nav rail and mobile tab bar** — glass Raised, pinned, with the active item marked by an accent pill behind
+  the label plus `aria-current`.
+- **Meters and progress bars** — accent fill on a low-contrast track, with the numeric value always shown in
+  monospace beside it. A bar alone is not an answer.
+- **Code blocks** — solid surface, NOT glass. Blur behind code is unreadable. Monospace, own scroll container.
+- **Type** — one display size for page titles, compact body size to keep question tables dense, monospace for
+  ids, LeetCode numbers, day and week counters, and minute counts.
+- **Motion** — transitions at 150 to 200ms on hover, expand, and theme change only. All of it disabled under
+  `prefers-reduced-motion`. No decorative animation, no illustration.
+
+The reference feeling is a well-made modern developer product: dense and serious, but with real visual craft.
+Final choices are made during implementation using the frontend-design skill and recorded in the plan.
 
 ## 14. Assumptions
 
