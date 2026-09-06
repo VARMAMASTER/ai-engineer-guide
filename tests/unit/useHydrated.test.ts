@@ -12,7 +12,7 @@ describe('useHydrated', () => {
       useProgress: {
         persist: {
           hasHydrated: () => true,
-          onFinishHydration: (_cb: () => void) => () => {},
+          onFinishHydration: () => () => {},
         },
       },
     }))

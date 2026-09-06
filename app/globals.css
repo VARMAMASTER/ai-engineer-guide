@@ -209,27 +209,30 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Only <html> paints the Ground, so the wash on body::before sits above it. */
+  /*
+   * <body> paints the Ground itself — colour AND wash in one element, rather
+   * than a `z-index: -1` pseudo-element. A transparent body left the canvas to
+   * whatever preflight decided, which rendered white under the whole app; an
+   * opaque body plus a negative-z pseudo-element hid the wash instead. One
+   * opaque background layer with the gradients on top of it is the only shape
+   * that gets both right, and it keeps working outside the Shell too — the
+   * not-found page, error boundaries, and overscroll rubber-banding.
+   *
+   * The Ground is never translucent and never blurred.
+   */
   body {
-    background-color: transparent;
+    background-color: var(--ground);
+    background-image:
+      radial-gradient(58rem 40rem at 14% -6%, var(--ground-wash-warm), transparent 66%),
+      radial-gradient(56rem 44rem at 92% 34%, var(--ground-wash-cool), transparent 64%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
     font-size: 0.9375rem;
     line-height: 1.55;
     letter-spacing: 0.005em;
     -webkit-font-smoothing: antialiased;
-  }
-
-  /* The single ground wash. Fixed so it never scrolls, and never blurred. */
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background:
-      radial-gradient(58rem 40rem at 14% -6%, var(--ground-wash-warm), transparent 66%),
-      radial-gradient(56rem 44rem at 92% 34%, var(--ground-wash-cool), transparent 64%);
   }
 
   h1,
@@ -430,8 +433,9 @@
     background-color: var(--raised-solid);
   }
 
-  body::before {
-    display: none;
+  /* Flat Ground: the base colour stays, the wash goes. */
+  body {
+    background-image: none;
   }
 }
 

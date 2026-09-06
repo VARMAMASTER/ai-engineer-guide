@@ -124,3 +124,46 @@ describe('faint text', () => {
     }
   })
 })
+
+/**
+ * The ratios above are only meaningful if the Ground token is what actually
+ * paints. An earlier revision left `body` transparent, so the page rendered on
+ * the user agent's white canvas while every token in this file still passed.
+ * These assertions test the page, not the palette.
+ */
+describe('the Ground token is what paints', () => {
+  /** The declaration block of the first top-level `<selector> {` rule. */
+  function rule(selector: string): string {
+    const lines = CSS.split('\n').map((l) => l.replace(/\r$/, ''))
+    const start = lines.findIndex((l) => l.trim() === `${selector} {`)
+    if (start === -1) throw new Error(`no \`${selector}\` rule in globals.css`)
+    const end = lines.findIndex((l, i) => i > start && l.trim() === '}')
+    return lines.slice(start + 1, end).join('\n')
+  }
+
+  it('gives <body> an explicit, opaque Ground background', () => {
+    const body = rule('body')
+    expect(body).toContain('background-color: var(--ground)')
+    expect(body).not.toContain('background-color: transparent')
+  })
+
+  it('gives <html> the same Ground, so overscroll and the canvas match', () => {
+    expect(rule('html')).toContain('background-color: var(--ground)')
+  })
+
+  it('carries the wash on the same element as the Ground, not behind it', () => {
+    const body = rule('body')
+    expect(body).toContain('--ground-wash-warm')
+    expect(body).toContain('--ground-wash-cool')
+    expect(CSS).not.toContain('body::before')
+  })
+
+  it('paints the Ground on the Shell root as well', () => {
+    const shell = readFileSync(resolve(process.cwd(), 'components/Shell.tsx'), 'utf8')
+    expect(shell).toContain('min-h-dvh bg-[var(--bg)]')
+  })
+
+  it('keeps the --bg alias pointing at the Ground', () => {
+    expect(token('bg')).toBe('var(--ground)')
+  })
+})

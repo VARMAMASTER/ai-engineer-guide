@@ -10,7 +10,7 @@ import StorageBanner from './StorageBanner'
  */
 export default function Shell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-dvh">
+    <div className="min-h-dvh bg-[var(--bg)] text-[var(--text)]">
       <StorageBanner />
       <div className="flex">
         <SideNav />

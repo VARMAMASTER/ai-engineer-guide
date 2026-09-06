@@ -53,7 +53,10 @@ export default function TopBar() {
       <div className="flex min-h-[var(--topbar-h)] items-center gap-3 px-4 py-2 md:gap-6 md:px-8">
         <div className="flex min-w-0 items-baseline gap-3 md:gap-5">
           {startDate === null && hydrated ? (
-            <Link href="/settings" className="readout text-[var(--accent)] underline underline-offset-4">
+            <Link
+              href="/settings"
+              className="readout -mx-2 inline-flex min-h-11 items-center rounded-[var(--radius-sm)] px-2 text-[var(--accent)] underline underline-offset-4 hover:bg-[var(--accent-soft)]"
+            >
               SET START DATE
             </Link>
           ) : (
