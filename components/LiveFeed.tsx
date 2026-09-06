@@ -21,9 +21,22 @@ export default function LiveFeed({ endpoint, heading }: Props) {
   const [items, setItems] = useState<FeedItem[]>([])
   const [fetchedAt, setFetchedAt] = useState<string | null>(null)
 
+  // Resetting to `loading` when the column is pointed at a different endpoint
+  // is state derived from a prop, so it is adjusted during render rather than
+  // in an effect (https://react.dev/learn/you-might-not-need-an-effect). An
+  // effect would have painted the previous endpoint's items for one frame
+  // first, and the extra render pass it costs is the cascade the lint rule is
+  // about. React re-runs this component immediately, before any child renders.
+  const [loadedFrom, setLoadedFrom] = useState(endpoint)
+  if (loadedFrom !== endpoint) {
+    setLoadedFrom(endpoint)
+    setStatus('loading')
+    setItems([])
+    setFetchedAt(null)
+  }
+
   useEffect(() => {
     let cancelled = false
-    setStatus('loading')
 
     fetch(endpoint)
       .then((res) => res.json() as Promise<FeedResponse>)
@@ -52,7 +65,7 @@ export default function LiveFeed({ endpoint, heading }: Props) {
   return (
     <section className="panel min-w-0 p-4">
       <div className="mb-3 flex items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold">{heading}</h3>
+        <h2 className="text-sm font-semibold">{heading}</h2>
         {fetchedAt ? (
           <span className="readout shrink-0 text-[var(--text-muted)]">
             refreshed{' '}

@@ -7,7 +7,10 @@ export default defineConfig({
   use: { baseURL: 'http://localhost:3000' },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } } },
-    { name: 'mobile', use: { ...devices['Pixel 5'] } },
+    // Pixel 5's own metrics are 393x851; spec section 11.2 pins the mobile
+    // viewport at 390x844, so the device's touch/UA traits are kept and only
+    // the viewport is overridden.
+    { name: 'mobile', use: { ...devices['Pixel 5'], viewport: { width: 390, height: 844 } } },
   ],
   webServer: {
     command: 'pnpm build && pnpm start',

@@ -86,6 +86,18 @@ describe.each([
     expect(round(ratio(token(`${prefix}-accent-contrast`), accent))).toBeGreaterThanOrEqual(4.5)
   })
 
+  /**
+   * The pairing this file originally missed. `.nav-pill` and the selected
+   * Reading tab both put accent text on an accent-soft fill, which is a
+   * *different* background from the panel — and in light mode it measured
+   * 4.46:1 until the accent was darkened. axe caught it in the e2e pass; this
+   * keeps it caught in the unit pass.
+   */
+  it('clears 4.5:1 for accent text on an accent-soft fill', () => {
+    const fill = over(token(`${prefix}-accent-soft`), panel)
+    expect(round(ratio(token(`${prefix}-accent`), fill))).toBeGreaterThanOrEqual(4.5)
+  })
+
   it('clears 4.5:1 for status colours', () => {
     for (const t of ['positive', 'warning', 'danger']) {
       expect(round(ratio(token(`${prefix}-${t}`), panel)), t).toBeGreaterThanOrEqual(4.5)

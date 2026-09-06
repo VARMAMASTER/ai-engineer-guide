@@ -37,6 +37,14 @@ export default function ReadingTabs() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      <div>
+        <h1>Reading</h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
+          The curated list is the one that matters — it is scheduled into the plan week by week.
+          The live feed is there for what landed after the list was written.
+        </p>
+      </div>
+
       <div
         role="tablist"
         aria-label="Reading view"
@@ -59,7 +67,7 @@ export default function ReadingTabs() {
         >
           {weekGroups.map(({ week, readings }) => (
             <section key={week.id} className="panel min-w-0 p-4">
-              <h3 className="eyebrow mb-3">Week {week.number}</h3>
+              <h2 className="eyebrow mb-3">Week {week.number}</h2>
               <ul className="flex min-w-0 flex-col">
                 {readings.map((r) => (
                   <li key={r.id} className="border-b border-[var(--panel-border)] last:border-0">

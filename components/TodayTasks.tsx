@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
 import {
@@ -59,14 +59,15 @@ export default function TodayTasks() {
   const completed = useProgress((s) => s.completed)
   const hours = useProgress((s) => s.hours)
 
-  // Computed once on mount so the page cannot mismatch across a midnight
-  // boundary between the server render and the client's own clock.
-  const [today, setToday] = useState<string | null>(null)
-  useEffect(() => {
-    setToday(todayIso())
-  }, [])
+  // Latched by a lazy initializer rather than set from an effect: the value is
+  // wanted once, on the client, and an effect would only re-render to reach the
+  // same answer (https://react.dev/learn/you-might-not-need-an-effect). The
+  // server's own initializer result is never rendered — `hydrated` is false in
+  // server markup and on the hydrating render, so both sides paint the skeleton
+  // and the client's clock is the only one that ever reaches the screen.
+  const [today] = useState(todayIso)
 
-  const ready = hydrated && today !== null
+  const ready = hydrated
 
   if (!ready) {
     return (

@@ -68,10 +68,12 @@
   --l-text: #1b2027;
   --l-text-muted: #5a6472;
   --l-text-faint: #666f7b;
-  --l-accent: #9a5b00;
+  /* Darkened from #9a5b00: accent-on-accent-soft (the active nav pill and the
+     selected Reading tab) measured 4.46:1 in light mode, just under AA. */
+  --l-accent: #8f5400;
   --l-accent-contrast: #ffffff;
-  --l-accent-soft: rgba(154, 91, 0, 0.12);
-  --l-accent-line: rgba(154, 91, 0, 0.45);
+  --l-accent-soft: rgba(143, 84, 0, 0.12);
+  --l-accent-line: rgba(143, 84, 0, 0.45);
   --l-positive: #0f6b4a;
   --l-warning: #9a4a16;
   --l-danger: #a3241c;
