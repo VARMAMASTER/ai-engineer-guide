@@ -1,28 +1,28 @@
 import type { FeedItem } from './types'
 
 /**
- * Build the HN Algolia search URL for recent, well-received AI-engineering
- * stories.
+ * Search terms fired as SEPARATE Algolia requests and merged.
  *
- * Verified against the live API: without Algolia's `advancedSyntax`, a
- * plain multi-word query is scored as an OR of terms, but empirically
- * adding a third or later OR'd keyword (e.g. "LLM OR RAG OR transformer")
- * collapses real result counts to zero far more often than a two-term
- * query does — confirmed by hand against the live endpoint while building
- * this feed. Two terms plus the recency filter is the combination that
- * reliably returned live, on-topic hits during testing.
- *
- * The `points>20` floor was re-verified against the live 2-term query
- * (probed at 20/15/10/5): all four floors returned the same 2 hits at
- * test time, so 20 is kept — it's the highest floor that still returns a
- * usable result set, and it keeps low-signal (1-2 point) stories out of
- * the feed.
+ * Algolia's `query` parameter is free-text relevance search, not a boolean
+ * query language: `query=LLM OR RAG` searches for stories containing the
+ * literal tokens "LLM", "OR", and "RAG", which is why a single combined
+ * query collapsed to almost nothing (verified live: 'LLM OR RAG' -> 2 hits,
+ * vs 'LLM' -> 28, 'RAG' -> 40, 'AI agents' -> 11, 'transformer' -> 4, all
+ * with the same points>20 + 7-day filters). There is no in-query OR — each
+ * term must be its own request.
  */
-export function hnUrl(now: Date): string {
+const TERMS = ['LLM', 'RAG', 'AI agents', 'transformer']
+
+const MAX_ITEMS = 40
+
+/** Build one Algolia search URL per term in {@link TERMS}, same filters on each. */
+export function hnUrls(now: Date): string[] {
   const weekAgo = Math.floor(now.getTime() / 1000) - 7 * 86_400
-  const query = encodeURIComponent('LLM OR RAG')
-  return `https://hn.algolia.com/api/v1/search_by_date?query=${query}&tags=story` +
-    `&numericFilters=points>20,created_at_i>${weekAgo}&hitsPerPage=40`
+  return TERMS.map((term) => {
+    const query = encodeURIComponent(term)
+    return `https://hn.algolia.com/api/v1/search_by_date?query=${query}&tags=story` +
+      `&numericFilters=points>20,created_at_i>${weekAgo}&hitsPerPage=${MAX_ITEMS}`
+  })
 }
 
 interface Hit {
@@ -33,13 +33,15 @@ interface Hit {
   created_at?: string
 }
 
-export function parseHn(payload: unknown): FeedItem[] {
+function hitsOf(payload: unknown): Hit[] {
   if (typeof payload !== 'object' || payload === null) return []
   const hits = (payload as { hits?: unknown }).hits
-  if (!Array.isArray(hits)) return []
+  return Array.isArray(hits) ? (hits as Hit[]) : []
+}
 
+export function parseHn(payload: unknown): FeedItem[] {
   const items: FeedItem[] = []
-  for (const raw of hits as Hit[]) {
+  for (const raw of hitsOf(payload)) {
     const id = raw.objectID
     const title = raw.title
     const created = raw.created_at
@@ -56,4 +58,20 @@ export function parseHn(payload: unknown): FeedItem[] {
     })
   }
   return items
+}
+
+/**
+ * Merge the JSON payloads from the per-term Algolia requests: dedupe by
+ * `objectID` (the same story legitimately matches several search terms),
+ * sort by `created_at` descending, then cap at {@link MAX_ITEMS}.
+ */
+export function mergeHnPayloads(payloads: unknown[]): FeedItem[] {
+  const byId = new Map<string, Hit>()
+  for (const payload of payloads) {
+    for (const hit of hitsOf(payload)) {
+      if (hit.objectID && !byId.has(hit.objectID)) byId.set(hit.objectID, hit)
+    }
+  }
+  const sorted = [...byId.values()].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
+  return parseHn({ hits: sorted }).slice(0, MAX_ITEMS)
 }

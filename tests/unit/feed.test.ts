@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { parseArxiv } from '@/lib/feed/arxiv'
-import { parseHn, hnUrl } from '@/lib/feed/hn'
+import { parseHn, hnUrls, mergeHnPayloads } from '@/lib/feed/hn'
 
 const xml = readFileSync('tests/fixtures/arxiv.xml', 'utf8')
 const hnJson = JSON.parse(readFileSync('tests/fixtures/hn.json', 'utf8'))
@@ -63,12 +63,44 @@ describe('parseArxiv', () => {
   })
 })
 
-describe('hnUrl', () => {
-  it('queries a two-term OR search with a points floor and recency filter', () => {
-    const url = hnUrl(new Date('2026-09-06T00:00:00Z'))
-    expect(url).toContain('query=LLM%20OR%20RAG')
-    expect(url).toContain('tags=story')
-    expect(url).toMatch(/numericFilters=points>20,created_at_i>\d+/)
+describe('hnUrls', () => {
+  it('builds one URL per search term, each with a points floor and recency filter', () => {
+    const urls = hnUrls(new Date('2026-09-06T00:00:00Z'))
+    expect(urls.length).toBeGreaterThan(1)
+    for (const url of urls) {
+      expect(url).toContain('tags=story')
+      expect(url).toMatch(/numericFilters=points>20,created_at_i>\d+/)
+    }
+    expect(urls.some((u) => u.includes('query=LLM'))).toBe(true)
+    expect(urls.some((u) => u.includes('query=RAG'))).toBe(true)
+    expect(urls.some((u) => u.includes('query=transformer'))).toBe(true)
+    expect(urls.some((u) => u.includes(encodeURIComponent('AI agents')))).toBe(true)
+  })
+})
+
+describe('mergeHnPayloads', () => {
+  const shared = { objectID: '111', title: 'Shared story', created_at: '2026-09-05T00:00:00Z', points: 50, url: 'https://example.com/shared' }
+  const onlyInA = { objectID: '222', title: 'Only in payload A', created_at: '2026-09-04T00:00:00Z', points: 40 }
+  const onlyInB = { objectID: '333', title: 'Only in payload B', created_at: '2026-09-06T00:00:00Z', points: 30 }
+  const payloadA = { hits: [shared, onlyInA] }
+  const payloadB = { hits: [shared, onlyInB] }
+
+  it('dedupes a story that matches more than one search term', () => {
+    const items = mergeHnPayloads([payloadA, payloadB])
+    const ids = items.map((i) => i.id)
+    expect(ids.filter((id) => id === 'hn-111')).toHaveLength(1)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids).toContain('hn-222')
+    expect(ids).toContain('hn-333')
+  })
+
+  it('sorts the merged result by date descending', () => {
+    const items = mergeHnPayloads([payloadA, payloadB])
+    expect(items.map((i) => i.id)).toEqual(['hn-333', 'hn-111', 'hn-222'])
+  })
+
+  it('returns an empty array when every payload is malformed', () => {
+    expect(mergeHnPayloads([null, {}, { hits: 'nope' }])).toEqual([])
   })
 })
 
