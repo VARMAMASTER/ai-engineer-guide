@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
-import { content, resolveRef, completionKey } from '@/lib/content/index'
+import { useId, useState, type ReactNode } from 'react'
+import { content, resolveRef, completionKey, labelForTask } from '@/lib/content/index'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
 import { dayNumber } from '@/lib/progress/selectors'
@@ -21,23 +21,6 @@ const MONTH_EMPHASIS: Record<number, string> = {
   6: 'Mixed review. Fine-tuning and evaluation.',
 }
 
-const REVIEW_LABELS: Record<string, string> = {
-  'review-week': 'Weekly review',
-  'review-mock': 'Mock interview loop',
-  'review-retro': 'Month retrospective',
-  'review-publish': 'Publish defense docs',
-}
-
-function primaryLabel(task: DayTask): string {
-  const item = resolveRef(task.refId)
-  if (item) {
-    if ('name' in item && typeof item.name === 'string') return item.name
-    if ('title' in item && typeof item.title === 'string') return item.title
-    if ('text' in item && typeof item.text === 'string') return item.text
-  }
-  return REVIEW_LABELS[task.refId] ?? task.refId.replace(/-/g, ' ')
-}
-
 function metaForTask(task: DayTask): string {
   const item = resolveRef(task.refId)
   if (item && 'leetcodeNumber' in item) return `LC ${item.leetcodeNumber}`
@@ -45,7 +28,7 @@ function metaForTask(task: DayTask): string {
 }
 
 function taskLabel(task: DayTask): ReactNode {
-  const primary = primaryLabel(task)
+  const primary = labelForTask(task.refId)
   if (!task.note) return primary
   return (
     <span className="flex min-w-0 flex-col gap-0.5">
@@ -83,6 +66,7 @@ function DayRow({ dayId, dayNum, kind, tasks, isCurrent }: DayRowProps) {
             key={completionKey(task)}
             itemId={completionKey(task)}
             label={taskLabel(task)}
+            labelText={labelForTask(task.refId)}
             meta={metaForTask(task)}
           />
         ))}
@@ -103,6 +87,7 @@ interface WeekBlockProps {
 /** Month 1's weeks: expandable into their days, each day's tasks as Checkbox rows. */
 function WeekBlock({ weekId, weekNum, theme, expanded, onToggle, currentDayNum }: WeekBlockProps) {
   const days = content.days.filter((d) => d.weekId === weekId)
+  const panelId = useId()
 
   return (
     <div className="surface-solid flex flex-col gap-2 p-3">
@@ -110,6 +95,7 @@ function WeekBlock({ weekId, weekNum, theme, expanded, onToggle, currentDayNum }
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
+        aria-controls={panelId}
         className="flex min-h-11 w-full flex-col items-start gap-0.5 text-left"
       >
         <span className="text-sm font-semibold">Week {weekNum}</span>
@@ -117,7 +103,7 @@ function WeekBlock({ weekId, weekNum, theme, expanded, onToggle, currentDayNum }
       </button>
 
       {expanded ? (
-        <div className="flex flex-col gap-2">
+        <div id={panelId} className="flex flex-col gap-2">
           {days.map((day) => (
             <DayRow
               key={day.id}
@@ -166,6 +152,7 @@ function WeekTargets({ weekNum, theme, targets }: WeekTargetsProps) {
 export default function RoadmapTimeline() {
   const hydrated = useHydrated()
   const startDate = useProgress((s) => s.startDate)
+  const monthPanelBase = useId()
   const [openMonths, setOpenMonths] = useState<Record<number, boolean>>({})
   const [openWeeks, setOpenWeeks] = useState<Record<string, boolean>>({})
 
@@ -217,11 +204,12 @@ export default function RoadmapTimeline() {
                 />
               ) : null}
 
-              <div className="panel flex flex-col gap-3 p-4">
+              <div className="panel card flex flex-col gap-3 p-4">
                 <button
                   type="button"
                   onClick={() => toggleMonth(n)}
                   aria-expanded={expanded}
+                  aria-controls={`${monthPanelBase}-${n}`}
                   className="flex min-h-11 w-full flex-col items-start gap-1 text-left"
                 >
                   <span className="text-base font-semibold">
@@ -232,7 +220,7 @@ export default function RoadmapTimeline() {
                 </button>
 
                 {expanded ? (
-                  <div className="flex flex-col gap-2">
+                  <div id={`${monthPanelBase}-${n}`} className="flex flex-col gap-2">
                     {n === 1
                       ? weeks.map((w) => (
                           <WeekBlock

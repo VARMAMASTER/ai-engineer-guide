@@ -26,7 +26,7 @@ export default function TopicIndex() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {topics.map((topic) => {
           const questions = content.topicQuestions.filter((q) => q.topicId === topic.id)
           const done = hydrated ? questions.filter((q) => completed[q.id]).length : 0

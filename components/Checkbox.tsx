@@ -7,6 +7,11 @@ import { useHydrated } from '@/lib/progress/useHydrated'
 interface Props {
   itemId: string
   label: ReactNode
+  /**
+   * Plain-text accessible name. Required whenever `label` is a rich node —
+   * without it the input falls back to announcing the raw item id.
+   */
+  labelText?: string
   meta?: ReactNode
 }
 
@@ -16,7 +21,7 @@ interface Props {
  * A completed row dims, desaturates, gains a strikethrough and a check glyph —
  * four signals, so colour is never carrying the state on its own.
  */
-export default function Checkbox({ itemId, label, meta }: Props) {
+export default function Checkbox({ itemId, label, labelText, meta }: Props) {
   const hydrated = useHydrated()
   const stored = useProgress((s) => Boolean(s.completed[itemId]))
   const toggle = useProgress((s) => s.toggle)
@@ -33,7 +38,7 @@ export default function Checkbox({ itemId, label, meta }: Props) {
           type="checkbox"
           checked={hydrated ? stored : false}
           onChange={() => toggle(itemId)}
-          aria-label={typeof label === 'string' ? label : itemId}
+          aria-label={labelText ?? (typeof label === 'string' ? label : itemId)}
           className="peer absolute inset-0 h-full w-full cursor-pointer appearance-none rounded-[6px] border border-[var(--panel-border)] bg-[var(--panel-solid)] transition-colors checked:border-[var(--accent)] checked:bg-[var(--accent)] hover:border-[var(--accent-line)]"
         />
         <svg
@@ -50,7 +55,7 @@ export default function Checkbox({ itemId, label, meta }: Props) {
         </svg>
       </span>
 
-      <span className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
+      <span className="flex min-w-0 flex-1 flex-col gap-1 md:flex-row md:items-baseline md:justify-between md:gap-3">
         <span className="min-w-0 text-sm group-data-[completed=true]:text-[var(--text-muted)] group-data-[completed=true]:line-through">
           {label}
         </span>

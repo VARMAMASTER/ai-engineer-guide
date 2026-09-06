@@ -38,9 +38,7 @@ export default async function SystemDesignPatternPage({
     <div className="flex flex-col gap-8">
       <div>
         <p className="eyebrow">{pattern.group === 'ml' ? 'ML & LLM' : 'General'}</p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-          {pattern.name}
-        </h1>
+        <h1 className="mt-1">{pattern.name}</h1>
       </div>
 
       <section className="panel flex min-w-0 flex-col gap-2 rounded-[var(--radius)] p-4">

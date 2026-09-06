@@ -1,51 +1,68 @@
 'use client'
 
 import Link from 'next/link'
+import Meter from './Meter'
 import { content } from '@/lib/content/index'
 import { slugOf } from '@/lib/content/ids'
 import type { SdPattern } from '@/lib/content/schema'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
 
-function PatternCard({ pattern }: { pattern: SdPattern }) {
-  const hydrated = useHydrated()
-  const completed = useProgress((s) => s.completed)
+interface CardProps {
+  pattern: SdPattern
+  completed: Record<string, string>
+  hydrated: boolean
+}
+
+function PatternCard({ pattern, completed, hydrated }: CardProps) {
   const questions = content.sdQuestions.filter((q) => q.patternId === pattern.id)
   const done = hydrated ? questions.filter((q) => completed[q.id]).length : 0
-  const total = questions.length
 
   return (
     <li>
       <Link
         href={`/system-design/${slugOf(pattern.id)}`}
-        className="card panel flex min-w-0 flex-col gap-3 rounded-[var(--radius)] p-4"
+        className="panel card flex min-w-0 flex-col gap-3 p-4"
       >
-        <span className="min-w-0 truncate text-sm font-medium">{pattern.name}</span>
-        <span className="readout text-[var(--text-muted)]">
-          {done}
-          <span className="text-[var(--text-faint)]">/{total} questions</span>
-        </span>
+        <h2 className="min-w-0 truncate">{pattern.name}</h2>
+        <Meter label="Questions" done={done} target={questions.length} />
       </Link>
     </li>
   )
 }
 
-function PatternGroup({ title, patterns }: { title: string; patterns: SdPattern[] }) {
+interface GroupProps {
+  title: string
+  patterns: SdPattern[]
+  completed: Record<string, string>
+  hydrated: boolean
+}
+
+function PatternGroup({ title, patterns, completed, hydrated }: GroupProps) {
   return (
     <section className="flex flex-col gap-3">
       <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
         {title}
       </h2>
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {patterns.map((p) => (
-          <PatternCard key={p.id} pattern={p} />
+          <PatternCard key={p.id} pattern={p} completed={completed} hydrated={hydrated} />
         ))}
       </ul>
     </section>
   )
 }
 
+/**
+ * The system design landing page: twenty pattern cards in two groups.
+ *
+ * The progress store is read once here rather than per card — twenty cards
+ * meant twenty store subscriptions for one shared slice of state.
+ */
 export default function SdIndex() {
+  const hydrated = useHydrated()
+  const completed = useProgress((s) => s.completed)
+
   const general = content.sdPatterns
     .filter((p) => p.group === 'general')
     .sort((a, b) => a.order - b.order)
@@ -57,12 +74,10 @@ export default function SdIndex() {
     <div className="flex flex-col gap-8">
       <div>
         <p className="eyebrow">System design</p>
-        <h1 className="mt-1 font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight">
-          System Design
-        </h1>
+        <h1 className="mt-1">System Design</h1>
       </div>
-      <PatternGroup title="General" patterns={general} />
-      <PatternGroup title="ML & LLM" patterns={ml} />
+      <PatternGroup title="General" patterns={general} completed={completed} hydrated={hydrated} />
+      <PatternGroup title="ML & LLM" patterns={ml} completed={completed} hydrated={hydrated} />
     </div>
   )
 }

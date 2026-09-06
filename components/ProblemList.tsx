@@ -16,9 +16,10 @@ const COMPANY_LABEL: Record<string, string> = {
 }
 
 /**
- * The problem rows for one pattern page. Below 768px each problem stacks as a
- * card: name and difficulty on the first line, tags/core badge/checkbox on
- * the second. At 768px and up it collapses into a single row. The outer
+ * The problem rows for one pattern page. Below 768px each problem stacks: the
+ * checkbox row (whose label is the problem name, so every checkbox on the page
+ * has its own accessible name) on the first line, difficulty/tags/LeetCode link
+ * on the second. At 768px and up it collapses into a single row. The outer
  * container carries `overflow-x-auto` so a long name never forces the page
  * itself to scroll horizontally.
  */
@@ -29,26 +30,17 @@ export default function ProblemList({ problems }: { problems: DsaProblem[] }) {
         {problems.map((problem) => (
           <li
             key={problem.id}
-            className="panel grid min-w-0 grid-cols-1 gap-2 p-3 md:grid-cols-[18rem_1fr_15rem] md:items-center md:gap-4"
+            className="panel grid min-w-0 grid-cols-1 gap-2 p-3 md:grid-cols-[1fr_auto] md:items-center md:gap-4"
           >
-            <div className="flex min-w-0 items-baseline gap-2">
-              <a
-                href={problem.url}
-                target="_blank"
-                rel="noreferrer"
-                className="min-w-0 truncate text-sm font-medium underline-offset-2 hover:underline"
-              >
-                {problem.name}
-              </a>
+            <Checkbox itemId={problem.id} label={problem.name} />
+
+            <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
               <span
                 className="readout shrink-0 capitalize"
                 style={{ color: DIFFICULTY_COLOR[problem.difficulty] }}
               >
                 {problem.difficulty}
               </span>
-            </div>
-
-            <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
               {problem.companies.map((company) => (
                 <span
                   key={company}
@@ -62,14 +54,17 @@ export default function ProblemList({ problems }: { problems: DsaProblem[] }) {
                   Core
                 </span>
               ) : null}
-            </div>
-
-            <div className="min-w-0 md:justify-self-end">
-              <Checkbox
-                itemId={problem.id}
-                label="Solved"
-                meta={`LC ${problem.leetcodeNumber} · ${problem.minutes}m`}
-              />
+              <span className="readout shrink-0 text-[var(--text-muted)]">
+                <a
+                  href={problem.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline-offset-2 hover:text-[var(--accent)] hover:underline"
+                >
+                  LC {problem.leetcodeNumber}
+                </a>
+                <span className="text-[var(--text-faint)]"> · {problem.minutes}m</span>
+              </span>
             </div>
           </li>
         ))}

@@ -198,7 +198,14 @@
   --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
   --radius-token: var(--radius);
+  /*
+   * One breakpoint, enforced. `sm` and `lg` are cleared so `sm:`/`lg:` variants
+   * simply do not exist — a stray one is a build-visible dead class rather than
+   * a fourth silent responsive ladder.
+   */
+  --breakpoint-sm: initial;
   --breakpoint-md: 48rem; /* 768px — the one breakpoint in the system */
+  --breakpoint-lg: initial;
 }
 
 /* ===== base ============================================================== */

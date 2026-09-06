@@ -49,7 +49,7 @@ export default function DsaIndex() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold">DSA Patterns</h1>
+        <h1>DSA Patterns</h1>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
           NeetCode 150, grouped into 18 patterns. Work through the core set first, then layer in
           the company-tagged problems.
@@ -70,7 +70,7 @@ export default function DsaIndex() {
             type="button"
             onClick={() => setFilter(f.id)}
             aria-pressed={filter === f.id}
-            className="rounded-full border px-3 py-1.5 text-sm transition-colors"
+            className="flex min-h-11 items-center rounded-full border px-4 text-sm transition-colors"
             style={{
               borderColor: filter === f.id ? 'var(--accent-line)' : 'var(--panel-border)',
               backgroundColor: filter === f.id ? 'var(--accent-soft)' : 'transparent',
@@ -86,7 +86,7 @@ export default function DsaIndex() {
         {filteredTotal} problems
       </p>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {patterns.map((pattern) => {
           const patternProblems = content.dsaProblems.filter((p) => p.patternId === pattern.id)
           const shown = patternProblems.filter((p) => matchesFilter(p, filter))
@@ -101,7 +101,7 @@ export default function DsaIndex() {
               href={`/dsa/${slugOf(pattern.id)}`}
               className="panel card flex min-w-0 flex-col gap-3 p-4"
             >
-              <h2 className="text-base font-semibold">{pattern.name}</h2>
+              <h2>{pattern.name}</h2>
               <p className="text-sm text-[var(--text-muted)]">
                 <span className="readout text-[var(--text)]">{shown.length}</span> problems ·{' '}
                 <span className="readout text-[var(--text)]">{coreCount}</span> core

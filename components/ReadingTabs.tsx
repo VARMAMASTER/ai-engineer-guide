@@ -66,6 +66,7 @@ export default function ReadingTabs() {
                     <Checkbox
                       itemId={r.id}
                       meta={`${r.minutes} min`}
+                      labelText={`${KIND_LABEL[r.kind]}: ${r.title}`}
                       label={
                         <span className="flex min-w-0 flex-col gap-1">
                           <span className="flex flex-wrap items-center gap-2">
@@ -130,7 +131,7 @@ function TabButton({
       aria-controls={controls}
       aria-selected={active}
       onClick={onClick}
-      className={`rounded-[var(--radius-sm)] px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`flex min-h-11 items-center rounded-[var(--radius-sm)] px-3 text-sm font-medium transition-colors ${
         active
           ? 'bg-[var(--accent-soft)] text-[var(--accent)]'
           : 'text-[var(--text-muted)] hover:text-[var(--text)]'

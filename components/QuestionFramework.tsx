@@ -48,7 +48,7 @@ export default function QuestionFramework({ question }: Props) {
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-left"
+        className="flex min-h-11 min-w-0 flex-wrap items-center gap-x-3 gap-y-1.5 text-left"
       >
         <span
           aria-hidden="true"

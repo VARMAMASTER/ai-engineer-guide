@@ -12,7 +12,7 @@ import {
   tasksForDay,
 } from '@/lib/progress/selectors'
 import type { Track } from '@/lib/progress/selectors'
-import { resolveRef, completionKey, content } from '@/lib/content/index'
+import { labelForTask, completionKey, content } from '@/lib/content/index'
 import type { DayTask } from '@/lib/content/schema'
 import { addDays, todayIso } from '@/lib/date'
 import Checkbox from './Checkbox'
@@ -31,23 +31,6 @@ const TRACK_LABELS: Record<Track, string> = {
   reading: 'Reading',
   build: 'Build',
   review: 'Review',
-}
-
-function labelFor(refId: string): string {
-  const item = resolveRef(refId)
-  if (!item) {
-    const fixed: Record<string, string> = {
-      'review-week': 'Weekly review',
-      'review-mock': 'Self-run mock loop',
-      'review-retro': 'Month retrospective',
-      'review-publish': 'Publish the project write-up',
-    }
-    return fixed[refId] ?? refId
-  }
-  if ('name' in item && typeof item.name === 'string') return item.name
-  if ('title' in item && typeof item.title === 'string') return item.title
-  if ('text' in item && typeof item.text === 'string') return item.text
-  return item.id
 }
 
 function groupByTrack(tasks: DayTask[]): Array<[Track, DayTask[]]> {
@@ -121,6 +104,16 @@ export default function TodayTasks() {
     ? Math.round(logged * 10) / 10
     : Math.round((progress.completedTotal / 60) * 10) / 10
 
+  // The week's planned minutes split by track. One aggregate bar cannot say
+  // which track fell behind, which is the only question this section is asked.
+  // Minutes, not hours: the plan is authored in minutes, and a track worth a
+  // quarter of an hour reads as "0/15", not "0/0.2".
+  const trackMeters = TRACK_ORDER.filter((t) => progress.planned[t] > 0).map((track) => ({
+    track,
+    done: progress.completed[track],
+    target: progress.planned[track],
+  }))
+
   const month1 = month1Checks(completed)
   const inMonth1 = day <= MONTH1_LAST_DAY
   const dayTasks = inMonth1 ? tasksForDay(day) : []
@@ -151,11 +144,12 @@ export default function TodayTasks() {
                 <h2 className="eyebrow px-2 pb-1">{TRACK_LABELS[track]}</h2>
                 {tasks.map((task) => {
                   const id = completionKey(task)
-                  const label = labelFor(task.refId)
+                  const label = labelForTask(task.refId)
                   return (
                     <Checkbox
                       key={id}
                       itemId={id}
+                      labelText={label}
                       label={
                         <span className="flex flex-col">
                           <span>{label}</span>
@@ -191,11 +185,27 @@ export default function TodayTasks() {
       <section className="panel flex flex-col gap-4 p-4">
         <h2>Streak and hours</h2>
         <Meter label="Weekly hours" done={hoursDone} target={WEEKLY_HOURS_TARGET} />
+
+        {trackMeters.length > 0 ? (
+          <>
+            <h3 className="eyebrow">This week by track · minutes</h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {trackMeters.map(({ track, done, target }) => (
+                <Meter key={track} label={TRACK_LABELS[track]} done={done} target={target} />
+              ))}
+              <Meter
+                label="All tracks"
+                done={progress.completedTotal}
+                target={progress.plannedTotal}
+              />
+            </div>
+          </>
+        ) : null}
       </section>
 
       <section className="panel flex flex-col gap-4 p-4">
         <h2>Month 1 checks</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Meter label="Problems solved" done={month1.problems.done} target={month1.problems.target} />
           <Meter label="Patterns covered" done={month1.patterns.done} target={month1.patterns.target} />
           <Meter

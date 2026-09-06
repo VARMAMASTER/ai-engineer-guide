@@ -81,7 +81,7 @@ export default function TopBar() {
             className="readout flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--panel-border)] px-2.5 py-1 text-[var(--text-muted)]"
             title="Consecutive days with at least one completed item"
           >
-            <span className="hidden sm:inline">STREAK</span>
+            <span className="hidden md:inline">STREAK</span>
             <span className={days > 0 ? 'text-[var(--accent)]' : 'text-[var(--text-faint)]'}>
               {pad(days, 2)}d
             </span>

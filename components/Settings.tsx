@@ -71,7 +71,7 @@ export default function Settings() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-[var(--text)]">Settings</h1>
+        <h1>Settings</h1>
         <p className="text-sm text-[var(--text-muted)]">
           Manage your start date and your progress data.
         </p>
