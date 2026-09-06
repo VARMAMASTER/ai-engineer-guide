@@ -71,7 +71,7 @@ export interface Month1Checks {
 
 export function month1Checks(completed: Completed): Month1Checks {
   const month1Tasks = content.days.filter((d) => d.number <= 28).flatMap((d) => d.tasks)
-  const scheduled = new Set(month1Tasks.map((t) => t.refId))
+  const scheduled = new Set(month1Tasks.map((t) => completionKey(t)))
 
   const countScheduled = (pred: (id: string) => boolean) =>
     Object.keys(completed).filter((id) => scheduled.has(id) && pred(id)).length

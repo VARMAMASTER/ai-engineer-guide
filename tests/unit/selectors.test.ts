@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { dayNumber, weekNumber, streak, weekProgress, month1Checks } from '@/lib/progress/selectors'
+import { content, completionKey } from '@/lib/content/index'
 
 describe('dayNumber', () => {
   it('is 1 on the start date', () => {
@@ -44,6 +45,10 @@ describe('streak', () => {
     const completed = { a: '2026-09-10', b: '2026-09-10', c: '2026-09-10' }
     expect(streak(completed, '2026-09-10')).toBe(1)
   })
+  it('is 0 when the only completion is dated in the future', () => {
+    const completed = { a: '2026-09-11' }
+    expect(streak(completed, '2026-09-10')).toBe(0)
+  })
 })
 
 describe('weekProgress', () => {
@@ -59,6 +64,33 @@ describe('weekProgress', () => {
     const r = weekProgress(1, { 'dsa-217-contains-duplicate': '2026-09-07' })
     expect(r.completed.dsa).toBe(30)
     expect(r.completedTotal).toBe(30)
+  })
+
+  it('keeps the two duplicate-scheduled topic-transformers occurrences independent by completionKey', () => {
+    // topic-transformers is scheduled twice: week 2 Thursday (day-11) and week 3
+    // Tuesday (day-16). Each carries a distinct taskId so they must track separately.
+    const day11Task = content.days
+      .find((d) => d.number === 11)!
+      .tasks.find((t) => t.refId === 'topic-transformers')!
+    const day16Task = content.days
+      .find((d) => d.number === 16)!
+      .tasks.find((t) => t.refId === 'topic-transformers')!
+    expect(day11Task.taskId).toBe('day-11-study-ml')
+    expect(day16Task.taskId).toBe('day-16-study-ml')
+
+    const onlyWeek2Done = { [completionKey(day11Task)]: '2026-09-07' }
+    const week2FromWeek2 = weekProgress(2, onlyWeek2Done)
+    const week3FromWeek2 = weekProgress(3, onlyWeek2Done)
+    expect(week2FromWeek2.completed['study-ml']).toBe(day11Task.minutes)
+    expect(week3FromWeek2.completed['study-ml']).toBe(0)
+    expect(week2FromWeek2.completed['study-ml']).not.toBe(week3FromWeek2.completed['study-ml'])
+
+    const onlyWeek3Done = { [completionKey(day16Task)]: '2026-09-13' }
+    const week2FromWeek3 = weekProgress(2, onlyWeek3Done)
+    const week3FromWeek3 = weekProgress(3, onlyWeek3Done)
+    expect(week2FromWeek3.completed['study-ml']).toBe(0)
+    expect(week3FromWeek3.completed['study-ml']).toBe(day16Task.minutes)
+    expect(week2FromWeek3.completed['study-ml']).not.toBe(week3FromWeek3.completed['study-ml'])
   })
 })
 
