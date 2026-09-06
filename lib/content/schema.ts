@@ -182,6 +182,19 @@ export const docSchema = z.object({
   order: z.number().int().min(1).max(7),
 })
 
+// Authored, not generated (spec 6.10). A structured object rather than a paragraph, because a
+// reader clicking a paper at 11pm wants to extract it, not read an essay. `result` and `limits`
+// carry minimums because those two fields are where a summary either earns its place or turns
+// into marketing.
+export const readingSummarySchema = z.object({
+  problem: z.string().min(1),
+  idea: z.string().min(1),
+  how: z.string().min(1),
+  result: z.string().min(40),
+  soWhat: z.string().min(1),
+  limits: z.string().min(40),
+})
+
 export const readingSchema = z.object({
   id: z.string().regex(/^read-[a-z0-9-]+$/),
   weekId: z.string().regex(/^week-\d{2}$/),
@@ -192,6 +205,11 @@ export const readingSchema = z.object({
   url: z.string().url(),
   why: z.string().min(1),
   minutes: z.number().int().positive(),
+  summary: readingSummarySchema,
+  // Optional Mermaid `flowchart` source showing the method's mechanism. Present only where a
+  // picture beats the prose: pipeline, architecture and training-method papers. Absent for
+  // posts, API launches, and papers whose contribution is a finding rather than a mechanism.
+  diagram: z.string().min(1).optional(),
 })
 
 export const weekSchema = z.object({
@@ -234,6 +252,7 @@ export type TopicQuestion = z.infer<typeof topicQuestionSchema>
 export type Project = z.infer<typeof projectSchema>
 export type Milestone = z.infer<typeof milestoneSchema>
 export type Doc = z.infer<typeof docSchema>
+export type ReadingSummary = z.infer<typeof readingSummarySchema>
 export type Reading = z.infer<typeof readingSchema>
 export type Week = z.infer<typeof weekSchema>
 export type Day = z.infer<typeof daySchema>
