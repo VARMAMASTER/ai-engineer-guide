@@ -25,9 +25,24 @@ const TERMS = ['LLM', 'OpenAI', 'Anthropic', 'AI agents', 'language model', 'tra
 
 const MAX_ITEMS = 40
 
+// Matches the route's `revalidate: 21600` / `Cache-Control: s-maxage=21600`
+// (6 hours). `next.revalidate` caches a fetch() by URL, so a `now`-derived
+// timestamp that changes every second (e.g. `Date.now()` used directly)
+// makes every request build a unique URL and the cache never hits. Flooring
+// to this bucket keeps the URL — and therefore the cache key — identical
+// for every request within the same 6-hour window. Shifting the 7-day
+// recency boundary by up to one bucket is irrelevant against a 7-day span.
+const CACHE_BUCKET_SECONDS = 21600
+
+/** Floor `now` down to the start of its current `CACHE_BUCKET_SECONDS` window. */
+function cacheBucketStart(now: Date): number {
+  const nowSeconds = Math.floor(now.getTime() / 1000)
+  return Math.floor(nowSeconds / CACHE_BUCKET_SECONDS) * CACHE_BUCKET_SECONDS
+}
+
 /** Build one Algolia search URL per term in {@link TERMS}, same filters on each. */
 export function hnUrls(now: Date): string[] {
-  const weekAgo = Math.floor(now.getTime() / 1000) - 7 * 86_400
+  const weekAgo = cacheBucketStart(now) - 7 * 86_400
   return TERMS.map((term) => {
     const query = encodeURIComponent(term)
     return `https://hn.algolia.com/api/v1/search_by_date?query=${query}&tags=story` +

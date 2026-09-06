@@ -79,6 +79,28 @@ describe('hnUrls', () => {
     // RAG was dropped as pure noise (see hn.ts comment) — must not silently reappear.
     expect(urls.some((u) => /query=RAG(&|$)/.test(u))).toBe(false)
   })
+
+  it('produces an identical URL set for two calls within the same 6-hour cache bucket', () => {
+    // Next's Data Cache keys a fetch() by URL. If the recency timestamp
+    // embedded in the URL changes on every call, the cache key is unique
+    // per request and the cache never hits. Two calls a few seconds apart,
+    // both inside the same bucket, must build byte-identical URLs.
+    const first = hnUrls(new Date('2026-09-06T03:00:00Z'))
+    const secondsLater = hnUrls(new Date('2026-09-06T03:00:07Z'))
+    expect(secondsLater).toEqual(first)
+
+    const otherEdgeOfBucket = hnUrls(new Date('2026-09-06T05:59:59Z'))
+    expect(otherEdgeOfBucket).toEqual(first)
+  })
+
+  it('produces a different URL set once the call crosses into the next cache bucket', () => {
+    // Guards against a regression where the bucketing collapses to a
+    // hardcoded constant that ignores `now` entirely (which would also
+    // pass the "identical within a bucket" test above).
+    const first = hnUrls(new Date('2026-09-06T03:00:00Z'))
+    const nextBucket = hnUrls(new Date('2026-09-06T06:00:00Z'))
+    expect(nextBucket).not.toEqual(first)
+  })
 })
 
 describe('mergeHnPayloads', () => {
