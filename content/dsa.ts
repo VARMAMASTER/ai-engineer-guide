@@ -432,7 +432,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/contains-duplicate/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -443,7 +443,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/valid-anagram/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -454,7 +454,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/two-sum/',
     difficulty: 'easy',
     core: true,
-    companies: ['amazon'],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -465,7 +465,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/group-anagrams/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -476,7 +476,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/top-k-frequent-elements/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -487,7 +487,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/encode-and-decode-strings/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -498,7 +498,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/product-of-array-except-self/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -520,7 +520,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-consecutive-sequence/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
 
@@ -533,7 +533,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/valid-palindrome/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 20,
   },
   {
@@ -544,7 +544,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -555,7 +555,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/3sum/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -566,7 +566,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/container-with-most-water/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -577,7 +577,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/trapping-rain-water/',
     difficulty: 'hard',
     core: false,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 45,
   },
 
@@ -590,7 +590,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/best-time-to-buy-and-sell-stock/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -601,7 +601,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-substring-without-repeating-characters/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -612,7 +612,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-repeating-character-replacement/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -623,7 +623,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/permutation-in-string/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -634,7 +634,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/minimum-window-substring/',
     difficulty: 'hard',
     core: true,
-    companies: ['amazon'],
+    companies: ['meta', 'amazon'],
     minutes: 45,
   },
   {
@@ -645,7 +645,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/sliding-window-maximum/',
     difficulty: 'hard',
     core: false,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 45,
   },
 
@@ -658,7 +658,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/valid-parentheses/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -669,7 +669,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/min-stack/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -691,7 +691,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/generate-parentheses/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -724,7 +724,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/largest-rectangle-in-histogram/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
 
@@ -737,7 +737,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/binary-search/',
     difficulty: 'easy',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 20,
   },
   {
@@ -748,7 +748,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/search-a-2d-matrix/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -759,7 +759,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/koko-eating-bananas/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -781,7 +781,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/search-in-rotated-sorted-array/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google', 'meta'],
     minutes: 30,
   },
   {
@@ -792,7 +792,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/time-based-key-value-store/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -803,7 +803,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/median-of-two-sorted-arrays/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
 
@@ -816,7 +816,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/reverse-linked-list/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 20,
   },
   {
@@ -827,7 +827,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/merge-two-sorted-lists/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 20,
   },
   {
@@ -838,7 +838,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/reorder-list/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -860,7 +860,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/copy-list-with-random-pointer/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -882,7 +882,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/linked-list-cycle/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 20,
   },
   {
@@ -915,7 +915,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/merge-k-sorted-lists/',
     difficulty: 'hard',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
   {
@@ -926,7 +926,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/reverse-nodes-in-k-group/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
 
@@ -939,7 +939,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/invert-binary-tree/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -950,7 +950,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/maximum-depth-of-binary-tree/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -961,7 +961,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/diameter-of-binary-tree/',
     difficulty: 'easy',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 20,
   },
   {
@@ -983,7 +983,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/same-tree/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 20,
   },
   {
@@ -994,7 +994,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/subtree-of-another-tree/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 20,
   },
   {
@@ -1016,7 +1016,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/binary-tree-level-order-traversal/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -1027,7 +1027,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/binary-tree-right-side-view/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -1049,7 +1049,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/validate-binary-search-tree/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google', 'amazon'],
     minutes: 30,
   },
   {
@@ -1060,7 +1060,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/kth-smallest-element-in-a-bst/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1071,7 +1071,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1082,7 +1082,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/binary-tree-maximum-path-sum/',
     difficulty: 'hard',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
   {
@@ -1093,7 +1093,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/serialize-and-deserialize-binary-tree/',
     difficulty: 'hard',
     core: true,
-    companies: ['google', 'amazon'],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 45,
   },
 
@@ -1128,7 +1128,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/k-closest-points-to-origin/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1139,7 +1139,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/kth-largest-element-in-an-array/',
     difficulty: 'medium',
     core: false,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 30,
   },
   {
@@ -1161,7 +1161,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/design-twitter/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -1172,7 +1172,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/find-median-from-data-stream/',
     difficulty: 'hard',
     core: true,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 45,
   },
 
@@ -1196,7 +1196,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/combination-sum/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1218,7 +1218,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/permutations/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google', 'meta'],
     minutes: 30,
   },
   {
@@ -1240,7 +1240,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/word-search/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google', 'meta'],
     minutes: 30,
   },
   {
@@ -1262,7 +1262,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/letter-combinations-of-a-phone-number/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -1273,7 +1273,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/n-queens/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
 
@@ -1308,7 +1308,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/word-search-ii/',
     difficulty: 'hard',
     core: true,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 45,
   },
 
@@ -1332,7 +1332,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/max-area-of-island/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1343,7 +1343,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/clone-graph/',
     difficulty: 'medium',
     core: true,
-    companies: ['meta', 'amazon'],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -1354,7 +1354,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/walls-and-gates/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1376,7 +1376,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/pacific-atlantic-water-flow/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1409,7 +1409,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/course-schedule-ii/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1420,7 +1420,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/graph-valid-tree/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1431,7 +1431,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1442,7 +1442,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/redundant-connection/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1466,7 +1466,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/reconstruct-itinerary/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
   {
@@ -1477,7 +1477,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/min-cost-to-connect-all-points/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1488,7 +1488,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/network-delay-time/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1499,7 +1499,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/swim-in-rising-water/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
   {
@@ -1521,7 +1521,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/cheapest-flights-within-k-stops/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
 
@@ -1534,7 +1534,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/climbing-stairs/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 20,
   },
   {
@@ -1556,7 +1556,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/house-robber/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1578,7 +1578,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-palindromic-substring/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google', 'meta'],
     minutes: 30,
   },
   {
@@ -1600,7 +1600,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/decode-ways/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 30,
   },
   {
@@ -1633,7 +1633,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/word-break/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google', 'meta'],
     minutes: 30,
   },
   {
@@ -1644,7 +1644,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-increasing-subsequence/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 30,
   },
   {
@@ -1668,7 +1668,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/unique-paths/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1679,7 +1679,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-common-subsequence/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -1734,7 +1734,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/longest-increasing-path-in-a-matrix/',
     difficulty: 'hard',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 45,
   },
   {
@@ -1756,7 +1756,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/edit-distance/',
     difficulty: 'medium',
     core: false,
-    companies: ['amazon'],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -1767,7 +1767,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/burst-balloons/',
     difficulty: 'hard',
     core: false,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 45,
   },
   {
@@ -1778,7 +1778,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/regular-expression-matching/',
     difficulty: 'hard',
     core: false,
-    companies: ['amazon'],
+    companies: ['google', 'amazon'],
     minutes: 45,
   },
 
@@ -1791,7 +1791,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/maximum-subarray/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['google', 'meta'],
     minutes: 30,
   },
   {
@@ -1824,7 +1824,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/gas-station/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1857,7 +1857,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/partition-labels/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -1881,7 +1881,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/insert-interval/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1892,7 +1892,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/merge-intervals/',
     difficulty: 'medium',
     core: true,
-    companies: ['amazon'],
+    companies: ['google', 'meta', 'amazon'],
     minutes: 30,
   },
   {
@@ -1903,7 +1903,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/non-overlapping-intervals/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1914,7 +1914,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/meeting-rooms/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['meta', 'amazon'],
     minutes: 20,
   },
   {
@@ -1925,7 +1925,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/meeting-rooms-ii/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 30,
   },
   {
@@ -1949,7 +1949,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/rotate-image/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -1960,7 +1960,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/spiral-matrix/',
     difficulty: 'medium',
     core: true,
-    companies: [],
+    companies: ['meta'],
     minutes: 30,
   },
   {
@@ -1993,7 +1993,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/plus-one/',
     difficulty: 'easy',
     core: false,
-    companies: [],
+    companies: ['amazon'],
     minutes: 20,
   },
   {
@@ -2004,7 +2004,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/powx-n/',
     difficulty: 'medium',
     core: false,
-    companies: [],
+    companies: ['google'],
     minutes: 30,
   },
   {
@@ -2039,7 +2039,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/single-number/',
     difficulty: 'easy',
     core: false,
-    companies: [],
+    companies: ['meta'],
     minutes: 20,
   },
   {
@@ -2050,7 +2050,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/number-of-1-bits/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['google'],
     minutes: 20,
   },
   {
@@ -2083,7 +2083,7 @@ export const dsaProblems: DsaProblem[] = [
     url: 'https://leetcode.com/problems/missing-number/',
     difficulty: 'easy',
     core: true,
-    companies: [],
+    companies: ['amazon'],
     minutes: 20,
   },
   {
