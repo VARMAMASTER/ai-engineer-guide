@@ -2,10 +2,16 @@ import { describe, it, expect } from 'vitest'
 import { NAV_ITEMS } from '@/lib/nav'
 
 describe('nav', () => {
-  it('has the eight sections', () => {
+  it('has the ten sections in rail order', () => {
     expect(NAV_ITEMS.map((i) => i.href)).toEqual([
-      '/today', '/roadmap', '/dsa', '/system-design', '/projects', '/ai-ml', '/reading', '/settings',
+      '/today', '/roadmap', '/dsa', '/system-design', '/projects',
+      '/lld', '/ai-ml', '/reading', '/revise', '/settings',
     ])
+  })
+
+  it('gives every section a unique href', () => {
+    const hrefs = NAV_ITEMS.map((i) => i.href)
+    expect(new Set(hrefs).size).toBe(hrefs.length)
   })
 
   it('marks exactly five as primary for the mobile tab bar', () => {
