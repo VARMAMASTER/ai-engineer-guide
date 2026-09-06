@@ -62,3 +62,55 @@ describe('readings bank', () => {
     }
   })
 })
+
+describe('reading summaries', () => {
+  it('gives all 49 readings a summary with all six fields filled', () => {
+    expect(readings).toHaveLength(49)
+    const fields = ['problem', 'idea', 'how', 'result', 'soWhat', 'limits'] as const
+    for (const r of readings) {
+      expect(r.summary, r.id).toBeDefined()
+      for (const f of fields) {
+        expect(r.summary[f].trim().length, `${r.id}.${f}`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('keeps `idea` to a single sentence', () => {
+    // The one-insight test. If it takes three sentences, the summary has not found the insight.
+    for (const r of readings) {
+      const breaks = r.summary.idea.match(/\. /g) ?? []
+      expect(breaks.length, `${r.id}: "${r.summary.idea}"`).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('makes `result` and `limits` substantive rather than a shrug', () => {
+    for (const r of readings) {
+      expect(r.summary.result.length, `${r.id}.result`).toBeGreaterThan(40)
+      expect(r.summary.limits.length, `${r.id}.limits`).toBeGreaterThan(40)
+    }
+  })
+
+  it('names the month, week, or milestone the reading feeds in `soWhat`', () => {
+    for (const r of readings) {
+      expect(r.summary.soWhat.length, `${r.id}.soWhat`).toBeGreaterThan(40)
+    }
+  })
+
+  it('makes every diagram parseable Mermaid flowchart source', () => {
+    for (const r of readings) {
+      if (r.diagram === undefined) continue
+      expect(r.diagram.startsWith('flowchart'), r.id).toBe(true)
+      expect(r.diagram.includes('-->'), r.id).toBe(true)
+      // Styling directives and click handlers do not survive a plain renderer or both themes.
+      expect(r.diagram.includes('classDef'), r.id).toBe(false)
+      expect(r.diagram.includes('click '), r.id).toBe(false)
+    }
+  })
+
+  it('diagrams the mechanism papers, not just a token few', () => {
+    const withDiagram = readings.filter((r) => r.diagram !== undefined)
+    expect(withDiagram.length).toBeGreaterThanOrEqual(12)
+    // Posts and API launches contribute a title in a box, not a mechanism.
+    for (const r of withDiagram) expect(r.kind, r.id).toBe('paper')
+  })
+})
