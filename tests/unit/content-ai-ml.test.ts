@@ -31,6 +31,28 @@ describe('ai/ml bank', () => {
     }
   })
 
+  it('gives every question a non-empty answer and key point', () => {
+    expect(topicQuestions.length).toBe(122)
+    for (const q of topicQuestions) {
+      expect(q.answer.trim().length, `${q.id} answer`).toBeGreaterThan(0)
+      expect(q.keyPoint.trim().length, `${q.id} keyPoint`).toBeGreaterThan(0)
+    }
+  })
+
+  it('writes answers long enough to be a real answer', () => {
+    for (const q of topicQuestions) {
+      expect(q.answer.length, `${q.id} answer length`).toBeGreaterThan(120)
+    }
+  })
+
+  it('writes a key point that adds something the answer did not say', () => {
+    for (const q of topicQuestions) {
+      expect(q.keyPoint.length, `${q.id} keyPoint length`).toBeGreaterThan(40)
+      expect(q.answer.includes(q.keyPoint), `${q.id} keyPoint restates answer`).toBe(false)
+      expect(q.answer.startsWith(q.keyPoint), `${q.id} keyPoint prefixes answer`).toBe(false)
+    }
+  })
+
   it('passes schema validation', () => {
     const c = {
       dsaPatterns: [], dsaProblems: [], sdPatterns: [], sdQuestions: [],

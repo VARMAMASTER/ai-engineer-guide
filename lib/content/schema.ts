@@ -62,6 +62,8 @@ export const topicQuestionSchema = z.object({
   id: z.string().regex(/^q-[a-z0-9-]+$/),
   topicId: z.string().regex(/^topic-[a-z0-9-]+$/),
   text: z.string().min(1),
+  answer: z.string().min(1),
+  keyPoint: z.string().min(1),
   minutes: z.number().int().positive(),
 })
 
