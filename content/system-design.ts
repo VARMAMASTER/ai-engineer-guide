@@ -278,8 +278,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the failure mode if the gateway fleet itself goes down, and how do you avoid a single point of failure?',
       ],
       wrapup: [
-        'Restate which cross-cutting concern was hardest to centralize and why.',
-        'Name the one component you would split out first if the gateway became a bottleneck.',
+        'What single number (added latency, error rate) would tell you the gateway itself, not the backends, is the bottleneck?',
+        'What would you tell the interviewer you deliberately left out of scope for a first version?',
       ],
     },
   },
@@ -314,8 +314,8 @@ export const sdQuestions: SdQuestion[] = [
         'What happens to analytics counting if the redirect service restarts mid-request?',
       ],
       wrapup: [
-        'Restate the code-generation strategy and the one property it trades away.',
-        'Name the bottleneck at 100x current traffic and what changes first.',
+        'What assumption about the read:write ratio would you test first before committing to this cache strategy?',
+        'What part of this design would you cut if you had one day to ship a working version?',
       ],
     },
   },
@@ -390,8 +390,8 @@ export const sdQuestions: SdQuestion[] = [
         'How do you resize capacity in production without a full flush?',
       ],
       wrapup: [
-        'Restate the eviction policy choice and the workload assumption it depends on.',
-        'Name the first sign in production that this cache is too small.',
+        'What metric would most quickly tell you the eviction policy is wrong for the real workload?',
+        'What would you tell the interviewer you deliberately skipped to keep this design simple?',
       ],
     },
   },
@@ -502,8 +502,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the operational runbook when a replica falls significantly behind?',
       ],
       wrapup: [
-        'Restate the consistency model chosen and what a client must handle because of it.',
-        'Name the first scaling limit you would hit and what you would change.',
+        'What number of replicas would you pick as a starting default, and what would make you change it?',
+        'What assumption about write patterns would you test first before trusting this partitioning scheme?',
       ],
     },
   },
@@ -614,8 +614,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback if blob storage is briefly unavailable for a read?',
       ],
       wrapup: [
-        'Restate the storage split between metadata and content and why.',
-        'Name the bottleneck at 100x paste volume and what changes first.',
+        'What would you tell the interviewer you deliberately skipped: access control, abuse detection, or something else?',
+        'What part of this design would you cut first under a one-day deadline?',
       ],
     },
   },
@@ -726,8 +726,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the reconciliation and alerting process for a ledger imbalance discovered after the fact?',
       ],
       wrapup: [
-        'Restate the consistency model chosen for balance and why it was worth the cost.',
-        'Name the first thing an auditor would ask you to prove about this design.',
+        'What single test would convince you the ledger and the cached balance can never silently disagree?',
+        'What assumption about transaction volume would you test first before trusting this design at scale?',
       ],
     },
   },
@@ -803,6 +803,42 @@ export const sdQuestions: SdQuestion[] = [
       ],
     },
   },
+  {
+    id: 'sdq-distributed-lock-service',
+    patternId: 'sdp-consistency-tradeoffs',
+    title: 'Design a distributed lock service',
+    tier: 2,
+    companies: ['amazon', 'google'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What must the lock protect: a critical section across multiple processes, or leader election?',
+        'What happens if the lock holder crashes without releasing: does the lock expire, and how fast?',
+        'Is it acceptable for two clients to briefly believe they both hold the lock during a network partition?',
+      ],
+      data: [
+        'What state does a lock record need: owner, fencing token, and expiry?',
+        'Where does lock state live so a majority of nodes must agree it changed?',
+      ],
+      architecture: [
+        'Walk through acquiring, holding, and releasing a lock, including what a fencing token protects against.',
+        'How does lease expiry work if a holder crashes without releasing?',
+        'How would you achieve consensus on lock ownership across replicas: quorum writes, or a consensus protocol?',
+      ],
+      evaluate: [
+        'How would you test that a crashed holder\'s lock is correctly reclaimed within the expected time?',
+        'What would you measure to catch a split-brain scenario where two clients both act as if they hold the lock?',
+      ],
+      deploy: [
+        'How do you handle clock skew between nodes affecting lease expiry?',
+        'What is the operational response when the lock service itself becomes unavailable?',
+      ],
+      wrapup: [
+        'What assumption about clock synchronization would you test first before trusting this design in production?',
+        'What part of this design would you cut if you had to ship a working version in a day?',
+      ],
+    },
+  },
 
   // ---------------------------------------------------------------------
   // sdp-message-queues
@@ -838,8 +874,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback channel if the primary channel provider is down?',
       ],
       wrapup: [
-        'Restate the ordering and delivery guarantee chosen and what a consumer must handle because of it.',
-        'Name the bottleneck at 10x notification volume and what changes first.',
+        'What would you tell the interviewer you deliberately skipped: read receipts, per-channel guarantees, or something else?',
+        'What number of retries before giving up would you pick, and why that number specifically?',
       ],
     },
   },
@@ -991,43 +1027,6 @@ export const sdQuestions: SdQuestion[] = [
       ],
     },
   },
-  {
-    id: 'sdq-distributed-lock-service',
-    patternId: 'sdp-rate-limiting',
-    title: 'Design a distributed lock service',
-    tier: 2,
-    companies: ['amazon', 'google'],
-    minutes: 60,
-    steps: {
-      define: [
-        'What must the lock protect: a critical section across multiple processes, or leader election?',
-        'What happens if the lock holder crashes without releasing: does the lock expire, and how fast?',
-        'Is it acceptable for two clients to briefly believe they both hold the lock during a network partition?',
-      ],
-      data: [
-        'What state does a lock record need: owner, fencing token, and expiry?',
-        'Where does lock state live so a majority of nodes must agree it changed?',
-      ],
-      architecture: [
-        'Walk through acquiring, holding, and releasing a lock, including what a fencing token protects against.',
-        'How does lease expiry work if a holder crashes without releasing?',
-        'How would you achieve consensus on lock ownership across replicas: quorum writes, or a consensus protocol?',
-      ],
-      evaluate: [
-        'How would you test that a crashed holder\'s lock is correctly reclaimed within the expected time?',
-        'What would you measure to catch a split-brain scenario where two clients both act as if they hold the lock?',
-      ],
-      deploy: [
-        'How do you handle clock skew between nodes affecting lease expiry?',
-        'What is the operational response when the lock service itself becomes unavailable?',
-      ],
-      wrapup: [
-        'Restate the fencing mechanism chosen and what it protects against.',
-        'Name the first failure mode you would drill for in a game day.',
-      ],
-    },
-  },
-
   // ---------------------------------------------------------------------
   // sdp-cdn-object-storage
   // ---------------------------------------------------------------------
@@ -1062,8 +1061,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback if the CDN edge is cold for a newly viral video?',
       ],
       wrapup: [
-        'Restate the transcode-and-cache strategy and the delay it trades for playback quality.',
-        'Name the first bottleneck at 100x concurrent viewers on one video.',
+        'What part of this design would you cut first if you had to launch in one week?',
+        'What assumption about upload volume would you test first before committing to this transcoding pipeline?',
       ],
     },
   },
@@ -1174,8 +1173,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback if the metrics pipeline itself is degraded during an incident?',
       ],
       wrapup: [
-        'Restate the retention and downsampling strategy and what precision it trades away over time.',
-        'Name the first cardinality problem you would hit and how you would contain it.',
+        'What single number (ingestion rate, cardinality) would tell you this design is about to fall over?',
+        'What would you tell the interviewer you deliberately left for a version two of this system?',
       ],
     },
   },
@@ -1286,8 +1285,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the reconciliation process when payment and order state disagree after an incident?',
       ],
       wrapup: [
-        'Restate the idempotency mechanism chosen and what failure mode it closes off.',
-        'Name the first thing you would harden after a payment-provider outage postmortem.',
+        'What assumption about payment provider latency would you test first before trusting this checkout flow?',
+        'What part of this design would you cut under a tight deadline, and what risk would that accept?',
       ],
     },
   },
@@ -1506,8 +1505,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback recommendation if the model service is unavailable: cached last-good list, or popularity fallback?',
       ],
       wrapup: [
-        'Restate the cold-start strategy chosen and what it costs in personalization quality.',
-        'Name the first thing you would improve if engagement plateaued after launch.',
+        'What offline metric number would have to move before you would trust this model over the current baseline?',
+        'What would you tell the interviewer you deliberately skipped for a first launch?',
       ],
     },
   },
@@ -1654,8 +1653,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback if a feature source is temporarily unavailable: a default value, or reject the request?',
       ],
       wrapup: [
-        'Restate the real-time-versus-batch feature split chosen and its latency cost.',
-        'Name the first feature you would cut if the latency budget were tightened.',
+        'What single latency number would force you to move a feature from real-time to batch?',
+        'What assumption about feature freshness would you test first before trusting this split?',
       ],
     },
   },
@@ -1802,8 +1801,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback when GPU capacity is exhausted: queue by priority, degrade, or reject with a clear signal?',
       ],
       wrapup: [
-        'Restate the tenant-isolation mechanism chosen and its cost in GPU utilization efficiency.',
-        'Name the first thing you would change if one tenant consistently starved the others.',
+        'What utilization number would tell you the platform is trading too much isolation for GPU efficiency?',
+        'What would you tell the interviewer you deliberately left out of a first version of this platform?',
       ],
     },
   },
@@ -2218,8 +2217,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback if the primary model is degraded: a smaller model, or a maintenance message?',
       ],
       wrapup: [
-        'Restate the context-management strategy chosen for long conversations and its cost.',
-        'Name the first thing you would improve if users complained the assistant "forgot" earlier context.',
+        'What part of this design would you cut first if you had to ship in two weeks?',
+        'What assumption about conversation length would you test first before trusting the summarization strategy?',
       ],
     },
   },
@@ -2294,8 +2293,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the fallback if retrieval returns nothing relevant: say "I don\'t know," or fall back to unretrieved model knowledge?',
       ],
       wrapup: [
-        'Restate the access-control enforcement point chosen and why it sits there rather than only at query time.',
-        'Name the first thing you would test in a red-team pass against this design.',
+        'What single test would convince you access control cannot be bypassed by a cleverly worded query?',
+        'What would you tell the interviewer you deliberately skipped for a first version of this system?',
       ],
     },
   },
@@ -2406,8 +2405,8 @@ export const sdQuestions: SdQuestion[] = [
         'What is the incident response when an agent takes an unintended action: an automatic kill switch, and what does it roll back?',
       ],
       wrapup: [
-        'Restate the human-approval boundary chosen and the blast radius it limits.',
-        'Name the first thing a red-team review would target first in this design.',
+        'What single action, if taken without approval, would worry you most, and does your design actually stop it?',
+        'What part of this design would you cut under a tight deadline, and what risk would that accept?',
       ],
     },
   },
