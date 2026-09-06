@@ -239,6 +239,91 @@ export const readings: Reading[] = [
     minutes: 35,
   },
 
+  // Week 10 (month 3, ms-graph-rag-1: entity/relation extraction pipeline)
+  {
+    id: 'read-kg-construction-survey',
+    weekId: 'week-10',
+    kind: 'paper',
+    title: 'A Comprehensive Survey on Automatic Knowledge Graph Construction',
+    source: 'Zhong et al.',
+    year: 2023,
+    url: 'https://arxiv.org/abs/2302.05019',
+    why: 'Maps the acquisition, refinement, and evolution steps of building a knowledge graph from text, the exact pipeline ms-graph-rag-1 asks you to build this week.',
+    minutes: 35,
+  },
+  {
+    id: 'read-rebel-relation-extraction',
+    weekId: 'week-10',
+    kind: 'paper',
+    title: 'REBEL: Relation Extraction By End-to-end Language Generation',
+    source: 'Huguet Cabot and Navigli',
+    year: 2021,
+    url: 'https://aclanthology.org/2021.findings-emnlp.204/',
+    why: 'A concrete seq2seq recipe for joint entity and relation extraction over 200+ relation types, directly usable for the extraction pipeline in ms-graph-rag-1 this week.',
+    minutes: 35,
+  },
+
+  // Week 11 (month 3, ms-graph-rag-2: graph construction and community detection)
+  {
+    id: 'read-leiden-community-detection',
+    weekId: 'week-11',
+    kind: 'paper',
+    title: 'From Louvain to Leiden: Guaranteeing Well-Connected Communities',
+    source: 'Traag, Waltman, and van Eck',
+    year: 2019,
+    url: 'https://arxiv.org/abs/1810.08473',
+    why: 'The community detection algorithm ms-graph-rag-2 needs this week; Louvain can leave communities disconnected, and this is the fix you should use instead.',
+    minutes: 35,
+  },
+  {
+    id: 'read-raptor',
+    weekId: 'week-11',
+    kind: 'paper',
+    title: 'RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval',
+    source: 'Sarthi et al.',
+    year: 2024,
+    url: 'https://arxiv.org/abs/2401.18059',
+    why: 'Shows how to recursively cluster and summarize chunks into a tree, the pattern to follow for the community summaries ms-graph-rag-2 asks for this week.',
+    minutes: 35,
+  },
+
+  // Week 12 (month 3, ms-graph-rag-3: graph plus vector hybrid retrieval)
+  {
+    id: 'read-hipporag',
+    weekId: 'week-12',
+    kind: 'paper',
+    title: 'HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models',
+    source: 'Gutiérrez et al.',
+    year: 2024,
+    url: 'https://arxiv.org/abs/2405.14831',
+    why: 'Combines a knowledge graph with personalized PageRank over embeddings, a concrete design for the graph-plus-vector hybrid retriever ms-graph-rag-3 asks you to build this week.',
+    minutes: 35,
+  },
+  {
+    id: 'read-lightrag',
+    weekId: 'week-12',
+    kind: 'paper',
+    title: 'LightRAG: Simple and Fast Retrieval-Augmented Generation',
+    source: 'Guo et al.',
+    year: 2024,
+    url: 'https://arxiv.org/abs/2410.05779',
+    why: 'A dual-level (graph plus vector) retrieval design lighter than full GraphRAG, worth comparing against your own ms-graph-rag-3 hybrid retriever this week.',
+    minutes: 35,
+  },
+
+  // Week 13 (month 3 close, ms-graph-rag-4: comparative eval against month 2)
+  {
+    id: 'read-rag-vs-graphrag-eval',
+    weekId: 'week-13',
+    kind: 'paper',
+    title: 'RAG vs. GraphRAG: A Systematic Evaluation and Key Insights',
+    source: 'Han et al.',
+    year: 2025,
+    url: 'https://arxiv.org/abs/2502.11371',
+    why: 'A published protocol for comparing vector RAG against graph RAG on global and local questions, the exact comparison ms-graph-rag-4 asks you to write up this week.',
+    minutes: 35,
+  },
+
   // Week 14 (month 4 opens, proj-agents: tool layer, planner/workers, memory)
   {
     id: 'read-react',
@@ -420,6 +505,19 @@ export const readings: Reading[] = [
     minutes: 35,
   },
 
+  // Week 22 (month 5 close, ms-gpt-from-scratch-4: streaming server, throughput/latency)
+  {
+    id: 'read-gptq-quantization',
+    weekId: 'week-22',
+    kind: 'paper',
+    title: 'GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers',
+    source: 'Frantar et al.',
+    year: 2022,
+    url: 'https://arxiv.org/abs/2210.17323',
+    why: 'A one-shot weight quantization method that cuts memory and cost with little accuracy loss, worth applying to the streaming server ms-gpt-from-scratch-4 asks you to measure this week.',
+    minutes: 35,
+  },
+
   // Week 23 (month 6 opens, proj-fine-tune-eval: dataset curation, LoRA SFT)
   {
     id: 'read-lora',
@@ -478,6 +576,19 @@ export const readings: Reading[] = [
     year: 2023,
     url: 'https://arxiv.org/abs/2306.05685',
     why: 'Documents the biases of LLM-as-judge scoring you should account for before trusting the comparative eval report ms-fine-tune-eval-4 asks for this week.',
+    minutes: 35,
+  },
+
+  // Week 26 (month 6 close: comparative eval report and the interview sprint)
+  {
+    id: 'read-constitutional-ai',
+    weekId: 'week-26',
+    kind: 'paper',
+    title: 'Constitutional AI: Harmlessness from AI Feedback',
+    source: 'Bai et al., Anthropic',
+    year: 2022,
+    url: 'https://arxiv.org/abs/2212.08073',
+    why: 'Lays out RLAIF as an alternative to human-labeled RLHF, direct ammunition for the "DPO vs RLHF, what did you trade away" defense question you close ms-fine-tune-eval-4 with this week.',
     minutes: 35,
   },
 ]
