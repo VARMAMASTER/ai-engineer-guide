@@ -14,17 +14,23 @@ export const STATIC_ROUTES = [
   '/roadmap',
   '/dsa',
   '/system-design',
+  '/lld',
   '/ai-ml',
   '/projects',
   '/reading',
+  '/revise',
+  '/revise/sheets',
   '/settings',
 ] as const
 
 export const DYNAMIC_ROUTES = [
   '/dsa/arrays-hashing',
   '/system-design/caching',
+  '/lld/solid',
+  '/lld/parking-lot',
   '/ai-ml/transformers',
   '/projects/rag',
+  '/revise/transformers',
 ] as const
 
 export const ALL_ROUTES = [...STATIC_ROUTES, ...DYNAMIC_ROUTES]

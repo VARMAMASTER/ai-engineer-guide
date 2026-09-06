@@ -18,8 +18,10 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/dsa', label: 'DSA', short: 'DSA', primary: true },
   { href: '/system-design', label: 'System Design', short: 'Design', primary: true },
   { href: '/projects', label: 'Projects', short: 'Build', primary: true },
+  { href: '/lld', label: 'Low-Level Design', short: 'LLD', primary: false },
   { href: '/ai-ml', label: 'AI / ML', short: 'AI/ML', primary: false },
   { href: '/reading', label: 'Reading', short: 'Reading', primary: false },
+  { href: '/revise', label: 'Revise', short: 'Revise', primary: false },
   { href: '/settings', label: 'Settings', short: 'Settings', primary: false },
 ]
 
