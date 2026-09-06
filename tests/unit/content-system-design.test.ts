@@ -44,6 +44,64 @@ describe('system design bank', () => {
     }
   })
 
+  it('gives every question a solution covering all six steps', () => {
+    for (const q of sdQuestions) {
+      for (const step of ['define', 'data', 'architecture', 'evaluate', 'deploy', 'wrapup'] as const) {
+        expect(q.solution[step].trim().length, `${q.id}.solution.${step}`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('has no placeholder-length solution step: every step is at least 40 characters', () => {
+    for (const q of sdQuestions) {
+      for (const step of ['define', 'data', 'architecture', 'evaluate', 'deploy', 'wrapup'] as const) {
+        expect(q.solution[step].length, `${q.id}.solution.${step}`).toBeGreaterThanOrEqual(40)
+      }
+    }
+  })
+
+  it('gives every solution at least two sized estimates', () => {
+    for (const q of sdQuestions) {
+      expect(q.solution.numbers.length, q.id).toBeGreaterThanOrEqual(2)
+      for (const n of q.solution.numbers) expect(n.trim().length, q.id).toBeGreaterThan(0)
+    }
+  })
+
+  it('makes every delivery budget sum exactly to the question minutes', () => {
+    for (const q of sdQuestions) {
+      const b = q.delivery.budget
+      const total = b.requirements + b.estimates + b.apiAndData + b.architecture + b.deepDive + b.wrapUp
+      expect(total, `${q.id} budget`).toBe(q.minutes)
+    }
+  })
+
+  it('gives every delivery an opening line, two traps, and two pushbacks', () => {
+    for (const q of sdQuestions) {
+      expect(q.delivery.opening.trim().length, q.id).toBeGreaterThan(0)
+      expect(q.delivery.traps.length, `${q.id} traps`).toBeGreaterThanOrEqual(2)
+      expect(q.delivery.whenPushed.length, `${q.id} whenPushed`).toBeGreaterThanOrEqual(2)
+      for (const w of q.delivery.whenPushed) {
+        expect(w.challenge.trim().length, q.id).toBeGreaterThan(0)
+        expect(w.answer.trim().length, q.id).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('gives every question a mermaid flowchart with at least one edge', () => {
+    for (const q of sdQuestions) {
+      expect(q.diagram.trim().length, `${q.id} diagram`).toBeGreaterThan(0)
+      expect(q.diagram.startsWith('flowchart'), `${q.id} diagram`).toBe(true)
+      expect(q.diagram.includes('-->'), `${q.id} diagram`).toBe(true)
+    }
+  })
+
+  it('draws a diagram with real mechanism, not three nodes', () => {
+    for (const q of sdQuestions) {
+      const edges = q.diagram.split('\n').filter((l) => l.includes('-->') || l.includes('-.->'))
+      expect(edges.length, `${q.id} diagram edges`).toBeGreaterThanOrEqual(4)
+    }
+  })
+
   it('passes schema validation', () => {
     const c = {
       dsaPatterns: [], dsaProblems: [], sdPatterns, sdQuestions,

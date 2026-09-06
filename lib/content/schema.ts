@@ -34,6 +34,45 @@ export const sdPatternSchema = z.object({
   tradeoffs: z.array(z.string().min(1)).min(1),
 })
 
+/**
+ * The reference answer for a system design question, keyed to the same six steps as
+ * `steps`. Each field is the decision a strong candidate reaches and why, not a prompt.
+ * `numbers` carries the estimates the candidate should say out loud, with the arithmetic.
+ */
+export const sdSolutionSchema = z.object({
+  define: z.string().min(40),
+  data: z.string().min(40),
+  architecture: z.string().min(40),
+  evaluate: z.string().min(40),
+  deploy: z.string().min(40),
+  wrapup: z.string().min(40),
+  numbers: z.array(z.string().min(1)).min(2),
+})
+
+/** One challenge the interviewer raises on this question, and the honest answer. */
+export const sdPushbackSchema = z.object({
+  challenge: z.string().min(1),
+  answer: z.string().min(1),
+})
+
+/** Minutes per phase of the round. Must sum to the question's `minutes`. */
+export const sdBudgetSchema = z.object({
+  requirements: z.number().int().positive(),
+  estimates: z.number().int().positive(),
+  apiAndData: z.number().int().positive(),
+  architecture: z.number().int().positive(),
+  deepDive: z.number().int().positive(),
+  wrapUp: z.number().int().positive(),
+})
+
+/** How to perform the answer inside the time box. */
+export const sdDeliverySchema = z.object({
+  budget: sdBudgetSchema,
+  opening: z.string().min(1),
+  traps: z.array(z.string().min(1)).min(2).max(4),
+  whenPushed: z.array(sdPushbackSchema).min(2).max(3),
+})
+
 export const sdQuestionSchema = z.object({
   id: z.string().regex(/^(sdq|mlq)-[a-z0-9-]+$/),
   patternId: z.string().regex(/^(sdp|mlp)-[a-z0-9-]+$/),
@@ -48,7 +87,56 @@ export const sdQuestionSchema = z.object({
     deploy: z.array(z.string().min(1)).min(1),
     wrapup: z.array(z.string().min(1)).min(1),
   }),
+  solution: sdSolutionSchema,
+  delivery: sdDeliverySchema,
+  /** Mermaid `flowchart` source for the reference architecture the solution describes. */
+  diagram: z.string().regex(/^flowchart (TD|LR|TB|RL|BT)\n/).refine((d) => d.includes('-->'), {
+    message: 'diagram must contain at least one --> edge',
+  }),
   minutes: z.number().int().positive(),
+}).superRefine((q, ctx) => {
+  const b = q.delivery.budget
+  const total = b.requirements + b.estimates + b.apiAndData + b.architecture + b.deepDive + b.wrapUp
+  if (total !== q.minutes) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['delivery', 'budget'],
+      message: `budget sums to ${total} minutes, expected ${q.minutes}`,
+    })
+  }
+})
+
+// Low-level design bank (spec 6.6c). Machine-coding rounds are reported at Flipkart and
+// Uber as often as at the FAANG three, so the LLD bank widens the company union.
+export const lldCompanySchema = z.enum(['google', 'meta', 'amazon', 'flipkart', 'uber'])
+
+export const lldPatternSchema = z.object({
+  id: z.string().regex(/^lldp-[a-z0-9-]+$/),
+  name: z.string().min(1),
+  order: z.number().int().min(1).max(8),
+  solves: z.string().min(1),
+  whenWrong: z.string().min(1),
+  notes: z.array(z.string().min(1)).min(2),
+  example: z.string().min(1),
+  pitfalls: z.array(z.string().min(1)).min(2),
+  // Mermaid classDiagram source (spec 6.10). Only on the patterns where structure is the point.
+  diagram: z.string().min(1).optional(),
+})
+
+export const lldQuestionSchema = z.object({
+  id: z.string().regex(/^lldq-[a-z0-9-]+$/),
+  name: z.string().min(1),
+  statement: z.string().min(1),
+  clarify: z.array(z.string().min(1)).min(3).max(5),
+  entities: z.array(z.string().min(1)).min(2),
+  solution: z.string().min(200),
+  // Mermaid classDiagram source (spec 6.10). Required here: for a machine-coding answer the
+  // class diagram is the primary artefact and the Python sketch is the supporting detail.
+  diagram: z.string().min(1),
+  patterns: z.array(z.string().regex(/^lldp-[a-z0-9-]+$/)).min(1),
+  extensions: z.array(z.string().min(1)).min(2).max(4),
+  minutes: z.number().int().min(45).max(90),
+  companies: z.array(lldCompanySchema).min(1),
 })
 
 export const topicSchema = z.object({
@@ -134,6 +222,13 @@ export type DsaPattern = z.infer<typeof dsaPatternSchema>
 export type DsaProblem = z.infer<typeof dsaProblemSchema>
 export type SdPattern = z.infer<typeof sdPatternSchema>
 export type SdQuestion = z.infer<typeof sdQuestionSchema>
+export type SdSolution = z.infer<typeof sdSolutionSchema>
+export type SdDelivery = z.infer<typeof sdDeliverySchema>
+export type SdBudget = z.infer<typeof sdBudgetSchema>
+export type SdPushback = z.infer<typeof sdPushbackSchema>
+export type LldCompany = z.infer<typeof lldCompanySchema>
+export type LldPattern = z.infer<typeof lldPatternSchema>
+export type LldQuestion = z.infer<typeof lldQuestionSchema>
 export type Topic = z.infer<typeof topicSchema>
 export type TopicQuestion = z.infer<typeof topicQuestionSchema>
 export type Project = z.infer<typeof projectSchema>
@@ -145,5 +240,6 @@ export type Day = z.infer<typeof daySchema>
 export type DayTask = z.infer<typeof dayTaskSchema>
 
 export type ContentItem =
-  | DsaPattern | DsaProblem | SdPattern | SdQuestion | Topic | TopicQuestion
+  | DsaPattern | DsaProblem | SdPattern | SdQuestion | LldPattern | LldQuestion
+  | Topic | TopicQuestion
   | Project | Milestone | Doc | Reading | Week | Day
