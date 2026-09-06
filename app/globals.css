@@ -1,26 +1,461 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================================================
+   AI Engineer Practice Guide — glass design system
+   ----------------------------------------------------------------------------
+   Three surface tiers and only three:
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+     Ground  page background. Opaque base + one soft radial wash. Never blurred.
+     Panel   cards, nav rail, tab bar, top bar, question rows. Translucent fill,
+             backdrop blur, 1px hairline border, inner top highlight.
+     Raised  the More sheet, modals, popovers, hover. Panel + more blur,
+             stronger border, drop shadow.
+
+   Blur budget: at most TWO stacked blurred layers on screen. That means a glass
+   panel must never contain another glass panel — page code nests plain
+   `.surface-solid` blocks instead. The top bar or tab bar over one card is the
+   allowed stack. Opening the More sheet drops every other glass to solid so the
+   sheet is the only blurred layer.
+
+   Palette values are declared once as `--d-*` (dark) and `--l-*` (light) on
+   bare :root, then bound to semantic tokens. The dark binding is repeated under
+   BOTH `@media (prefers-color-scheme: dark)` and `:root[data-theme="dark"]`,
+   so an explicit choice wins in either direction and the system default still
+   works. No colour is ever defined only inside a media block.
+   ========================================================================== */
+
+:root {
+  /* --- dark palette: deep desaturated blue-grey, never black --------------- */
+  --d-ground: #121822;
+  --d-ground-wash-warm: rgba(242, 179, 61, 0.1);
+  --d-ground-wash-cool: rgba(78, 120, 184, 0.14);
+  --d-panel: rgba(255, 255, 255, 0.055);
+  --d-panel-solid: #1c2128;
+  --d-panel-border: rgba(255, 255, 255, 0.09);
+  --d-panel-highlight: rgba(255, 255, 255, 0.1);
+  --d-raised: rgba(255, 255, 255, 0.085);
+  --d-raised-solid: #232932;
+  --d-raised-border: rgba(255, 255, 255, 0.16);
+  --d-raised-shadow: 0 18px 46px -14px rgba(0, 0, 0, 0.72);
+  --d-track: #262c35;
+  --d-code: #141a22;
+  --d-text: #e6eaf0;
+  --d-text-muted: #a3aebb;
+  --d-text-faint: #96a1ae;
+  --d-accent: #f2b33d;
+  --d-accent-contrast: #12161c;
+  --d-accent-soft: rgba(242, 179, 61, 0.16);
+  --d-accent-line: rgba(242, 179, 61, 0.5);
+  --d-positive: #6dd3a8;
+  --d-warning: #f0a07a;
+  --d-danger: #ff8b7a;
+  --d-scheme: dark;
+
+  /* --- light palette: warm off-white, never pure white --------------------- */
+  --l-ground: #f3f1ea;
+  --l-ground-wash-warm: rgba(154, 91, 0, 0.1);
+  --l-ground-wash-cool: rgba(64, 96, 148, 0.1);
+  --l-panel: rgba(255, 255, 255, 0.72);
+  --l-panel-solid: #fcfbf9;
+  --l-panel-border: rgba(26, 32, 42, 0.14);
+  --l-panel-highlight: rgba(255, 255, 255, 0.9);
+  --l-raised: rgba(255, 255, 255, 0.88);
+  --l-raised-solid: #ffffff;
+  --l-raised-border: rgba(26, 32, 42, 0.2);
+  --l-raised-shadow: 0 16px 40px -14px rgba(30, 26, 16, 0.28);
+  --l-track: #e5e1d6;
+  --l-code: #efeadd;
+  --l-text: #1b2027;
+  --l-text-muted: #5a6472;
+  --l-text-faint: #666f7b;
+  --l-accent: #9a5b00;
+  --l-accent-contrast: #ffffff;
+  --l-accent-soft: rgba(154, 91, 0, 0.12);
+  --l-accent-line: rgba(154, 91, 0, 0.45);
+  --l-positive: #0f6b4a;
+  --l-warning: #9a4a16;
+  --l-danger: #a3241c;
+  --l-scheme: light;
+
+  /* --- semantic tokens, bound to light by default ------------------------- */
+  --ground: var(--l-ground);
+  --ground-wash-warm: var(--l-ground-wash-warm);
+  --ground-wash-cool: var(--l-ground-wash-cool);
+  --panel: var(--l-panel);
+  --panel-solid: var(--l-panel-solid);
+  --panel-border: var(--l-panel-border);
+  --panel-highlight: var(--l-panel-highlight);
+  --raised: var(--l-raised);
+  --raised-solid: var(--l-raised-solid);
+  --raised-border: var(--l-raised-border);
+  --raised-shadow: var(--l-raised-shadow);
+  --track: var(--l-track);
+  --code-bg: var(--l-code);
+  --text: var(--l-text);
+  --text-muted: var(--l-text-muted);
+  --text-faint: var(--l-text-faint);
+  --accent: var(--l-accent);
+  --accent-contrast: var(--l-accent-contrast);
+  --accent-soft: var(--l-accent-soft);
+  --accent-line: var(--l-accent-line);
+  --positive: var(--l-positive);
+  --warning: var(--l-warning);
+  --danger: var(--l-danger);
+  color-scheme: var(--l-scheme);
+
+  /* --- aliases kept for page code written against the plan ---------------- */
+  --bg: var(--ground);
+  --surface: var(--panel-solid);
+  --surface-raised: var(--track);
+  --border: var(--panel-border);
+
+  /* --- geometry, blur, motion --------------------------------------------- */
+  --radius-lg: 16px;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --blur-panel: 14px;
+  --blur-raised: 22px;
+  --dur: 170ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --rail-w: 15.5rem;
+  --topbar-h: 3.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --ground: var(--d-ground);
+    --ground-wash-warm: var(--d-ground-wash-warm);
+    --ground-wash-cool: var(--d-ground-wash-cool);
+    --panel: var(--d-panel);
+    --panel-solid: var(--d-panel-solid);
+    --panel-border: var(--d-panel-border);
+    --panel-highlight: var(--d-panel-highlight);
+    --raised: var(--d-raised);
+    --raised-solid: var(--d-raised-solid);
+    --raised-border: var(--d-raised-border);
+    --raised-shadow: var(--d-raised-shadow);
+    --track: var(--d-track);
+    --code-bg: var(--d-code);
+    --text: var(--d-text);
+    --text-muted: var(--d-text-muted);
+    --text-faint: var(--d-text-faint);
+    --accent: var(--d-accent);
+    --accent-contrast: var(--d-accent-contrast);
+    --accent-soft: var(--d-accent-soft);
+    --accent-line: var(--d-accent-line);
+    --positive: var(--d-positive);
+    --warning: var(--d-warning);
+    --danger: var(--d-danger);
+    color-scheme: var(--d-scheme);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+:root[data-theme="dark"] {
+  --ground: var(--d-ground);
+  --ground-wash-warm: var(--d-ground-wash-warm);
+  --ground-wash-cool: var(--d-ground-wash-cool);
+  --panel: var(--d-panel);
+  --panel-solid: var(--d-panel-solid);
+  --panel-border: var(--d-panel-border);
+  --panel-highlight: var(--d-panel-highlight);
+  --raised: var(--d-raised);
+  --raised-solid: var(--d-raised-solid);
+  --raised-border: var(--d-raised-border);
+  --raised-shadow: var(--d-raised-shadow);
+  --track: var(--d-track);
+  --code-bg: var(--d-code);
+  --text: var(--d-text);
+  --text-muted: var(--d-text-muted);
+  --text-faint: var(--d-text-faint);
+  --accent: var(--d-accent);
+  --accent-contrast: var(--d-accent-contrast);
+  --accent-soft: var(--d-accent-soft);
+  --accent-line: var(--d-accent-line);
+  --positive: var(--d-positive);
+  --warning: var(--d-warning);
+  --danger: var(--d-danger);
+  color-scheme: var(--d-scheme);
+}
+
+/* Tailwind utility surface for the tokens above. */
+@theme inline {
+  --color-ground: var(--ground);
+  --color-panel: var(--panel-solid);
+  --color-raised: var(--raised-solid);
+  --color-track: var(--track);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-positive: var(--positive);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-hairline: var(--panel-border);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
+
+  --radius-token: var(--radius);
+  --breakpoint-md: 48rem; /* 768px — the one breakpoint in the system */
+}
+
+/* ===== base ============================================================== */
+
+@layer base {
+  html {
+    background-color: var(--ground);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Only <html> paints the Ground, so the wash on body::before sits above it. */
+  body {
+    background-color: transparent;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    letter-spacing: 0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* The single ground wash. Fixed so it never scrolls, and never blurred. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(58rem 40rem at 14% -6%, var(--ground-wash-warm), transparent 66%),
+      radial-gradient(56rem 44rem at 92% 34%, var(--ground-wash-cool), transparent 64%);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2rem);
+    font-weight: 600;
+    line-height: 1.15;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  code,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+/* ===== the three tiers =================================================== */
+
+@layer components {
+  /* Panel: cards, rows, nav rail, top bar, tab bar. */
+  /* `min-width: 0` matters: without it a Panel used as a grid or flex item
+     inherits `min-width: auto` and is widened by its widest child — a code
+     block or a long id — which pushes the page into horizontal scroll at
+     390px. Every tier opts out. */
+  .panel {
+    position: relative;
+    min-width: 0;
+    background-color: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius);
+    -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(140%);
+    backdrop-filter: blur(var(--blur-panel)) saturate(140%);
+  }
+
+  /* The inner top highlight that gives glass its edge. */
+  .panel::before,
+  .raised::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--panel-highlight) 18%,
+      var(--panel-highlight) 82%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  /* Raised: the More sheet, popovers, and the hover state of a card. */
+  .raised {
+    position: relative;
+    min-width: 0;
+    background-color: var(--raised);
+    border: 1px solid var(--raised-border);
+    border-radius: var(--radius);
+    box-shadow: var(--raised-shadow);
+    -webkit-backdrop-filter: blur(var(--blur-raised)) saturate(150%);
+    backdrop-filter: blur(var(--blur-raised)) saturate(150%);
+  }
+
+  /* A card is a Panel that lifts to Raised on hover. Never nest one in another. */
+  .card {
+    transition:
+      transform var(--dur) var(--ease),
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease),
+      box-shadow var(--dur) var(--ease);
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    background-color: var(--raised);
+    border-color: var(--raised-border);
+    box-shadow: var(--raised-shadow);
+  }
+
+  /* Solid blocks for anything nested inside a Panel — keeps the blur budget. */
+  .surface-solid {
+    min-width: 0;
+    background-color: var(--panel-solid);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+  }
+
+  /* Code is solid, never glass. Blur behind code is unreadable. */
+  .code-block {
+    background-color: var(--code-bg);
+    max-width: 100%;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    padding: 0.875rem 1rem;
+    tab-size: 2;
+  }
+
+  /* Small monospace readout: ids, LeetCode numbers, day and week counters, minutes. */
+  .readout {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
+
+  /* Section eyebrow. */
+  .eyebrow {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* Accent pill behind the active nav item. */
+  .nav-pill {
+    background-color: var(--accent-soft);
+    box-shadow: inset 0 0 0 1px var(--accent-line);
+    color: var(--accent);
+  }
+
+  .hairline {
+    border-color: var(--panel-border);
+  }
+}
+
+/* ===== blur budget ======================================================= */
+
+/* While the More sheet is open it is the only blurred layer on screen. */
+:root[data-sheet="open"] .panel,
+:root[data-sheet="open"] .card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-color: var(--panel-solid);
+}
+
+/* ===== degradation ======================================================= */
+
+/* No backdrop-filter support: fall back to solid tints so the design still reads. */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .panel,
+  .card:hover {
+    background-color: var(--panel-solid);
+  }
+
+  .raised {
+    background-color: var(--raised-solid);
+  }
+}
+
+/* The user asked for less transparency: honour it the same way. */
+@media (prefers-reduced-transparency: reduce) {
+  .panel,
+  .card:hover {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: var(--panel-solid);
+  }
+
+  .raised {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: var(--raised-solid);
+  }
+
+  body::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card:hover {
+    transform: none;
+  }
+}
+
+/* Windows high-contrast and forced-colours modes: drop the glass entirely. */
+@media (forced-colors: active) {
+  .panel,
+  .raised,
+  .card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
 }
