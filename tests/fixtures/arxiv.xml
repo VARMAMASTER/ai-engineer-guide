@@ -1,0 +1,907 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/jB166YDeJ/NPP8E2/UUqK+udI4s</id>
+  <title>arXiv Query: search_query=cat:cs.CL&amp;id_list=&amp;start=0&amp;max_results=6</title>
+  <updated>2026-09-06T13:07:00Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=cat:cs.CL&amp;start=0&amp;max_results=6&amp;id_list=" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>6</opensearch:itemsPerPage>
+  <opensearch:totalResults>118213</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2609.04199v1</id>
+    <title>Compile by Training: Turning Natural-Language Specifications into Local Neural Functions</title>
+    <updated>2026-09-03T17:59:49Z</updated>
+    <link href="https://arxiv.org/abs/2609.04199v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.04199v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Many recurring text functions are easy to describe but difficult to implement with rules, while calling a large remote model for every input introduces repeated cost, latency, and dependency on a provider. We present compile by training, which turns a natural-language specification into a reusable neural function. At compile time, teacher models generate task-specific examples that are used to train a small adapter for a compact interpreter. The resulting function runs without the teachers and can be stored, versioned, and composed like ordinary software. On FuzzyBench-Hard, a subset on which the Program-as-Weights fast compiler produced no exact matches, compile by training reaches 83.6% semantic accuracy. This higher accuracy comes with a higher compile-time cost: roughly a minute rather than seconds for the fast compiler. We deploy the compiler in a public interactive service and demonstrate compiled functions in a multi-site website helper, a language-controlled 3D avatar, and a bidirectional English-Claudish translator.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-03T17:59:49Z</published>
+    <arxiv:comment>EMNLP 2026 System Demonstrations. Demo: https://programasweights.com</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Yuntian Deng</name>
+    </author>
+    <author>
+      <name>Pengyu Nie</name>
+    </author>
+    <author>
+      <name>Stuart Shieber</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.04197v1</id>
+    <title>ESPO: Error-Structured Prompt Optimization via Diagnose, Diversify, and Stabilize</title>
+    <updated>2026-09-03T17:59:37Z</updated>
+    <link href="https://arxiv.org/abs/2609.04197v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.04197v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Evolutionary prompt optimizers such as GEPA suffer from prompt bloat: each iteration appends rules and caveats, producing prompts up to 3$\times$ longer yet no more accurate. We trace this to three deficiencies - incomplete error observation, limited search diversity, and unreliable selection - and propose ESPO (Error-Structured Prompt Optimization), which decomposes prompt optimization into three phases: Diagnose clusters all training errors into structural patterns in one round; Propose generates candidates via four complementary strategies with independent biases; Select applies bootstrap stability selection. On seven public NLP benchmarks - Tweet, MMLU, GSM8K, HotpotQA, ScoNe, HoVer, and PUPA - ESPO improves average accuracy by $+$3.76 pp over the state-of-the-art (74.67% vs 70.91% for GEPA), matching or exceeding GEPA on every dataset while producing prompts 47% shorter (1,004 vs 1,878 chars) and faster at inference. Cross-model experiments across four additional student models (Gemma 3 12B, Mistral 14B, Qwen3 32B, Claude Haiku 4.5) show ESPO yields the best average accuracy on every model tested, with the largest gap on Qwen3 GSM8K (15.00% $\to$ 91.40%). A generalization bound (Appendix) grounds each phase in a corresponding term of the test-time gap, and the ablation confirms a key prediction: adding diversity without bootstrap selection actually hurts performance ($-$1.20%).</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-03T17:59:37Z</published>
+    <arxiv:comment>EMNLP 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Lihao Liu</name>
+    </author>
+    <author>
+      <name>Peng Tang</name>
+    </author>
+    <author>
+      <name>Kunwar Yashraj Singh</name>
+    </author>
+    <author>
+      <name>Shabnam Ghadar</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.04194v1</id>
+    <title>Legibility is Not Interpretability: Comparing Judged and Actual Importance in Chain-Of-Thought Reasoning</title>
+    <updated>2026-09-03T17:59:08Z</updated>
+    <link href="https://arxiv.org/abs/2609.04194v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.04194v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reasoning traces from chain-of-thought models appear to offer a legible window into how a model arrives at its answer. A growing body of work treats them as such, using LLM judges to diagnose errors, evaluate faithfulness, and provide step-level supervision via process reward models and generative critics. These practices rely on the text of a reasoning step carrying information about its functional role. But does the text actually encode information about which reasoning steps matter? We operationalize the importance of a reasoning step as its advantage: the change in expected reward, e.g., producing the correct final answer, from including that step, estimated via Monte Carlo rollouts. Basing ground truth on these estimates, we evaluate whether LLM judges can identify high-advantage steps and find that sufficiently capable LLMs can outperform a prevalence baseline but fall well short of a noise ceiling. Fine-tuning a model as a step-level critic yields strong improvement for incorrect responses but remains distant from ceiling for correct responses, suggesting that step importance is only partially recoverable from the text of the reasoning trace. Our findings contribute to a growing body of chain-of-thought faithfulness work that cautions against treating the legibility of reasoning traces as interpretability, especially with implications for process reward modeling.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-03T17:59:08Z</published>
+    <arxiv:comment>Published at COLM 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Kevin Du</name>
+    </author>
+    <author>
+      <name>Alexander Hoyle</name>
+    </author>
+    <author>
+      <name>Laura Ruis</name>
+    </author>
+    <author>
+      <name>Acyr Locatelli</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.04180v1</id>
+    <title>Knowledge Acquisition During Pre-training? Large Language Models Learn Better With Auxiliary Views</title>
+    <updated>2026-09-03T17:57:02Z</updated>
+    <link href="https://arxiv.org/abs/2609.04180v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.04180v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Gaps remain in our understanding of how large language models (LLMs) acquire knowledge during pre-training. We posit that auxiliary views, reformulations of knowledge, are causally helpful for learning. We design controlled experiments to isolate this. First, we confirm that repetition is necessary for acquisition and clarify that paraphrasing helps only at smaller batch sizes. Second, holding the token budget fixed, allocating tokens from document repetition to auxiliary views improves learning, counterintuitively, even for factual recall. Third, the effectiveness of auxiliary views is not contingent on the strength of the teacher model that generates them. Fourth, we identify forms of knowledge, contextual and foundational, that aid learning in the presence of prior knowledge gaps. Finally, we examine how these effects manifest mechanistically via layer-wise biases and compression. Together, our findings suggest that auxiliary representations of knowledge, which arise naturally in large pre-training corpora, are a key factor in the success of pre-training and offer a plausible explanation for why data diversity matters.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-03T17:57:02Z</published>
+    <arxiv:comment>Accepted to Findings of EMNLP 2026</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Joseph Lee</name>
+    </author>
+    <author>
+      <name>Yidi Huang</name>
+    </author>
+    <author>
+      <name>Dokyoon Kim</name>
+    </author>
+    <author>
+      <name>Shu Yang</name>
+    </author>
+    <author>
+      <name>Li Shen</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.04173v1</id>
+    <title>Last Translation Benchmark</title>
+    <updated>2026-09-03T17:54:45Z</updated>
+    <link href="https://arxiv.org/abs/2609.04173v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.04173v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>For scientific progress, we need benchmarks that test the limits of state-of-the-art models, and evaluation methods that inform us about failure cases. As models get stronger, standard benchmarks for machine translation are approaching saturation. Further, automatic translation metrics are unreliable, vulnerable to reward-hacking, and provide unactionable assessments. Even gold human evaluation is not problem-free, because it often lacks reproducibility, objectivity, and scalability. Overall, this prevents us from tracking objective progress in the field and identifying pathways for improvement. We introduce the Last Translation Benchmark, a collection of human-authored and peer-reviewed examples (texts, images, audio, videos) that break leading machine translation models. We also present a new evaluation approach: each example comes with handcrafted verification rules describing concrete failure cases on that example, therefore allowing reliable and actionable future evaluation. The Last Translation Benchmark is a live dataset that accepts ongoing contributions. The latest version is LTBv1, containing accepted contributions prior to September 1st 2026, with future releases planned as new data is continuously collected.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-03T17:54:45Z</published>
+    <arxiv:comment>typeset in Typst</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Vilém Zouhar</name>
+    </author>
+    <author>
+      <name>Niyati Bafna</name>
+    </author>
+    <author>
+      <name>Mukund Choudhary</name>
+    </author>
+    <author>
+      <name>Maike Züfle</name>
+    </author>
+    <author>
+      <name>Sara Rajaee</name>
+    </author>
+    <author>
+      <name>Pinzhen Chen</name>
+    </author>
+    <author>
+      <name>Jannis Vamvas</name>
+    </author>
+    <author>
+      <name>Sara Papi</name>
+    </author>
+    <author>
+      <name>Ona de Gibert</name>
+    </author>
+    <author>
+      <name>Bhavitvya Malik</name>
+    </author>
+    <author>
+      <name>Eliya Habba</name>
+    </author>
+    <author>
+      <name>Orfeas Menis Mastromichalakis</name>
+    </author>
+    <author>
+      <name>Patrícia Schmidtová</name>
+    </author>
+    <author>
+      <name>Michelle Wastl</name>
+    </author>
+    <author>
+      <name>Sheriff Issaka</name>
+    </author>
+    <author>
+      <name>Leshem Choshen</name>
+    </author>
+    <author>
+      <name>Stella Biderman</name>
+    </author>
+    <author>
+      <name>Antonis Anastasopoulos</name>
+    </author>
+    <author>
+      <name>Jan Niehues</name>
+    </author>
+    <author>
+      <name>Rico Sennrich</name>
+    </author>
+    <author>
+      <name>Mrinmaya Sachan</name>
+    </author>
+    <author>
+      <name>Ondřej Bojar</name>
+    </author>
+    <author>
+      <name>Kenton Murray</name>
+    </author>
+    <author>
+      <name>Jörg Tiedemann</name>
+    </author>
+    <author>
+      <name>Alham Fikri Aji</name>
+    </author>
+    <author>
+      <name>Philipp Koehn</name>
+    </author>
+    <author>
+      <name>Christof Monz</name>
+    </author>
+    <author>
+      <name>Alexandra Birch</name>
+    </author>
+    <author>
+      <name>Sowmya Vajjala</name>
+    </author>
+    <author>
+      <name>Chalamalasetti Kranti</name>
+    </author>
+    <author>
+      <name>Cristina España-Bonet</name>
+    </author>
+    <author>
+      <name>Nobin Sarwar</name>
+    </author>
+    <author>
+      <name>David Kaczér</name>
+    </author>
+    <author>
+      <name>Shunta Asano</name>
+    </author>
+    <author>
+      <name>Malik Marmonier</name>
+    </author>
+    <author>
+      <name>Daban Q. Jaff</name>
+    </author>
+    <author>
+      <name>Vaisakhi Mishra</name>
+    </author>
+    <author>
+      <name>Hend Al- Khalifa</name>
+    </author>
+    <author>
+      <name>Gabriele Sarti</name>
+    </author>
+    <author>
+      <name>Sourajit Saha</name>
+    </author>
+    <author>
+      <name>Nils Rehlinger</name>
+    </author>
+    <author>
+      <name>Juan Daniel Cuervo Villa</name>
+    </author>
+    <author>
+      <name>Jonathan Tonglet</name>
+    </author>
+    <author>
+      <name>Saugata Purkayastha</name>
+    </author>
+    <author>
+      <name>Dominik Macháček</name>
+    </author>
+    <author>
+      <name>Jagannathan Ramanujam</name>
+    </author>
+    <author>
+      <name>Heejin Do</name>
+    </author>
+    <author>
+      <name>Zuzana Nadova</name>
+    </author>
+    <author>
+      <name>Fred Philippy</name>
+    </author>
+    <author>
+      <name>Fabian Retkowski</name>
+    </author>
+    <author>
+      <name>Maria Lymperaiou</name>
+    </author>
+    <author>
+      <name>Silvia Casola</name>
+    </author>
+    <author>
+      <name>Hanna Yukhymenko</name>
+    </author>
+    <author>
+      <name>Shubhashis Roy Dipta</name>
+    </author>
+    <author>
+      <name>Sangwon Ryu</name>
+    </author>
+    <author>
+      <name>Andrés Jerez</name>
+    </author>
+    <author>
+      <name>Ron Keinan</name>
+    </author>
+    <author>
+      <name>Shuaib Shuaib Yusuf</name>
+    </author>
+    <author>
+      <name>Avantica Vempati</name>
+    </author>
+    <author>
+      <name>Maria Carmen Staiano</name>
+    </author>
+    <author>
+      <name>Sukannya Purkayastha</name>
+    </author>
+    <author>
+      <name>Adrian Cosma</name>
+    </author>
+    <author>
+      <name>Vitalii Babenko</name>
+    </author>
+    <author>
+      <name>Erivan Inan</name>
+    </author>
+    <author>
+      <name>Aviral Nigam</name>
+    </author>
+    <author>
+      <name>Wafa Aissa</name>
+    </author>
+    <author>
+      <name>Fatima Haouari</name>
+    </author>
+    <author>
+      <name>Venkata Prasanth Kumar Gummadi</name>
+    </author>
+    <author>
+      <name>Mehdi Jafarzadeh</name>
+    </author>
+    <author>
+      <name>Valentin Scourneau</name>
+    </author>
+    <author>
+      <name>Lukas Edman</name>
+    </author>
+    <author>
+      <name>Kaiser Sun</name>
+    </author>
+    <author>
+      <name>Shaomu Tan</name>
+    </author>
+    <author>
+      <name>Mohammad Sadegh Gholizadeh</name>
+    </author>
+    <author>
+      <name>Johannes-Rudolf David</name>
+    </author>
+    <author>
+      <name>Dipankar Srirag</name>
+    </author>
+    <author>
+      <name>Javier García Gilabert</name>
+    </author>
+    <author>
+      <name>Ruta Binkyte</name>
+    </author>
+    <author>
+      <name>Manar Ali</name>
+    </author>
+    <author>
+      <name>Ana-Maria Bucur</name>
+    </author>
+    <author>
+      <name>Sabry E. Farrag</name>
+    </author>
+    <author>
+      <name>Youssef Saber</name>
+    </author>
+    <author>
+      <name>Yihong Liu</name>
+    </author>
+    <author>
+      <name>Jean Maillard</name>
+    </author>
+    <author>
+      <name>Cojocaru Nicoleta</name>
+    </author>
+    <author>
+      <name>Xiaochuang Yuan</name>
+    </author>
+    <author>
+      <name>Sina Ahmadi</name>
+    </author>
+    <author>
+      <name>Philipp Mondorf</name>
+    </author>
+    <author>
+      <name>Kaustubh Dhole</name>
+    </author>
+    <author>
+      <name>Roman Wixinger</name>
+    </author>
+    <author>
+      <name>Shenbin Qian</name>
+    </author>
+    <author>
+      <name>Manuel Tuor</name>
+    </author>
+    <author>
+      <name>Sergey Troshin</name>
+    </author>
+    <author>
+      <name>Jonathan Yahav</name>
+    </author>
+    <author>
+      <name>Fida Mohammad Thoker</name>
+    </author>
+    <author>
+      <name>Amir Arsalan Rezapour</name>
+    </author>
+    <author>
+      <name>Lance Calvin Lim Gamboa</name>
+    </author>
+    <author>
+      <name>Manon Reusens</name>
+    </author>
+    <author>
+      <name>Kätriin Kukk</name>
+    </author>
+    <author>
+      <name>Koel Dutta Chowdhury</name>
+    </author>
+    <author>
+      <name>Giuseppe Gallipoli</name>
+    </author>
+    <author>
+      <name>Christian Hoang</name>
+    </author>
+    <author>
+      <name>Shaswati Saha</name>
+    </author>
+    <author>
+      <name>Seth Aycock</name>
+    </author>
+    <author>
+      <name>Jan Kocoń</name>
+    </author>
+    <author>
+      <name>Bo Chen</name>
+    </author>
+    <author>
+      <name>Linh Vu</name>
+    </author>
+    <author>
+      <name>Vatsal Venkatkrishna</name>
+    </author>
+    <author>
+      <name>Arafat Ahsan</name>
+    </author>
+    <author>
+      <name>Luan Thanh Nguyen</name>
+    </author>
+    <author>
+      <name>Hassan Soliman</name>
+    </author>
+    <author>
+      <name>Daryna Dementieva</name>
+    </author>
+    <author>
+      <name>Theresia Veronika Rampisela</name>
+    </author>
+    <author>
+      <name>Ngoc Quynh Tram Do</name>
+    </author>
+    <author>
+      <name>Marius Huber</name>
+    </author>
+    <author>
+      <name>Kazuki Egashira</name>
+    </author>
+    <author>
+      <name>Azmine Toushik Wasi</name>
+    </author>
+    <author>
+      <name>Vladislav Poritski</name>
+    </author>
+    <author>
+      <name>Mike Zhang</name>
+    </author>
+    <author>
+      <name>Deep Shah</name>
+    </author>
+    <author>
+      <name>Paul Gavrikov</name>
+    </author>
+    <author>
+      <name>Luis Frentzen Salim</name>
+    </author>
+    <author>
+      <name>David Africa</name>
+    </author>
+    <author>
+      <name>R. Damanhuri</name>
+    </author>
+    <author>
+      <name>Bello Umar Bello</name>
+    </author>
+    <author>
+      <name>Anumit Garg</name>
+    </author>
+    <author>
+      <name>Gengyu Rao</name>
+    </author>
+    <author>
+      <name>Pawan Sasanka Ammanamanchi</name>
+    </author>
+    <author>
+      <name>Kamile Dementaviciute</name>
+    </author>
+    <author>
+      <name>Andrianos Michail</name>
+    </author>
+    <author>
+      <name>L D M S Sai Teja</name>
+    </author>
+    <author>
+      <name>Dawei Zhu</name>
+    </author>
+    <author>
+      <name>Yi Fan</name>
+    </author>
+    <author>
+      <name>Wei Liu</name>
+    </author>
+    <author>
+      <name>Farhan Farsi</name>
+    </author>
+    <author>
+      <name>Elias Herranen</name>
+    </author>
+    <author>
+      <name>Sankalan Pal Chowdhury</name>
+    </author>
+    <author>
+      <name>Karen Sanchez</name>
+    </author>
+    <author>
+      <name>Farzad Shami</name>
+    </author>
+    <author>
+      <name>Ashok Urlana</name>
+    </author>
+    <author>
+      <name>Zimu Wang</name>
+    </author>
+    <author>
+      <name>Tomasz Limisiewicz</name>
+    </author>
+    <author>
+      <name>Priyaranjan Pattnayak</name>
+    </author>
+    <author>
+      <name>Marii Ojastu</name>
+    </author>
+    <author>
+      <name>Hongbin Na</name>
+    </author>
+    <author>
+      <name>Emilian Radoi</name>
+    </author>
+    <author>
+      <name>Chenyi Zhao</name>
+    </author>
+    <author>
+      <name>Carlos Hinojosa</name>
+    </author>
+    <author>
+      <name>Andrea Gregor de Varda</name>
+    </author>
+    <author>
+      <name>Zaid Alyafeai</name>
+    </author>
+    <author>
+      <name>Reem Alzahrani</name>
+    </author>
+    <author>
+      <name>Nehal Kathrotia</name>
+    </author>
+    <author>
+      <name>Alex Flückiger</name>
+    </author>
+    <author>
+      <name>Ulysses Sekai Tully Carr</name>
+    </author>
+    <author>
+      <name>Jimson Paulo Layacan</name>
+    </author>
+    <author>
+      <name>Guy Kaplan</name>
+    </author>
+    <author>
+      <name>Ritwik Tiwari</name>
+    </author>
+    <author>
+      <name>Rishit Dagli</name>
+    </author>
+    <author>
+      <name>Oksana Volchek</name>
+    </author>
+    <author>
+      <name>Isaac R Caswell</name>
+    </author>
+    <author>
+      <name>Bowen Yi</name>
+    </author>
+    <author>
+      <name>Blanka Kövér</name>
+    </author>
+    <author>
+      <name>Amir Hossein Yari</name>
+    </author>
+    <author>
+      <name>Aicha Chorana</name>
+    </author>
+    <author>
+      <name>Zhengxiang Wang</name>
+    </author>
+    <author>
+      <name>Selja Keränen</name>
+    </author>
+    <author>
+      <name>Samuel Simko</name>
+    </author>
+    <author>
+      <name>Joy Olusanya</name>
+    </author>
+    <author>
+      <name>Jenny Chim</name>
+    </author>
+    <author>
+      <name>Enzo Doyen</name>
+    </author>
+    <author>
+      <name>Vivek Harsha Lakkamaneni</name>
+    </author>
+    <author>
+      <name>Sophia Conrad</name>
+    </author>
+    <author>
+      <name>Pouya Sadeghi</name>
+    </author>
+    <author>
+      <name>Panayiotis Panayiotou</name>
+    </author>
+    <author>
+      <name>Luis Lara</name>
+    </author>
+    <author>
+      <name>Jannatul Nayem</name>
+    </author>
+    <author>
+      <name>Eran Yahav</name>
+    </author>
+    <author>
+      <name>Debanshu Das</name>
+    </author>
+    <author>
+      <name>Antonia Karamolegkou</name>
+    </author>
+    <author>
+      <name>Anmol Goel</name>
+    </author>
+    <author>
+      <name>Aishik Mandal</name>
+    </author>
+    <author>
+      <name>Tommaso Cerruti</name>
+    </author>
+    <author>
+      <name>Raoyuan Zhao</name>
+    </author>
+    <author>
+      <name>Mykola Haltiuk</name>
+    </author>
+    <author>
+      <name>Thura Aung</name>
+    </author>
+    <author>
+      <name>Naser Almousa</name>
+    </author>
+    <author>
+      <name>Amir Hossein Kargaran</name>
+    </author>
+    <author>
+      <name>Rachel Bawden</name>
+    </author>
+    <author>
+      <name>Qiaoyuan Zheng</name>
+    </author>
+    <author>
+      <name>Mateusz Lango</name>
+    </author>
+    <author>
+      <name>Beni Egressy</name>
+    </author>
+    <author>
+      <name>Fidel Rodríguez Velásquez</name>
+    </author>
+    <author>
+      <name>Natchapon Jongwiriyanurak</name>
+    </author>
+    <author>
+      <name>Minh Ngoc Do</name>
+    </author>
+    <author>
+      <name>Marco Gaido</name>
+    </author>
+    <author>
+      <name>Lena Libon</name>
+    </author>
+    <author>
+      <name>Dzmitry Kuzmin</name>
+    </author>
+    <author>
+      <name>Badal Nyalang</name>
+    </author>
+    <author>
+      <name>Antoine Taroni</name>
+    </author>
+    <author>
+      <name>Andrei Niculae</name>
+    </author>
+    <author>
+      <name>Abdulaziz Nura Kani</name>
+    </author>
+    <author>
+      <name>Rushikesh Zawar</name>
+    </author>
+    <author>
+      <name>Marek Šuppa</name>
+    </author>
+    <author>
+      <name>Beatrice Savoldi</name>
+    </author>
+    <author>
+      <name>Andreas Simons</name>
+    </author>
+    <author>
+      <name>Rayyan Merchant</name>
+    </author>
+    <author>
+      <name>Ilai Yaron Levy</name>
+    </author>
+    <author>
+      <name>Francesco Pinto</name>
+    </author>
+    <author>
+      <name>Ziyi Yang</name>
+    </author>
+    <author>
+      <name>Yolanda Xavier</name>
+    </author>
+    <author>
+      <name>Samuel Frontull</name>
+    </author>
+    <author>
+      <name>Muhammad Ravi Shulthan Habibi</name>
+    </author>
+    <author>
+      <name>Kenneth Enevoldsen</name>
+    </author>
+    <author>
+      <name>Harris Abdul Majid</name>
+    </author>
+    <author>
+      <name>Francesca Padovani</name>
+    </author>
+    <author>
+      <name>Tim Graf</name>
+    </author>
+    <author>
+      <name>Tatiana Bielakova</name>
+    </author>
+    <author>
+      <name>Sharifa Djurabaeva</name>
+    </author>
+    <author>
+      <name>Shaoxiong Ji</name>
+    </author>
+    <author>
+      <name>Raia Abu Ahmad</name>
+    </author>
+    <author>
+      <name>Pavel Stepachev</name>
+    </author>
+    <author>
+      <name>Jirui Qi</name>
+    </author>
+    <author>
+      <name>Ayush Sunil Munot</name>
+    </author>
+    <author>
+      <name>Alireza Pakniat</name>
+    </author>
+    <author>
+      <name>Ayla Rigouts Terryn</name>
+    </author>
+    <author>
+      <name>Yuxing Lu</name>
+    </author>
+    <author>
+      <name>Yurii Paniv</name>
+    </author>
+    <author>
+      <name>Xiyan Fu</name>
+    </author>
+    <author>
+      <name>Tosin Adewumi</name>
+    </author>
+    <author>
+      <name>Sunisth Kumar</name>
+    </author>
+    <author>
+      <name>Stéphane J. P. S. Thunus</name>
+    </author>
+    <author>
+      <name>Shree Harsha Bokkahalli Satish</name>
+    </author>
+    <author>
+      <name>Shayan Bali</name>
+    </author>
+    <author>
+      <name>Prakhar Gupta</name>
+    </author>
+    <author>
+      <name>Papa Abdou Karim Karou Diallo</name>
+    </author>
+    <author>
+      <name>Matija Akrap</name>
+    </author>
+    <author>
+      <name>Marko Culjak</name>
+    </author>
+    <author>
+      <name>Kristýna Onderková</name>
+    </author>
+    <author>
+      <name>Joseph Attieh</name>
+    </author>
+    <author>
+      <name>Esrael Teferi Tensay</name>
+    </author>
+    <author>
+      <name>Elisabeth Fittschen</name>
+    </author>
+    <author>
+      <name>Benoît Sagot</name>
+    </author>
+    <author>
+      <name>Jingwei Ni</name>
+    </author>
+    <author>
+      <name>Yu Fan</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.04172v1</id>
+    <title>Rethinking On-Policy Distillation of Large Language Models II: One Training Example</title>
+    <updated>2026-09-03T17:54:38Z</updated>
+    <link href="https://arxiv.org/abs/2609.04172v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.04172v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>On-policy distillation (OPD) combines student-generated rollouts with dense token-level supervision from a teacher. Existing work has mainly studied its algorithmic behavior, leaving the role of training data unclear. We examine this role at the data-minimal limit by training on a single query. One-shot OPD keeps improving for hundreds of steps and recovers most of full-data OPD's gain across task domains and model families. We explain this result through the states visited during training and the rate at which the student aligns with the teacher. We measure \emph{state coverage}, the fraction of the states full-data OPD visits that a query set's rollouts reach. A single query already reaches \(71.5\%\), most of it within the first 100 steps. Adding semantically distinct queries raises coverage and validation accuracy together, until 16 queries reach \(98.9\%\) and match full-data training. Yet alignment slows at a similar pace whether OPD trains on one query or the whole dataset, and even a fixed set of states takes hundreds of steps to absorb. OPD is therefore data-overfed but algorithm-starved. Its rollouts quickly expose broad supervision, while the student absorbs that supervision increasingly slowly. The state-coverage result extends to multi-teacher OPD, where 16 semantically diverse queries per domain match full-data MOPD. As a further stress test, content-light templates and off-domain WildChat queries also approach the real-query baseline. Task content and induced state coverage can therefore come apart. We hope these findings direct future work toward the step efficiency of OPD, and prompt a re-examination of the data and the mechanisms behind its recent successes in frontier post-training.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-03T17:54:38Z</published>
+    <arxiv:comment>29 pages, 20 figures</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Zixuan Fu</name>
+    </author>
+    <author>
+      <name>Bingxiang He</name>
+    </author>
+    <author>
+      <name>Yuxin Zuo</name>
+    </author>
+    <author>
+      <name>Haohuan Huang</name>
+    </author>
+    <author>
+      <name>Jinqian Zhang</name>
+    </author>
+    <author>
+      <name>Ruhang Xiao</name>
+    </author>
+    <author>
+      <name>Cheng Qian</name>
+    </author>
+    <author>
+      <name>Qinyu Luo</name>
+    </author>
+    <author>
+      <name>Huan-ang Gao</name>
+    </author>
+    <author>
+      <name>Yudong Wang</name>
+    </author>
+    <author>
+      <name>Zhiyuan Liu</name>
+    </author>
+    <author>
+      <name>Ning Ding</name>
+    </author>
+    <author>
+      <name>Chaojun Xiao</name>
+    </author>
+  </entry>
+</feed>
