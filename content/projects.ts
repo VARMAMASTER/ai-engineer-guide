@@ -273,7 +273,7 @@ export const milestones: Milestone[] = [
       'Build an entity and relation extraction pipeline over the corpus with a quality check step.',
     ],
     acceptance: [
-      'Extraction output is committed with a quality report against a sample of hand-labeled documents.',
+      'Extraction output is committed with a quality report against at least 50 hand-labeled documents, showing precision and recall of at least 80% against that gold sample.',
     ],
   },
   {
@@ -365,7 +365,7 @@ export const milestones: Milestone[] = [
       'Build an eval suite for task success, cost, steps, and safety, plus cost controls and model routing.',
     ],
     acceptance: [
-      'The eval suite report is committed and shows the effect of model routing on cost.',
+      'The eval suite report is committed and shows cost per resolved task with model routing on versus off, with routing on reducing cost per resolved task by at least 20% at equal or better task-success rate.',
     ],
   },
 
@@ -405,7 +405,7 @@ export const milestones: Milestone[] = [
       'Implement a KV cache and batched generation for inference.',
     ],
     acceptance: [
-      'Batched generation with the KV cache produces correct output faster than the naive baseline.',
+      'On a fixed prompt and seed, batched generation with the KV cache produces token-for-token identical output to the uncached path, at least 2x the tokens/sec of the uncached baseline.',
     ],
   },
   {
