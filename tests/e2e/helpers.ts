@@ -18,6 +18,7 @@ export const STATIC_ROUTES = [
   '/ai-ml',
   '/projects',
   '/reading',
+  '/feed',
   '/cs-fundamentals',
   '/hardware',
   '/behavioural',
@@ -146,6 +147,7 @@ export function isMobile(testInfo: TestInfo): boolean {
  * because it re-read storage.
  */
 export const SECONDARY_HREFS = [
+  '/feed',
   '/cs-fundamentals',
   '/hardware',
   '/lld',

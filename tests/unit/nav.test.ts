@@ -5,7 +5,7 @@ describe('nav', () => {
   it('has every section in rail order', () => {
     expect(NAV_ITEMS.map((i) => i.href)).toEqual([
       '/today', '/roadmap', '/dsa', '/system-design', '/projects',
-      '/lld', '/ai-ml', '/reading', '/cs-fundamentals', '/hardware',
+      '/lld', '/ai-ml', '/reading', '/feed', '/cs-fundamentals', '/hardware',
       '/behavioural', '/companies', '/mock', '/revise', '/settings',
     ])
   })
