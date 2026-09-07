@@ -994,4 +994,416 @@ const gatewayQuestions: AiSdQuestion[] = [
   },
 ]
 
-export const aiSdQuestions: AiSdQuestion[] = [...servingQuestions, ...gatewayQuestions]
+/**
+ * Pattern 3 — RAG platforms. Grounding generation in a corpus, where the hard parts are
+ * chunking, hybrid retrieval, access control that survives approximate search, and keeping
+ * the index fresh without serving a mix of embedding-model versions.
+ */
+const ragQuestions: AiSdQuestion[] = [
+  {
+    id: 'aisdq-chat-with-your-documents',
+    patternId: 'aisdp-rag-platform',
+    title: 'Design chat-with-your-documents',
+    companies: ['google', 'microsoft', 'amazon'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What does a good answer look like here — a synthesis, an extraction, or a pointer to the right page?',
+        'Is the user asking about one document they just uploaded, or a corpus they have accumulated?',
+        'What is the honest failure mode we are designing against: no answer, or a confident wrong one?',
+      ],
+      data: [
+        'How do you chunk a PDF with tables, headers and multi-column layout, and what breaks if you split naively?',
+        'Size the index: how many chunks, how many bytes per vector, and how much memory does that need?',
+        'What metadata travels with each chunk, and what is it for?',
+      ],
+      architecture: [
+        'Draw the ingestion pipeline and the query pipeline separately, and say where they meet.',
+        'Why hybrid retrieval rather than pure vector search, and how do you merge the two ranked lists?',
+        'Where does a reranker go, what does it buy, and what does it cost?',
+        'How do you construct the final prompt, and what do you do when the retrieved context does not fit?',
+      ],
+      evaluate: [
+        'How do you separate a retrieval failure from a generation failure when the answer is wrong?',
+        'What eval set would you build first, and how do you get labels for it?',
+        'How do you measure and reduce ungrounded claims in the answer?',
+      ],
+      deploy: [
+        'How do you ship a new embedding model when every existing vector is in the old space?',
+        'What does the user see while a 400-page document is still being indexed?',
+      ],
+      wrapup: [
+        'What is the cost per question, broken into retrieval and generation?',
+        'What is the first thing you would improve after launch, and how would you know?',
+      ],
+    },
+    solution: {
+      define:
+        'A good answer is a synthesis with citations that a user can click to verify — the citation is not a nicety, it is the mechanism that makes a wrong answer recoverable instead of authoritative. The workload is a personal or team corpus that grows: tens to thousands of documents per workspace, queried repeatedly. The failure mode I design against explicitly is the confident wrong answer built from a plausible-but-irrelevant chunk, because no-answer is visible and self-correcting while a hallucinated synthesis is not. That drives two decisions early: retrieval must be able to return nothing, and the generator must be instructed and evaluated on refusing when the context does not support an answer.',
+      data:
+        'Chunking is the highest-leverage decision in the whole system and naive fixed-size splitting is where most implementations lose their quality. I parse to a structured document first — a layout model that recovers reading order, headings and table boundaries — then chunk on structure: a chunk is a section or a table, split further at roughly 512 tokens with 64 tokens of overlap only when a section is longer. Tables are serialised as markdown and never split mid-table, because half a table is worse than no table. Each chunk carries a synthesised header — document title, section path, page number — prepended before embedding, which recovers the context a small chunk otherwise loses. Metadata per chunk: document id, version, page, section path, ACL ids, source timestamp, and the parser version. Index sizing for a large workspace tier: 50M documents at an average 2,000 tokens is roughly 4.5 chunks each, about 225M chunks; at 1,024 dimensions in float32 that is 4KB per vector or 900GB, which is why I store int8-quantised vectors at 1KB each, 225GB, plus about 57GB of HNSW graph links — a number that fits across a handful of memory-optimised nodes rather than a fleet.',
+      architecture:
+        'Two pipelines. Ingestion: upload to object storage, virus and type check, layout parse, structural chunk, embed in batches, write to the vector index and to a BM25 index in the same transaction-ish flow, then mark the document ready. It is a queue-driven worker pool because a 400-page PDF takes minutes and must not block anything. Query: embed the question, run dense ANN top-50 and BM25 top-50 in parallel, merge with reciprocal rank fusion, rerank the fused top-100 with a cross-encoder down to the top 5 to 8, build the prompt, generate with citations, stream. Hybrid rather than pure vector because the two fail on opposite queries: dense retrieval misses exact identifiers, product codes, error strings and rare proper nouns, which is precisely what users paste in; BM25 misses paraphrase. Reciprocal rank fusion is chosen over score normalisation because the two scores are not commensurable and RRF needs no tuning per corpus. The reranker earns its 50 to 300ms by lifting precision at 5 substantially — the generator only sees 5 chunks and one irrelevant chunk in that window measurably increases ungrounded claims. When context does not fit, I do not truncate silently: I drop the lowest-ranked chunks, keep whole chunks rather than fragments, and record how many were dropped as a metric, because chronic dropping means the chunk size or the top-k is wrong.',
+      evaluate:
+        'Separating retrieval from generation failure requires two metrics, not one. Retrieval: recall at k against a labelled set of question-to-gold-chunk pairs — if the gold chunk is not in the retrieved set, the generator never had a chance and no prompt engineering will fix it. Generation: groundedness, measured by decomposing the answer into atomic claims and checking each against the retrieved context with a judge, plus citation precision, the fraction of citations that actually support the sentence they are attached to. The first eval set comes from the corpus itself: sample 300 chunks, have a model generate a question each chunk uniquely answers, human-review to drop the bad ones, and you have gold pairs for retrieval in a day. Real user questions replace them over the first month, harvested from logs with thumbs and click-through on citations as weak labels. Ungrounded claims come down through the reranker, through instructing the generator to answer only from context and to say when it cannot, and through a post-generation groundedness check on a sampled slice that alerts when the rate rises.',
+      deploy:
+        'A new embedding model means every vector is in the wrong space, and you cannot mix spaces in one index — cosine similarity across two embedding models is meaningless, not merely noisy. So: build a second index offline, backfill it fully, evaluate it on the gold pairs, then cut over per workspace behind a flag with both indexes live for a fortnight. Backfilling 225M chunks at an assumed 0.02 USD per million embedding tokens costs about 2,300 USD in embedding spend and a day or two of throughput, which is a manageable one-off and should be budgeted at design time rather than discovered later. During indexing the user sees per-document progress and can query what is ready — partial availability with an explicit banner is much better than a spinner, but the banner is essential, because otherwise the user reads a gap in the corpus as a wrong answer.',
+      wrapup:
+        'Cost per question: embedding the query is negligible, ANN plus BM25 plus fusion is a few milliseconds of CPU, the cross-encoder rerank of 100 candidates is the real retrieval cost at perhaps 0.0002 USD, and generation over about 4,000 tokens of context dominates at roughly 0.012 USD input plus output. So generation is 95 percent-plus of the bill and the lever is context size, not retrieval. First improvement after launch would be query rewriting — resolving pronouns and follow-ups against conversation history before retrieval — because the single most common production failure is a follow-up question that retrieves nothing, and I would know from the recall-at-k metric segmented by conversation turn depth.',
+      numbers: [
+        'Index size: 50M docs x 4.5 chunks = 225M chunks; at 1,024 dims int8 that is 225GB of vectors plus about 57GB of HNSW links (32 neighbours x 8 bytes), against 900GB if stored as float32.',
+        'Backfill cost: 225M chunks x 512 tokens = 115B tokens; at an assumed 0.02 USD per million that is about 2,300 USD to re-embed the corpus for a model migration.',
+        'Query latency budget: 10ms query embed + 15ms ANN + 10ms BM25 + 5ms fusion + 120ms cross-encoder rerank = about 160ms before the first generation token, inside a 800ms TTFT budget.',
+        'Cost per question: about 4,000 context tokens at an assumed 3 USD per million input = 0.012 USD, versus roughly 0.0002 USD for reranking, so generation is over 95 percent of unit cost and context length is the lever.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 8, apiAndData: 10, architecture: 15, deepDive: 14, wrapUp: 5 },
+      opening:
+        'I want to spend real time on chunking and on the retrieval-versus-generation split in evaluation, because in my experience those two decide whether a RAG system is good, and everything else is plumbing.',
+      traps: [
+        'Fixed-size chunking with no document structure. Splitting a table in half or cutting a section header off its content quietly caps your ceiling, and no amount of prompt work recovers it.',
+        'Pure vector search. Users paste error codes, SKUs and proper nouns, and dense retrieval is systematically bad at exactly those; hybrid with rank fusion is the default, not an enhancement.',
+        'One quality metric. If you cannot say whether a wrong answer was a retrieval miss or a generation failure, you cannot fix either, and the interviewer will ask which one it was.',
+        'Hand-waving the embedding-model migration. Vectors from two models are not comparable, so the migration is a full backfill with a dual-index cutover, and it costs real money you should have sized.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Long-context models make RAG unnecessary — just put the documents in the prompt.',
+          answer:
+            'For a single 50-page document, I agree and I would skip retrieval entirely. It stops working on cost and latency well before it stops working on capability: a 200K-token context at an assumed 3 USD per million is 0.60 USD per question, fifty times my RAG cost, and it adds seconds of prefill. It also degrades on retrieval-in-the-middle for a large corpus. So I use long context as the fallback for small corpora and retrieval for large ones, which is a size threshold rather than a philosophy.',
+        },
+        {
+          challenge: 'Your reranker adds 120ms to every query.',
+          answer:
+            'It does, and I pay it because precision at 5 is what the generator actually consumes — one irrelevant chunk in five measurably raises ungrounded claims. If the latency budget tightened I would shrink the rerank candidate set from 100 to 30 before I would remove the reranker, and I would measure the recall loss from that on the gold pairs rather than guessing.',
+        },
+        {
+          challenge: 'How do you stop it answering from its own knowledge rather than the documents?',
+          answer:
+            'Instruction alone is not enough, so I measure it: the groundedness check decomposes the answer into claims and verifies each against the retrieved chunks, and a claim with no supporting chunk is a violation regardless of whether it happens to be true. Sampled continuously, that gives a rate I can alert on, and citations give the user the means to catch the ones that slip through.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  UP["Upload"] --> OBJ[("Object store")]
+  OBJ --> Q["Ingest queue"]
+  Q --> PARSE["Layout parse: reading order, headings, tables"]
+  PARSE --> CH["Structural chunking, 512 tok, 64 overlap, header prepended"]
+  CH --> EMB["Embed (batched)"]
+  EMB --> VEC[("Vector index: 225M x int8 + HNSW")]
+  CH --> BM[("BM25 index")]
+  CH --> META[("Chunk metadata: doc, page, ACL, parser version")]
+  QRY["User question"] --> QE["Embed query"]
+  QE --> VEC
+  QRY --> BM
+  VEC -->|top 50| RRF["Reciprocal rank fusion"]
+  BM -->|top 50| RRF
+  RRF -->|top 100| RR["Cross-encoder rerank (~120ms)"]
+  RR -->|top 5-8| PROMPT["Prompt build + citation slots"]
+  PROMPT --> GEN["Generator (streamed)"]
+  GEN --> ANS["Answer with clickable citations"]
+  ANS -->|sampled| GRD["Claim decomposition + groundedness judge"]
+  GOLD[("Gold question-chunk pairs")] --> RECALL["recall@k"]`,
+  },
+  {
+    id: 'aisdq-enterprise-search-acl',
+    patternId: 'aisdp-rag-platform',
+    title: 'Design enterprise search with per-user access control',
+    companies: ['microsoft', 'google', 'amazon'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What is the security requirement, stated precisely: must a user never see a snippet, or never see a document, or never learn a document exists?',
+        'What systems are we searching over, and who owns permissions in each of them?',
+        'How stale is an acceptable permission, in seconds?',
+      ],
+      data: [
+        'How do you model permissions when the sources have groups, nested groups, sharing links and inheritance?',
+        'How many ACL entries per document should you expect, and what does that do to your filter?',
+        'What is the permission-change event volume, and can you keep up with it?',
+      ],
+      architecture: [
+        'Where in the retrieval path do you enforce access control, and what does each choice cost?',
+        'What happens to ANN recall when you pre-filter to a user who can see 0.1 percent of the corpus?',
+        'How do you stop the answer itself from leaking content the user cannot see?',
+      ],
+      evaluate: [
+        'How do you test that access control is correct, given the failure is silent and catastrophic?',
+        'How do you measure quality separately for a user with broad access and one with narrow access?',
+      ],
+      deploy: [
+        'How do you handle a permission revocation that must take effect immediately?',
+        'How do you re-index after a bulk permission change across a hundred thousand documents?',
+      ],
+      wrapup: [
+        'What is the residual risk you are accepting, and how would you explain it to a security reviewer?',
+        'What would you build differently if the requirement were existence-hiding rather than content-hiding?',
+      ],
+    },
+    solution: {
+      define:
+        'The precise requirement matters enormously and I would pin it before designing: content-hiding, where a user never sees text or a snippet from a document they cannot access, is achievable at reasonable cost; existence-hiding, where a user cannot infer the document exists, is much stricter and rules out several optimisations including shared caches and result counts. I design for content-hiding with best-effort existence-hiding, and I say that out loud to the security reviewer rather than implying more. Sources are the usual enterprise set — a document store, a wiki, a ticket system, chat — each owning its own permission model, and none of them agreeing on what a group is. Permission staleness target: under 60 seconds for a grant, and effectively zero for a revoke, which is an asymmetry I will build for explicitly.',
+      data:
+        'I normalise every source into a principal graph: users, groups, and group-of-group edges, resolved to a flattened principal set per user at query time and cached for a short TTL. Each document carries an allow-list of principal ids after inheritance is resolved at index time, which is what makes query-time filtering a set-membership test rather than a graph traversal. Expect a heavy tail: most documents have 1 to 5 ACL entries, but the inherited-from-a-large-folder case produces documents with thousands, so the ACL field is stored as a sorted id list with a bloom-style prefilter rather than inline in the vector payload. Permission change volume in a 50,000-person org is on the order of 100K events per day with bursts of millions during a reorg or a bulk share, so the ingestion path must be able to absorb a bulk re-permission without falling behind on new content — separate queues with separate priorities.',
+      architecture:
+        'Access control is enforced in three places, deliberately redundant. First, pre-filter: the ANN query carries the user flattened principal set and the index does filtered search. Second, post-filter: every candidate is re-checked against the authoritative ACL store before it reaches the reranker, which catches index staleness. Third, at answer time: the generator only ever sees chunks that passed both, and citations are re-validated on click. The pre-filter is where the interesting engineering is, because filtered ANN degrades badly when the filter is selective: HNSW traversal visits neighbours that fail the filter and either returns too few results or explodes the search-effort parameter. For users with broad access, inline filtering during graph traversal works fine. For narrow access — a contractor who can see 0.1 percent of the corpus — I switch strategy to partition-based search: documents are sharded into index partitions by their dominant ACL group, so a narrow user searches only the two or three partitions they can see, exhaustively if needed, which is both faster and exact. Choosing between the two based on the user selectivity estimate is the design decision I would defend hardest here. Post-filtering alone I reject: it silently returns three results where the user deserved fifty.',
+      evaluate:
+        'Access-control correctness is not something you sample, because a 0.1 percent leak rate is a breach. So it gets a deterministic test: a synthetic corpus with a known permission matrix, and a test suite that asserts for every (user, document) pair with no access that the document never appears in results, never appears in a citation, and never contributes a token to an answer, including through the semantic cache. That runs on every deploy. In production I run a continuous canary with probe users at known permission levels against known probe documents. Quality is measured separately by access breadth, because a narrow-access user has a genuinely harder retrieval problem — fewer relevant documents exist — and a fleet-wide recall number is dominated by broad-access users and hides that entirely. So: recall at k reported by access-breadth decile.',
+      deploy:
+        'Revocation must be immediate, and the index cannot be, so revocation is handled at the post-filter against the authoritative ACL store, which is read on every query for the candidate set only — a few hundred key lookups, cheap and always current. Index updates for revocation follow asynchronously. Grants can be slower and go through the normal indexing path. A bulk permission change across a hundred thousand documents is a re-permission job, not a re-embedding job, and separating those two is what makes it survivable: the vectors do not change, only the ACL field, so it is a metadata update at index-write throughput rather than an embedding backfill. It runs on a lower-priority queue with its own rate limit so it cannot starve fresh-content indexing. Caches — semantic cache, retrieval cache — are keyed by the user principal set hash, so a permission change naturally invalidates them.',
+      wrapup:
+        'Residual risk I would state plainly to a reviewer: between a revocation and the index update, the document is excluded by post-filter but a timing observer could in principle infer existence from latency; snippets are generated only from post-filtered chunks so content does not leak; and the biggest real risk is not the retrieval path at all but an over-permissive ACL inherited from a source system, which we faithfully reproduce. If the requirement were true existence-hiding, I would drop shared caching entirely, return no result counts, pad latency to a constant, and partition indexes hard by security boundary rather than by dominant group, accepting a significant cost and quality loss for it.',
+      numbers: [
+        'ACL fan-out: at a median of 4 principals per document and a tail of thousands, a 50M-document corpus holds roughly 250M ACL edges — a sorted-id list per document, not a join at query time.',
+        'Narrow-access selectivity: a user seeing 0.1 percent of 225M chunks has 225K candidates; inline-filtered HNSW would visit roughly 1,000 rejected neighbours per accepted one, which is why partitioned exhaustive search over 2-3 partitions wins below about 1 percent selectivity.',
+        'Post-filter cost: re-checking 100 reranker candidates against the ACL store is 100 key lookups at about 0.5ms batched, roughly 0.3 percent of the query budget, and it is what makes immediate revocation possible.',
+        'Bulk re-permission: 100K documents as metadata-only updates at an assumed 5K writes/s is 20 seconds, against re-embedding the same documents at 450K chunks x 512 tokens which would be hours and about 5 USD of embedding spend.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 9, estimates: 7, apiAndData: 10, architecture: 15, deepDive: 14, wrapUp: 5 },
+      opening:
+        'I want to pin down whether the requirement is content-hiding or existence-hiding first, because those are different systems and it is the only question in this design where getting it wrong is a breach rather than a bug.',
+      traps: [
+        'Post-filtering only. It is fast and it is correct, and it silently returns three results to a narrow-access user who deserved fifty, so your quality looks fine in aggregate and is terrible for exactly the users who complain.',
+        'Assuming filtered ANN just works. HNSW recall collapses as the filter gets selective, and if you cannot describe what happens at 0.1 percent selectivity you have not built one.',
+        'Treating permission changes as re-indexing. Vectors do not change when an ACL does, and conflating the two turns a 20-second metadata job into an hours-long embedding backfill.',
+        'Sampling for access-control correctness. A leak is not a quality metric with a tolerable rate; it needs a deterministic permission-matrix test in CI.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not just build one index per user?',
+          answer:
+            'It is exactly correct and completely unaffordable: in a 50,000-person org with heavily overlapping access you would store the same chunk thousands of times. Partitioning by dominant ACL group is the compromise — it gets most of the exactness benefit for narrow users at a small multiple of storage, and I fall back to filtered search for the broad-access majority.',
+        },
+        {
+          challenge: 'Your semantic cache leaks across users.',
+          answer:
+            'It would if I keyed it on the question alone, which is why the key includes a hash of the user resolved principal set. That crushes hit rate for a personalised corpus, and I accept that: a cross-user cache over permissioned content is a data-leak mechanism wearing a performance costume. I keep caching at the embedding layer, where the vector depends on the question only.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  SRC1["Doc store"] --> NORM["Normalise to principal graph + inherited ACLs"]
+  SRC2["Wiki"] --> NORM
+  SRC3["Tickets"] --> NORM
+  NORM --> IDX["Index writer"]
+  IDX --> P1[("Partition: group A dominant")]
+  IDX --> P2[("Partition: group B dominant")]
+  IDX --> ACL[("Authoritative ACL store")]
+  U["User query"] --> RES["Resolve flattened principal set (short TTL cache)"]
+  RES --> SEL{"Access selectivity"}
+  SEL -->|broad, > 1%| FANN["Filtered HNSW across partitions"]
+  SEL -->|narrow, < 1%| PART["Exhaustive search, visible partitions only"]
+  FANN --> CAND["Candidates"]
+  PART --> CAND
+  CAND --> POST["Post-filter against ACL store (immediate revocation)"]
+  POST --> RR["Rerank"]
+  RR --> GEN["Generate with citations"]
+  GEN --> CLICK["Citation re-validated on click"]
+  PERM["Permission change event"] -->|revoke: instant| ACL
+  PERM -->|bulk: low-priority metadata queue| IDX
+  MATRIX["Permission-matrix test suite"] --> POST`,
+  },
+  {
+    id: 'aisdq-multi-tenant-knowledge-base',
+    patternId: 'aisdp-rag-platform',
+    title: 'Design a multi-tenant knowledge base for a SaaS product',
+    companies: ['amazon', 'microsoft'],
+    minutes: 45,
+    steps: {
+      define: [
+        'How many tenants, and what does the distribution of corpus size across them look like?',
+        'What isolation guarantee do you owe: logical separation, or physically separate storage?',
+        'What is the onboarding experience — how long from first upload to first useful answer?',
+      ],
+      data: [
+        'Do you use one index for everyone with a tenant filter, an index per tenant, or something between?',
+        'What does the smallest tenant cost you when idle, and what does the largest cost at peak?',
+      ],
+      architecture: [
+        'How do you keep one large tenant from degrading query latency for everyone else?',
+        'How do you handle a tenant with 5 documents and a tenant with 5 million in the same system?',
+        'What is shared across tenants and what must never be?',
+      ],
+      evaluate: [
+        'How do you evaluate quality per tenant when each corpus is different?',
+        'What signals tell you a specific tenant is getting bad answers before they file a ticket?',
+      ],
+      deploy: [
+        'How do you migrate one tenant to a new embedding model without touching the others?',
+        'How does a tenant delete their data, and how do you prove it is gone?',
+      ],
+      wrapup: [
+        'What is the marginal cost of a new tenant, and does the pricing model match it?',
+        'Where does this architecture break, and at what tenant count?',
+      ],
+    },
+    solution: {
+      define:
+        'Assume 5,000 tenants with a brutal power law: the top 20 hold more documents than the remaining 4,980 combined, and the median tenant has under 500 documents. That distribution, not the total, is what dictates the architecture. Isolation: logical separation with a tenant id on every row and enforced at a data-access layer, plus physically separate namespaces for the enterprise tier that pays for it — I would not promise physical separation to everyone, because it makes the small-tenant economics impossible and most customers are buying the assurance, not the topology. Onboarding target is a useful answer within 5 minutes of the first upload, which means indexing must be incremental and queryable before completion.',
+      data:
+        'Three storage tiers rather than one decision. Small tenants — under about 100K chunks — share a pooled index with a tenant-id filter, because a dedicated index has a fixed memory and process overhead that dwarfs their data. Medium tenants get a dedicated namespace inside a shared cluster. Large tenants get their own index, and above a threshold their own nodes. A tenant is promoted between tiers automatically on chunk count and query rate, and promotion is an offline re-index into the new tier followed by a pointer flip. Idle cost of the smallest tenant is then genuinely near zero — a few thousand vectors inside a pooled index, some object storage, and a row in a control-plane database — while the largest is priced on dedicated capacity.',
+      architecture:
+        'A control plane holds the tenant registry: tier, index location, embedding model version, quota, and feature flags. The query path resolves tenant to index location, so the routing logic is identical across tiers and only the target changes. Noisy-neighbour protection is per-tier: in the pooled index, per-tenant query concurrency limits and a per-tenant token bucket on retrieval, because one tenant running a bulk backfill of questions can saturate the shared node otherwise; ingestion is a separate worker pool with per-tenant fair queueing so a tenant uploading 5 million documents does not delay another tenant first upload — that is the single most damaging noisy-neighbour failure, because it hits onboarding. What is shared: the embedding service, the reranker, the generator pool, the parsing workers, and the control plane. What must never be shared: any cache keyed on content, any index without a tenant filter enforced below the application layer, and any log stream containing document text.',
+      evaluate:
+        'Per-tenant quality needs per-tenant ground truth, which nobody will hand-label, so I generate it: at onboarding, sample chunks from the tenant corpus and synthesise question-to-gold-chunk pairs, giving a recall-at-k number for that specific corpus within an hour of ingestion and a regression baseline forever after. It is imperfect — synthetic questions are easier than real ones — but it is comparable over time, which is what matters for detecting a regression. Real signals that a tenant is unhappy before the ticket: rising rate of answers where retrieval returned nothing above the score floor, rising rate of the generator declining to answer, falling citation click-through, and rising query reformulation within a session. Those four, per tenant, with a threshold relative to that tenant own trailing baseline rather than a global one, because a tenant with a thin corpus starts from a worse absolute number and always will.',
+      deploy:
+        'Per-tenant embedding migration is exactly why the model version lives in the tenant registry rather than in global config. Migration is: build the new index for that tenant, run their synthetic gold set against both, compare recall, flip the pointer, keep the old index for seven days. Tenants migrate in waves starting with the smallest, and a tenant can be pinned if their evaluation regresses, which is a situation a global rollout would have made invisible. Deletion is a legal requirement, not a feature, so it is designed for: object-store originals, chunk rows, vectors, BM25 postings, caches, and traces are all tagged with tenant id, deletion is a control-plane job that fans out to every store with per-store confirmation, and it emits a certificate listing rows removed per store. Proving it is gone means a post-deletion scan that asserts zero rows for that tenant id across every store, run as part of the job rather than on request.',
+      wrapup:
+        'Marginal cost of a new small tenant is dominated by embedding their corpus once — 500 documents at 4.5 chunks and 512 tokens is about 1.15M tokens, roughly 0.02 USD at an assumed 0.02 USD per million — plus a few megabytes of storage. That is essentially free, which is why a per-seat or per-question pricing model works and a per-tenant infrastructure fee does not. The architecture breaks on control-plane fan-out: at around 50,000 tenants, per-tenant index metadata, per-tenant eval runs and per-tenant migration waves become an operations load of their own, and the fix at that point is to stop treating tenants as individually managed objects and move to a fully pooled index with hard per-tenant partitioning inside it.',
+      numbers: [
+        'Tenant distribution: 5,000 tenants where the median holds 500 docs (about 2,250 chunks) and the top 20 hold millions — pooled indexing for the median, dedicated nodes for the top, because a dedicated index per median tenant wastes more memory in overhead than it stores.',
+        'Onboarding cost: 500 docs x 4.5 chunks x 512 tokens = 1.15M tokens, about 0.02 USD at an assumed 0.02 USD per million, so a free trial tenant costs cents to index.',
+        'Noisy neighbour: one tenant issuing 200 QPS of bulk queries against a pooled node sized for 500 QPS consumes 40 percent of it, which is why the per-tenant token bucket is set at roughly 10 percent of node capacity by default.',
+        'Deletion proof: a fan-out delete across 6 stores with a post-scan asserting zero rows per store, run inline, converts a compliance promise into a job with an artefact.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 7, estimates: 6, apiAndData: 8, architecture: 11, deepDive: 9, wrapUp: 4 },
+      opening:
+        'The shape of the tenant size distribution decides this design, so let me assume a power law up front — a median tenant with a few hundred documents and a handful with millions — and build three tiers rather than one.',
+      traps: [
+        'One index per tenant for everyone. The fixed overhead per index dwarfs a median tenant data, and at a few thousand tenants you are paying for empty containers.',
+        'Enforcing tenant isolation in application code only. It needs to be below the application layer, or the one query someone writes without the filter is your breach.',
+        'Letting ingestion share a queue across tenants. A tenant bulk-loading five million documents delays another tenant first upload, which is the worst possible time to be slow.',
+        'A single global embedding-model version. It makes migration all-or-nothing, when the safe path is per-tenant waves with a per-tenant evaluation gate.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Enterprise customers will demand their own database.',
+          answer:
+            'Some will, and I sell that as a tier rather than arguing. The registry already abstracts index location, so a dedicated cluster or even a customer-managed region is a registry entry rather than a fork of the product. What I refuse is promising it by default, because the pooled tier is what makes the median tenant profitable.',
+        },
+        {
+          challenge: 'Your synthetic eval sets are not real questions.',
+          answer:
+            'Correct, and they overstate absolute quality — synthetic questions are drawn from the chunk that answers them, so recall looks better than it is. Their value is as a fixed baseline per tenant for detecting regressions, which is a different job from measuring quality. Real questions from logs replace them progressively once a tenant has traffic.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  CP[("Control plane: tier, index location, model version, quota")] --> RTR["Query router"]
+  UP["Tenant upload"] --> FQ["Ingestion pool, per-tenant fair queue"]
+  FQ --> EMB["Shared embedding service"]
+  EMB --> TIER{"Tenant tier"}
+  TIER -->|small| POOL[("Pooled index + tenant filter")]
+  TIER -->|medium| NS[("Dedicated namespace, shared cluster")]
+  TIER -->|large| DED[("Dedicated index and nodes")]
+  Q["Tenant query"] --> RTR
+  RTR --> TB["Per-tenant token bucket"]
+  TB --> POOL
+  TB --> NS
+  TB --> DED
+  POOL --> RR["Shared reranker"]
+  NS --> RR
+  DED --> RR
+  RR --> GEN["Shared generator pool"]
+  GEN --> OUT["Answer"]
+  SYN["Synthetic gold pairs per tenant"] --> BASE[("Per-tenant recall baseline")]
+  OUT -->|no-hit rate, decline rate, citation CTR| BASE
+  DEL["Delete tenant"] -->|fan-out + post-scan certificate| POOL`,
+  },
+  {
+    id: 'aisdq-index-freshness',
+    patternId: 'aisdp-rag-platform',
+    title: 'Design index freshness and re-indexing for a live corpus',
+    companies: ['google', 'amazon'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What is the freshness requirement, and is it the same for every kind of document?',
+        'What is the cost of answering from a stale version of a document?',
+        'How do you tell a user that the answer is based on a version from an hour ago?',
+      ],
+      data: [
+        'What is the change rate of the corpus, and how much of it is meaningful change?',
+        'How do you detect that a document changed in a way that matters, rather than a timestamp bump?',
+      ],
+      architecture: [
+        'Draw the incremental update path from a source change to a queryable vector.',
+        'How do you handle deletes and edits in an ANN index that does not love either?',
+        'When do you rebuild the whole index instead, and how do you cut over?',
+      ],
+      evaluate: [
+        'How do you measure freshness as an SLO rather than a feeling?',
+        'How do you detect that the index and the source have silently diverged?',
+      ],
+      deploy: [
+        'How do you run a re-index of the whole corpus without degrading live queries?',
+        'What happens if the embedding job fails halfway through?',
+      ],
+      wrapup: [
+        'What does freshness cost, and what would you trade for it?',
+        'What is the simplest version of this that would be good enough?',
+      ],
+    },
+    solution: {
+      define:
+        'Freshness is not uniform and pretending it is wastes most of the budget. I tier it: policy documents, pricing and incident notes need under 60 seconds because a stale answer there is materially wrong; general documentation can be minutes; archived material can be daily. The cost of staleness varies the same way — a stale price quoted confidently to a customer is a business incident, a stale tutorial is a nuisance. Every answer carries the source timestamp per citation, so the user can see the version the answer is built from; that single UI element converts an invisible staleness problem into a visible one, and it is far cheaper than driving staleness to zero everywhere.',
+      data:
+        'Change rate in a live corporate corpus is dominated by noise: most update events are metadata touches, permission changes, or an auto-save that changed nothing semantic. So the pipeline computes a content hash after parsing and normalisation, and a document whose normalised content hash is unchanged is dropped immediately — that alone typically removes 70 to 90 percent of events before any embedding work. Below that, chunk-level hashing: re-embed only the chunks whose text changed, which for a typical edit is 1 to 3 chunks out of a hundred. That is the difference between re-embedding a 400-page document on every save and re-embedding two paragraphs.',
+      architecture:
+        'Source systems push change events to a queue, or are polled with a cursor where they cannot push. A worker fetches the document, parses, normalises, hashes at document and chunk level, and diffs against the stored chunk hashes. New and changed chunks are embedded and upserted; removed chunks are deleted. ANN indexes handle upserts poorly over time — HNSW deletes are tombstones, and the graph degrades as tombstones accumulate — so I accept that and manage it: tombstone ratio is a monitored metric, and a segment is compacted and rebuilt when it exceeds about 20 percent deleted. That is a background operation on one segment at a time, invisible to queries, which is much better than the alternative of a global rebuild. A global rebuild is reserved for exactly two situations: an embedding model change, and a chunking-strategy change, both of which invalidate everything. The cutover for those is a parallel index built offline, evaluated on the gold set, and swapped behind an alias.',
+      evaluate:
+        'Freshness as an SLO needs a measured number, not a queue-depth proxy. I inject a canary document into each source every minute with the current timestamp in its body, and query for it; the delay until it is retrievable is the end-to-end freshness measurement, and the SLO is stated on its p95 per tier. Queue depth alone lies, because a stuck worker on one shard shows a healthy aggregate. Silent divergence between source and index is the failure that no queue metric catches — a dropped event, a permanently failing document, a source cursor that skipped — so a reconciliation job walks the source inventory nightly and compares document ids and content hashes against the index, emitting a divergence count. That number should be zero, and when it is not, it is usually a class of documents the parser has been failing on for weeks in silence.',
+      deploy:
+        'A full re-index runs on separate worker capacity writing into a separate index, so live queries never contend with it — the only shared resource is the embedding service, which gets a lower-priority lane for backfill traffic so interactive query embedding is never queued behind it. Progress is checkpointed by document id range, so a failure resumes rather than restarting, and the new index is not aliased until a completeness check passes: document count and content-hash coverage matching the source inventory within a tolerance of zero. A half-finished index that gets aliased is the worst outcome available here, because it looks healthy and quietly answers from a partial corpus, so the completeness gate is not optional.',
+      wrapup:
+        'Freshness costs mostly in embedding spend and in the operational complexity of a streaming pipeline, and the hash-based deduplication is what makes it affordable — without it, the same corpus costs an order of magnitude more to keep current. What I would trade: sub-minute freshness on the archived tier, which nobody needs, in exchange for spending it on the policy tier. The simplest version that is genuinely good enough for many products is a nightly full rebuild plus an express lane for documents flagged as time-sensitive; it is a hundred lines rather than a pipeline, and if the corpus is under a few million chunks I would start there and only build the incremental path when the freshness SLO or the rebuild cost forces it.',
+      numbers: [
+        'Event filtering: at an assumed 500K change events/day of which 80 percent are non-semantic, content hashing drops the workload to 100K documents; chunk-level diffing then re-embeds about 2 chunks each, so 200K chunks/day rather than 450K per full-corpus pass.',
+        'Incremental embedding cost: 200K chunks x 512 tokens = 102M tokens/day, about 2 USD/day at an assumed 0.02 USD per million, versus roughly 2,300 USD for a full 225M-chunk rebuild.',
+        'Tombstone management: rebuilding a segment at 20 percent deleted keeps ANN recall within a point or two of a fresh index, and a segment rebuild touches roughly 1/64th of the corpus at a time.',
+        'Freshness SLO measurement: a canary document per source per minute gives 1,440 samples/day/source, enough to state a p95 index-lag number rather than inferring freshness from queue depth.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 6, estimates: 6, apiAndData: 8, architecture: 11, deepDive: 10, wrapUp: 4 },
+      opening:
+        'I want to tier the freshness requirement rather than set one number, because most of a corpus does not need to be fresh and paying for uniform freshness is where this design usually goes wrong.',
+      traps: [
+        'Re-embedding a whole document on every change event. Most events change nothing semantic, and chunk-level hashing turns an expensive pipeline into a cheap one.',
+        'Assuming an ANN index absorbs deletes indefinitely. Tombstones degrade recall, so segment compaction has to be a designed background job with a monitored ratio.',
+        'Using queue depth as the freshness metric. It goes green while one stuck shard serves month-old content; a canary document measures the thing you actually promised.',
+        'Aliasing a rebuilt index before a completeness check. A partial index answers confidently from a partial corpus and looks perfectly healthy.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not just query the source system live instead of indexing?',
+          answer:
+            'For a small number of high-value, high-churn sources that is genuinely better, and I would federate: query the ticket system API live and merge those results with the index. It does not generalise, because live sources have their own rate limits and latencies and no semantic search, so you get keyword results with a two-second tax. Federating the few and indexing the many is the pragmatic split.',
+        },
+        {
+          challenge: 'Your reconciliation job is a nightly full scan of everything.',
+          answer:
+            'It is, and at 50M documents that is a real job, so it walks a partition per night on a rolling seven-day cycle rather than the whole corpus, and it compares hashes rather than content. The point is not instant detection, it is that a class of silently failing documents cannot hide for months, which is the actual failure I have seen.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  SRC["Source system"] -->|change event or cursor poll| Q["Change queue (tiered by freshness class)"]
+  Q --> W["Worker: fetch, parse, normalise"]
+  W --> DH{"Document content hash changed?"}
+  DH -->|no| DROP["Drop (70-90% of events)"]
+  DH -->|yes| CDIFF["Chunk-level hash diff"]
+  CDIFF -->|changed chunks only| EMB["Embed (low-priority lane for backfill)"]
+  EMB --> UPS["Upsert vectors + BM25 postings"]
+  CDIFF -->|removed chunks| TOMB["Delete (tombstone)"]
+  TOMB --> RATIO{"Segment tombstones > 20%?"}
+  RATIO -->|yes| COMPACT["Background segment rebuild"]
+  UPS --> IDX[("Live index (aliased)")]
+  CANARY["Canary doc per source per minute"] --> IDX
+  IDX -->|retrieval delay p95| SLO[("Freshness SLO per tier")]
+  RECON["Nightly partition reconciliation: source vs index hashes"] --> IDX
+  MODEL["Embedding or chunking change"] --> REBUILD["Offline full rebuild"]
+  REBUILD -->|completeness gate passes| IDX`,
+  },
+]
+
+export const aiSdQuestions: AiSdQuestion[] = [
+  ...servingQuestions,
+  ...gatewayQuestions,
+  ...ragQuestions,
+]
