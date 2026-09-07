@@ -4521,6 +4521,40 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'Use every edge exactly once — that is an Eulerian path, not a shortest path, so ordinary DFS with backtracking is the wrong tool.',
+    approach: `Greedily always take the smallest unused destination, and append a node to the
+route only once it has no edges left. That post-order append is what makes it
+correct: a dead end reached early is the tail of the itinerary, not a failure.
+Reversing the collected order yields the Eulerian path.`,
+    solution: `from collections import defaultdict
+
+
+def find_itinerary(tickets: list[list[str]]) -> list[str]:
+    if not tickets:
+        return []
+
+    graph: dict[str, list[str]] = defaultdict(list)
+    for src, dst in sorted(tickets, reverse=True):
+        graph[src].append(dst)  # reverse-sorted so pop() takes the smallest
+
+    route: list[str] = []
+    stack = ["JFK"]
+
+    while stack:
+        while graph[stack[-1]]:
+            stack.append(graph[stack[-1]].pop())
+        route.append(stack.pop())  # no edges left: this is a tail of the route
+
+    return route[::-1]`,
+    complexity: {
+      time: 'O(E log E) — the sort dominates; Hierholzer\'s traversal itself uses each of the E edges exactly once.',
+      space: 'O(E) — the adjacency lists, the stack and the route all hold at most one entry per ticket.',
+    },
+    followUps: [
+      'What if no valid itinerary exists? The route comes back shorter than E + 1 nodes, which is the check to add.',
+      'What if you must visit every airport once instead of every ticket once? That is Hamiltonian and NP-hard.',
+      'Why does plain lexicographic DFS with backtracking blow up, and where exactly does it waste time?',
+    ],
   },
   {
     id: 'dsa-1584-min-cost-to-connect-all-points',
@@ -4532,6 +4566,47 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Connect everything at minimum total cost with no requirement on path lengths — a minimum spanning tree, not a shortest-path tree.',
+    approach: `The graph is complete, with Manhattan distance as the weight, so listing all
+O(n^2) edges for Kruskal is wasteful. Prim's algorithm grows one tree, repeatedly
+taking the cheapest edge leaving it, which suits dense graphs. A heap of
+candidate edges makes each extraction logarithmic.`,
+    solution: `import heapq
+
+
+def min_cost_connect_points(points: list[list[int]]) -> int:
+    n = len(points)
+    if n <= 1:
+        return 0
+
+    visited = [False] * n
+    heap: list[tuple[int, int]] = [(0, 0)]  # (cost to reach, node)
+    total = 0
+    used = 0
+
+    while used < n:
+        cost, node = heapq.heappop(heap)
+        if visited[node]:
+            continue  # stale entry from before this node was reached
+        visited[node] = True
+        total += cost
+        used += 1
+        x1, y1 = points[node]
+        for other in range(n):
+            if not visited[other]:
+                x2, y2 = points[other]
+                heapq.heappush(heap, (abs(x1 - x2) + abs(y1 - y2), other))
+
+    return total`,
+    complexity: {
+      time: 'O(n^2 log n) — each of the n extractions pushes up to n candidate edges onto the heap.',
+      space: 'O(n^2) — the heap can hold one entry per unvisited node per extraction before stale ones are discarded.',
+    },
+    followUps: [
+      'What if the graph is sparse and given as an edge list? Kruskal with union-find is O(E log E) and usually wins.',
+      'What if one edge\'s weight changes? Recomputing is wasteful; MST-sensitivity analysis updates it locally.',
+      'What if you need the second-best spanning tree, or the tree itself rather than its cost?',
+    ],
   },
   {
     id: 'dsa-743-network-delay-time',
@@ -4543,6 +4618,42 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Shortest paths from one source with non-negative weights, and the answer is the worst of them — Dijkstra, then take the maximum.',
+    approach: `BFS is wrong because edges have weights. Dijkstra settles nodes in increasing
+distance order using a min-heap, so the first time a node is popped its distance
+is final. The signal reaches everyone at the moment the last node settles, so
+the answer is the largest settled distance — or -1 if any node is unreachable.`,
+    solution: `import heapq
+from collections import defaultdict
+
+
+def network_delay_time(times: list[list[int]], n: int, k: int) -> int:
+    graph: dict[int, list[tuple[int, int]]] = defaultdict(list)
+    for u, v, w in times:
+        graph[u].append((v, w))
+
+    settled: dict[int, int] = {}
+    heap: list[tuple[int, int]] = [(0, k)]
+
+    while heap:
+        dist, node = heapq.heappop(heap)
+        if node in settled:
+            continue  # already settled with a shorter distance
+        settled[node] = dist
+        for nxt, weight in graph[node]:
+            if nxt not in settled:
+                heapq.heappush(heap, (dist + weight, nxt))
+
+    return max(settled.values()) if len(settled) == n else -1`,
+    complexity: {
+      time: 'O(E log V) — every edge may push one heap entry, and each pop costs log of the heap size.',
+      space: 'O(V + E) — the adjacency lists, the settled map and the heap.',
+    },
+    followUps: [
+      'What if some weights are negative? Dijkstra\'s settled-once invariant breaks; use Bellman-Ford.',
+      'What if you need all-pairs delays? Floyd-Warshall at O(V^3), or Dijkstra from every source.',
+      'What if the network changes constantly — is recomputing from scratch each time acceptable?',
+    ],
   },
   {
     id: 'dsa-778-swim-in-rising-water',
@@ -4554,6 +4665,43 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'Minimise the maximum value along a path, not the sum — a bottleneck shortest path, which Dijkstra solves with max in place of plus.',
+    approach: `The cost of a path is the highest cell on it, so relaxation takes the maximum of
+the current cost and the next cell rather than the sum. Dijkstra then settles
+cells in increasing bottleneck order and the first arrival at the corner is the
+answer. Binary searching the water level plus a flood fill also works.`,
+    solution: `import heapq
+
+
+def swim_in_water(grid: list[list[int]]) -> int:
+    if not grid or not grid[0]:
+        return 0
+
+    n, m = len(grid), len(grid[0])
+    seen = {(0, 0)}
+    heap: list[tuple[int, int, int]] = [(grid[0][0], 0, 0)]
+
+    while heap:
+        level, r, c = heapq.heappop(heap)
+        if (r, c) == (n - 1, m - 1):
+            return level
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < n and 0 <= nc < m and (nr, nc) not in seen:
+                seen.add((nr, nc))
+                # bottleneck: the cost of a path is its highest cell, not the sum
+                heapq.heappush(heap, (max(level, grid[nr][nc]), nr, nc))
+
+    return -1`,
+    complexity: {
+      time: 'O(n^2 log n) — each of the n^2 cells is pushed once and each heap operation costs log(n^2).',
+      space: 'O(n^2) — the seen set and the heap, both bounded by the number of cells.',
+    },
+    followUps: [
+      'What if you binary search the water level instead? Each guess costs one O(n^2) flood fill, giving O(n^2 log(max)).',
+      'What if the cost were the sum of elevations? Then it is ordinary Dijkstra, and max becomes plus.',
+      'What if you must also report the path, not just the time?',
+    ],
   },
   {
     id: 'dsa-269-alien-dictionary',
@@ -4565,6 +4713,50 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'Infer a total order from sorted examples — consecutive words give pairwise constraints, which is a topological sort.',
+    approach: `Two adjacent words differ first at one character position, and that single pair is
+the only ordering fact they carry. Collect those edges and topologically sort.
+Two traps: a cycle means the input is inconsistent, and a longer word preceding
+its own prefix is impossible, not merely unordered.`,
+    solution: `from collections import defaultdict, deque
+
+
+def alien_order(words: list[str]) -> str:
+    graph: dict[str, set[str]] = {ch: set() for word in words for ch in word}
+    indegree = {ch: 0 for ch in graph}
+
+    for first, second in zip(words, words[1:]):
+        for a, b in zip(first, second):
+            if a != b:
+                if b not in graph[a]:
+                    graph[a].add(b)
+                    indegree[b] += 1
+                break
+        else:
+            if len(first) > len(second):
+                return ""  # a word cannot precede its own prefix
+
+    queue = deque(sorted(ch for ch in indegree if indegree[ch] == 0))
+    order: list[str] = []
+
+    while queue:
+        ch = queue.popleft()
+        order.append(ch)
+        for nxt in sorted(graph[ch]):
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                queue.append(nxt)
+
+    return "".join(order) if len(order) == len(graph) else ""`,
+    complexity: {
+      time: 'O(C + V log V) where C is the total characters — each adjacent pair yields at most one edge, and the sorted queue adds the log factor.',
+      space: 'O(V + E) — at most one node per distinct letter and one edge per adjacent word pair.',
+    },
+    followUps: [
+      'What if several valid orders exist? Any topological order is correct, so the answer is not unique.',
+      'What if the alphabet is only partially constrained — should unconstrained letters be omitted or appended?',
+      'What if the word list is a stream and constraints keep arriving — can the order be maintained incrementally?',
+    ],
   },
   {
     id: 'dsa-787-cheapest-flights-within-k-stops',
@@ -4576,6 +4768,32 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Cheapest path with a cap on the number of edges — the hop limit breaks Dijkstra\'s settled-once invariant.',
+    approach: `Dijkstra can settle a node cheaply via a long path and then refuse a pricier route
+that would have left hops to spare. Bellman-Ford relaxes all edges exactly
+k+1 times instead, so after round i the distances use at most i edges. Relaxing
+from a snapshot of the previous round is what enforces the hop cap.`,
+    solution: `def find_cheapest_price(n: int, flights: list[list[int]], src: int, dst: int, k: int) -> int:
+    INF = float("inf")
+    cost = [INF] * n
+    cost[src] = 0
+
+    for _ in range(k + 1):  # k stops means at most k + 1 edges
+        snapshot = cost[:]  # relax from the previous round only
+        for u, v, price in flights:
+            if snapshot[u] + price < cost[v]:
+                cost[v] = snapshot[u] + price
+
+    return -1 if cost[dst] == INF else int(cost[dst])`,
+    complexity: {
+      time: 'O(k * E) — k + 1 relaxation rounds, each sweeping every flight once.',
+      space: 'O(n) — one distance array plus the per-round snapshot; the flight list is not copied.',
+    },
+    followUps: [
+      'Why does plain Dijkstra fail here? Construct a graph where the cheap route uses too many hops.',
+      'What if you needed the cheapest path with no hop limit? Dijkstra is correct again and faster.',
+      'What if there are negative-cost promotions — does Bellman-Ford still terminate correctly?',
+    ],
   },
 
   // --- 1-D Dynamic Programming (12) ---
@@ -4589,6 +4807,25 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google'],
     minutes: 20,
+    signal: 'Count the ways to reach a target where each move adds a fixed amount — the count at n is a sum of the counts at the states that reach it.',
+    approach: `You arrive at step n either from n-1 or n-2, so ways(n) = ways(n-1) + ways(n-2) —
+Fibonacci. Naive recursion recomputes the same subproblems exponentially; since
+only the last two values ever matter, two rolling variables replace the whole
+table.`,
+    solution: `def climb_stairs(n: int) -> int:
+    prev, current = 1, 1  # ways to reach step 0 and step 1
+    for _ in range(n - 1):
+        prev, current = current, prev + current
+    return current`,
+    complexity: {
+      time: 'O(n) — one addition per step, versus O(2^n) for the unmemoised recursion.',
+      space: 'O(1) — two rolling variables instead of an n-length table.',
+    },
+    followUps: [
+      'What if you may climb 1, 2 or 3 steps? The window widens to three rolling variables.',
+      'What if some steps are broken and cannot be landed on? Those states become zero, not skipped.',
+      'What if n is 10^18 — matrix exponentiation gets you to O(log n).',
+    ],
   },
   {
     id: 'dsa-746-min-cost-climbing-stairs',
@@ -4600,6 +4837,29 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 20,
+    signal: 'Same two-step recurrence as climbing stairs, but you are minimising a cost rather than counting paths.',
+    approach: `The cheapest way to stand on step i is its own cost plus the cheaper of the two
+steps you could have come from. Sweep forward carrying just those two values.
+The top is one past the last step, so the answer is the cheaper of the final
+two — that off-by-one is the whole trap.`,
+    solution: `def min_cost_climbing_stairs(cost: list[int]) -> int:
+    if len(cost) < 2:
+        return 0
+
+    one_back, two_back = 0, 0  # cost to stand on the last two steps
+    for c in cost:
+        one_back, two_back = c + min(one_back, two_back), one_back
+
+    return min(one_back, two_back)  # the top is one past the last step`,
+    complexity: {
+      time: 'O(n) — one pass, each step doing a single comparison and addition.',
+      space: 'O(1) — two rolling values rather than an n-length DP array.',
+    },
+    followUps: [
+      'What if you may start from any step, not just the first two? The initial conditions change, the recurrence does not.',
+      'What if steps may be skipped by up to k? The rolling window becomes a sliding-window minimum.',
+      'What if you must also return the actual sequence of steps taken?',
+    ],
   },
   {
     id: 'dsa-198-house-robber',
@@ -4611,6 +4871,25 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Maximise a sum with an adjacency exclusion — taking an element forbids its neighbour, so each element is a take-or-skip decision.',
+    approach: `At each house the best is either skipping it, keeping the previous best, or taking
+it and adding the best from two houses back. Only those two values are ever
+needed, so a full DP array collapses to two rolling variables. Greedy fails:
+taking the biggest house first can block two even bigger ones.`,
+    solution: `def rob(nums: list[int]) -> int:
+    take, skip = 0, 0  # best including the previous house, best excluding it
+    for n in nums:
+        take, skip = skip + n, max(take, skip)
+    return max(take, skip)`,
+    complexity: {
+      time: 'O(n) — one pass with constant work per house.',
+      space: 'O(1) — two rolling values; the DP table is never materialised.',
+    },
+    followUps: [
+      'What if the houses form a circle? Run it twice, once excluding the first house and once excluding the last.',
+      'What if the houses form a binary tree? The same take-or-skip pair is returned bottom-up per node.',
+      'What if you must avoid two neighbours on each side instead of one?',
+    ],
   },
   {
     id: 'dsa-213-house-robber-ii',
@@ -4622,6 +4901,31 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'The array is circular — the first and last elements are now adjacent, which a single linear pass cannot express.',
+    approach: `The circle only matters through one fact: the first and last houses cannot both be
+taken. So split into two linear problems — one that excludes the last house and
+one that excludes the first — and take the better. Each is the ordinary House
+Robber sweep, so nothing new has to be invented.`,
+    solution: `def rob_circular(nums: list[int]) -> int:
+    def rob_line(houses: list[int]) -> int:
+        take, skip = 0, 0
+        for n in houses:
+            take, skip = skip + n, max(take, skip)
+        return max(take, skip)
+
+    if len(nums) <= 1:
+        return sum(nums)
+    # first and last are adjacent, so at most one of them can be taken
+    return max(rob_line(nums[:-1]), rob_line(nums[1:]))`,
+    complexity: {
+      time: 'O(n) — two linear sweeps over slices of the array, which is still linear overall.',
+      space: 'O(n) for the two slices; slicing in place with index bounds would make it O(1).',
+    },
+    followUps: [
+      'Why is it not enough to run the linear version and subtract the smaller of the ends?',
+      'What if the houses formed a general graph rather than a circle? That is maximum weight independent set, NP-hard.',
+      'What if the circle can be entered at any point — does the answer change at all?',
+    ],
   },
   {
     id: 'dsa-5-longest-palindromic-substring',
@@ -4633,6 +4937,39 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google', 'meta'],
     minutes: 30,
+    signal: 'Longest substring with a symmetry property — every palindrome has a centre, so enumerate centres rather than substrings.',
+    approach: `Checking all O(n^2) substrings for palindromicity costs O(n^3). Instead expand
+outward from each of the 2n-1 centres — n single characters and n-1 gaps between
+them — while the ends match. That is O(n^2) with O(1) space, and Manacher's
+algorithm gets it to O(n) if pressed.`,
+    solution: `def longest_palindrome(s: str) -> str:
+    if not s:
+        return ""
+
+    start, length = 0, 1
+
+    def expand(lo: int, hi: int) -> None:
+        nonlocal start, length
+        while lo >= 0 and hi < len(s) and s[lo] == s[hi]:
+            lo -= 1
+            hi += 1
+        if hi - lo - 1 > length:
+            start, length = lo + 1, hi - lo - 1
+
+    for i in range(len(s)):
+        expand(i, i)  # odd-length centre
+        expand(i, i + 1)  # even-length centre
+
+    return s[start : start + length]`,
+    complexity: {
+      time: 'O(n^2) — 2n-1 centres, each expanding at most n/2 steps, versus O(n^3) for checking every substring.',
+      space: 'O(1) — two indices track the best window; no DP table is allocated.',
+    },
+    followUps: [
+      'What if you need O(n)? Manacher\'s algorithm reuses previously computed radii to avoid re-expanding.',
+      'What if you need the longest palindromic subsequence instead? That is 2D DP, and the centres argument dies.',
+      'What if there are many queries on the same string — what would you precompute?',
+    ],
   },
   {
     id: 'dsa-647-palindromic-substrings',
@@ -4644,6 +4981,35 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Count substrings with a symmetry property — the same centre expansion as the longest palindrome, counting instead of measuring.',
+    approach: `Every palindromic substring is uniquely identified by its centre and radius, so
+expanding from each of the 2n-1 centres and counting every successful step
+enumerates each palindrome exactly once. No deduplication is needed, which is
+exactly why the centre view beats enumerating substrings.`,
+    solution: `def count_substrings(s: str) -> int:
+    total = 0
+
+    def expand(lo: int, hi: int) -> int:
+        count = 0
+        while lo >= 0 and hi < len(s) and s[lo] == s[hi]:
+            count += 1
+            lo -= 1
+            hi += 1
+        return count
+
+    for i in range(len(s)):
+        total += expand(i, i) + expand(i, i + 1)
+
+    return total`,
+    complexity: {
+      time: 'O(n^2) — each of the 2n-1 centres expands at most n/2 times, and each step counts one palindrome.',
+      space: 'O(1) — only counters and indices; nothing proportional to the input is stored.',
+    },
+    followUps: [
+      'What if only distinct palindromic substrings should be counted? You need a suffix automaton or an Eertree.',
+      'What if the string is 10^6 long? Manacher gives all radii in O(n) and the count follows directly.',
+      'What if you must count palindromic subsequences instead — why does the centre argument fail?',
+    ],
   },
   {
     id: 'dsa-91-decode-ways',
@@ -4655,6 +5021,35 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 30,
+    signal: 'Count the ways to segment a string where each piece must be valid — the count at position i depends on one or two positions back.',
+    approach: `Ways to decode a prefix ending at i = ways(i-1) if the single digit is 1..9, plus
+ways(i-2) if the two-digit pair is 10..26. Zero is the whole difficulty: it can
+never stand alone, so it kills the one-digit branch and only survives as part of
+10 or 20.`,
+    solution: `def num_decodings(s: str) -> int:
+    if not s:
+        return 0
+
+    two_back, one_back = 1, 1 if s[0] != "0" else 0
+
+    for i in range(1, len(s)):
+        current = 0
+        if s[i] != "0":
+            current += one_back  # a valid single digit
+        if 10 <= int(s[i - 1 : i + 1]) <= 26:
+            current += two_back  # a valid pair
+        two_back, one_back = one_back, current
+
+    return one_back`,
+    complexity: {
+      time: 'O(n) — one pass, each position doing two constant-time validity checks.',
+      space: 'O(1) — two rolling counts replace the length-n DP array.',
+    },
+    followUps: [
+      'What if the string contains \'*\' meaning any digit 1-9? Each branch multiplies by how many digits fit.',
+      'What if you must list the decodings rather than count them? That is exponential output, so backtracking.',
+      'Why does a leading zero force the answer to zero, and where in the loop is that enforced?',
+    ],
   },
   {
     id: 'dsa-322-coin-change',
@@ -4666,6 +5061,30 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Fewest items to reach an exact total with unlimited reuse — greedy fails on arbitrary denominations, so it is unbounded-knapsack DP.',
+    approach: `Taking the largest coin first is wrong for coin sets like [1, 3, 4] and amount 6.
+Instead build up every amount from 0: the best for amount a is one more than the
+best of a minus each coin. Each subproblem is solved once and reused, so the
+exponential recursion collapses to a table sweep.`,
+    solution: `def coin_change(coins: list[int], amount: int) -> int:
+    INF = amount + 1
+    best = [0] + [INF] * amount  # best[a] = fewest coins summing to a
+
+    for a in range(1, amount + 1):
+        for coin in coins:
+            if coin <= a:
+                best[a] = min(best[a], best[a - coin] + 1)
+
+    return -1 if best[amount] == INF else best[amount]`,
+    complexity: {
+      time: 'O(amount * len(coins)) — every amount is solved once by trying each coin, and each subresult is reused.',
+      space: 'O(amount) — a single table indexed by amount, independent of how many coins there are.',
+    },
+    followUps: [
+      'What if you need the number of ways rather than the fewest coins? Swap the loop order and sum instead of min.',
+      'What if each coin may be used only once? That is 0/1 knapsack, and the inner loop must run backwards.',
+      'What if the amount is huge but the coins are few — is there a number-theoretic shortcut?',
+    ],
   },
   {
     id: 'dsa-152-maximum-product-subarray',
@@ -4677,6 +5096,34 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Best contiguous product, and negatives flip sign — so the smallest running value is as valuable as the largest.',
+    approach: `Unlike a max-sum sweep, a very negative running product can become the maximum the
+moment another negative appears. So carry both the running maximum and running
+minimum, swapping them when the current element is negative. A zero resets both,
+because no product can span it.`,
+    solution: `def max_product(nums: list[int]) -> int:
+    if not nums:
+        return 0
+
+    best = high = low = nums[0]
+
+    for n in nums[1:]:
+        if n < 0:
+            high, low = low, high  # a negative swaps the roles
+        high = max(n, high * n)
+        low = min(n, low * n)
+        best = max(best, high)
+
+    return best`,
+    complexity: {
+      time: 'O(n) — one pass carrying two running extremes, with constant work per element.',
+      space: 'O(1) — three scalars, no table.',
+    },
+    followUps: [
+      'What if the array is circular? Products wrapping the ends need the same two-pass trick as circular sums.',
+      'What if division were allowed — why does prefix-product plus division break on zeros?',
+      'What if you must return the subarray itself, not just its product?',
+    ],
   },
   {
     id: 'dsa-139-word-break',
@@ -4688,6 +5135,31 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google', 'meta'],
     minutes: 30,
+    signal: 'Can a string be cut into dictionary pieces — reachability over cut positions, where each position is a subproblem reused many times.',
+    approach: `Position i is reachable if some earlier reachable j has s[j:i] in the dictionary.
+Plain recursion re-explores the same suffixes exponentially; a boolean array over
+cut positions solves each once. Storing the dictionary as a set is what keeps
+each membership test O(1).`,
+    solution: `def word_break(s: str, word_dict: list[str]) -> bool:
+    words = set(word_dict)
+    reachable = [True] + [False] * len(s)  # reachable[i]: s[:i] is fully breakable
+
+    for i in range(1, len(s) + 1):
+        for j in range(i):
+            if reachable[j] and s[j:i] in words:
+                reachable[i] = True
+                break
+
+    return reachable[len(s)]`,
+    complexity: {
+      time: 'O(n^2 * k) — every cut pair is tried once and each slice comparison costs up to k, the longest word length.',
+      space: 'O(n + total dictionary characters) — the reachability array plus the word set.',
+    },
+    followUps: [
+      'What if you must return every possible sentence? That is exponential output, so memoised backtracking.',
+      'What if the dictionary is huge? A trie walk from each start avoids building the substrings at all.',
+      'What if words may be used at most once each — does the DP still apply?',
+    ],
   },
   {
     id: 'dsa-300-longest-increasing-subsequence',
@@ -4699,6 +5171,34 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 30,
+    signal: 'Longest increasing subsequence — not contiguous, so a sliding window is useless and each element must consult all earlier ones.',
+    approach: `The O(n^2) DP asks, for each element, the best subsequence ending at any smaller
+earlier element. The O(n log n) version keeps \`tails\`, where tails[k] is the
+smallest possible tail of an increasing subsequence of length k+1; each element
+either extends it or replaces the first tail it can beat.`,
+    solution: `from bisect import bisect_left
+
+
+def length_of_lis(nums: list[int]) -> int:
+    tails: list[int] = []  # tails[k] = smallest tail of an LIS of length k + 1
+
+    for n in nums:
+        i = bisect_left(tails, n)
+        if i == len(tails):
+            tails.append(n)  # n extends the longest run so far
+        else:
+            tails[i] = n  # a smaller tail keeps more options open
+
+    return len(tails)`,
+    complexity: {
+      time: 'O(n log n) — one binary search per element into a list that never exceeds the answer\'s length.',
+      space: 'O(n) — the tails list, which is at most as long as the input.',
+    },
+    followUps: [
+      'What if you must return the subsequence itself? Record predecessor indices; tails alone is not the answer.',
+      'What if non-decreasing is allowed? bisect_left becomes bisect_right.',
+      'What if the sequence arrives as a stream and the answer is queried continuously?',
+    ],
   },
   {
     id: 'dsa-416-partition-equal-subset-sum',
@@ -4710,6 +5210,34 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Split into two equal-sum halves — really "can any subset hit exactly half the total", which is subset-sum, a 0/1 knapsack.',
+    approach: `An odd total is immediately impossible. Otherwise ask whether some subset sums to
+total/2. Track reachable sums as a set (or bitset): each number either joins a
+sum or does not. Iterating the existing sums rather than re-enumerating subsets
+is what turns 2^n into O(n * total).`,
+    solution: `def can_partition(nums: list[int]) -> bool:
+    total = sum(nums)
+    if total % 2:
+        return False  # an odd total can never split evenly
+
+    target = total // 2
+    reachable = {0}
+
+    for n in nums:
+        reachable |= {n + s for s in reachable if n + s <= target}
+        if target in reachable:
+            return True
+
+    return target in reachable`,
+    complexity: {
+      time: 'O(n * total) — each number is combined with at most total/2 reachable sums; pseudo-polynomial, not polynomial in the input bits.',
+      space: 'O(total) — the reachable set holds at most target + 1 distinct sums.',
+    },
+    followUps: [
+      'What if you must split into k equal parts? That is much harder and needs bitmask DP or careful backtracking.',
+      'What if the values are huge? The pseudo-polynomial bound stops helping once total dwarfs n.',
+      'What if you must return the actual subsets, not just whether they exist?',
+    ],
   },
 
   // --- 2-D Dynamic Programming (11) ---
@@ -4723,6 +5251,30 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Count paths through a grid with movement restricted to two directions — every cell\'s count is the sum of the cells that lead into it.',
+    approach: `A cell can only be entered from above or from the left, so paths(r,c) = paths(r-1,c)
++ paths(r,c-1) with the first row and column all ones. Since each row only needs
+the row above, a single array rolled in place suffices — the full m by n table is
+never required.`,
+    solution: `def unique_paths(m: int, n: int) -> int:
+    if m <= 0 or n <= 0:
+        return 0
+
+    row = [1] * n  # the top row: exactly one path to each cell
+    for _ in range(m - 1):
+        for c in range(1, n):
+            row[c] += row[c - 1]  # from above (old value) plus from the left
+
+    return row[n - 1]`,
+    complexity: {
+      time: 'O(m * n) — each cell\'s count is computed once with a single addition.',
+      space: 'O(n) — one rolling row instead of the full m by n table.',
+    },
+    followUps: [
+      'What if some cells are blocked? Obstacles zero out those entries, and the recurrence is otherwise unchanged.',
+      'What if m and n are enormous? The answer is the binomial coefficient C(m+n-2, m-1), computable directly.',
+      'What if diagonal moves are allowed — what third term joins the recurrence?',
+    ],
   },
   {
     id: 'dsa-1143-longest-common-subsequence',
@@ -4734,6 +5286,33 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Two sequences compared by subsequence, not substring — a 2D table over prefix pairs, the archetype of string DP.',
+    approach: `Compare the last characters of the two prefixes. If they match, the answer is one
+plus the LCS of both shorter prefixes; if not, it is the better of dropping one
+character from either. That gives an (m+1) by (n+1) table, and since each row
+only reads the row above, one rolling row suffices.`,
+    solution: `def longest_common_subsequence(text1: str, text2: str) -> int:
+    previous = [0] * (len(text2) + 1)
+
+    for a in text1:
+        current = [0] * (len(text2) + 1)
+        for j, b in enumerate(text2, start=1):
+            if a == b:
+                current[j] = previous[j - 1] + 1
+            else:
+                current[j] = max(previous[j], current[j - 1])
+        previous = current
+
+    return previous[len(text2)]`,
+    complexity: {
+      time: 'O(m * n) — every prefix pair is resolved exactly once with constant work.',
+      space: 'O(n) — two rows instead of the full m by n table, since each row only depends on the previous one.',
+    },
+    followUps: [
+      'What if you need the subsequence itself? Reconstruction needs the full table, or a divide-and-conquer Hirschberg pass.',
+      'What if it is the longest common substring instead? Mismatches reset to zero rather than carrying forward.',
+      'What if there are three strings — how badly does the table grow?',
+    ],
   },
   {
     id: 'dsa-309-best-time-to-buy-and-sell-stock-with-cooldown',
@@ -4745,6 +5324,33 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Trading with a rest constraint — the answer depends on which state you are in, so the DP is over states, not just days.',
+    approach: `Three states per day: holding stock, just sold (so tomorrow is a cooldown), and
+free to buy. Each day's states are computed from the previous day's, and the
+cooldown is encoded by letting "free" come only from the previous free or the
+sold-two-days-ago state. Three scalars replace any table.`,
+    solution: `def max_profit_cooldown(prices: list[int]) -> int:
+    hold = float("-inf")  # holding a share
+    sold = float("-inf")  # sold today, so tomorrow is a cooldown
+    free = 0  # holding nothing and free to buy
+
+    for price in prices:
+        hold, sold, free = (
+            max(hold, free - price),
+            hold + price,
+            max(free, sold),  # can only buy the day after a sale
+        )
+
+    return int(max(free, sold, 0))`,
+    complexity: {
+      time: 'O(n) — one pass over prices, updating three states in constant time each day.',
+      space: 'O(1) — three scalars; the day-by-day table is never materialised.',
+    },
+    followUps: [
+      'What if the cooldown is k days? The state count grows with k, or you keep a sliding window of sold values.',
+      'What if there is a transaction fee instead of a cooldown? Subtract it in the sold transition.',
+      'What if you may hold at most one share but shorting is allowed — how many states then?',
+    ],
   },
   {
     id: 'dsa-518-coin-change-ii',
@@ -4756,6 +5362,28 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Count combinations, not permutations — the order of the loops is what decides which of the two you compute.',
+    approach: `Iterate coins in the outer loop and amounts in the inner. That way each coin's
+contribution is added once, so 1+2 and 2+1 are never counted separately. Swapping
+the loops counts ordered sequences instead — the same table, a different
+question.`,
+    solution: `def change(amount: int, coins: list[int]) -> int:
+    ways = [1] + [0] * amount  # one way to make 0: take nothing
+
+    for coin in coins:  # coins outermost: combinations, not permutations
+        for a in range(coin, amount + 1):
+            ways[a] += ways[a - coin]
+
+    return ways[amount]`,
+    complexity: {
+      time: 'O(amount * len(coins)) — one pass over amounts per coin, with a single addition each.',
+      space: 'O(amount) — a single array reused across coins rather than a 2D table.',
+    },
+    followUps: [
+      'What happens if you swap the loops? You count ordered sequences, which is a different problem entirely.',
+      'What if each coin may be used at most once? Iterate amounts downward so a coin cannot be reused.',
+      'What if the count overflows 64 bits — do you need modular arithmetic or big integers?',
+    ],
   },
   {
     id: 'dsa-494-target-sum',
@@ -4767,6 +5395,34 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Assign a plus or minus to every element to hit a target — algebra turns it into a subset-sum count.',
+    approach: `If P is the positive subset and N the negative one, P - N = target and P + N = total,
+so P = (total + target) / 2. Counting sign assignments therefore reduces to
+counting subsets summing to P — reject non-integer or negative P immediately.
+Then it is 0/1 knapsack counting.`,
+    solution: `def find_target_sum_ways(nums: list[int], target: int) -> int:
+    total = sum(nums)
+    needed = total + target
+    if needed % 2 or needed < 0:
+        return 0  # no integer split of the positives can work
+
+    subset = needed // 2
+    ways = [1] + [0] * subset
+
+    for n in nums:
+        for s in range(subset, n - 1, -1):  # downward: each number used at most once
+            ways[s] += ways[s - n]
+
+    return ways[subset]`,
+    complexity: {
+      time: 'O(n * total) — each number sweeps the reachable-sum array once; pseudo-polynomial in the values.',
+      space: 'O(total) — one counting array indexed by subset sum.',
+    },
+    followUps: [
+      'What if zeros are present? Each zero doubles the count, which the DP handles but a naive subset enumeration might not.',
+      'What if the numbers can be negative? The algebraic reduction assumes non-negative values.',
+      'What if you must list the assignments rather than count them?',
+    ],
   },
   {
     id: 'dsa-97-interleaving-string',
@@ -4778,6 +5434,37 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Can two strings be shuffled into a third preserving each one\'s order — the state is how far you have consumed each source.',
+    approach: `Greedy fails whenever both sources offer the same next character. The state (i, j)
+— characters taken from s1 and from s2 — determines the position in s3, so the
+table is 2D and each cell asks whether either source could have supplied the
+next character. Lengths must sum, or the answer is immediately no.`,
+    solution: `def is_interleave(s1: str, s2: str, s3: str) -> bool:
+    if len(s1) + len(s2) != len(s3):
+        return False
+
+    reachable = [False] * (len(s2) + 1)
+    reachable[0] = True
+    for j in range(1, len(s2) + 1):
+        reachable[j] = reachable[j - 1] and s2[j - 1] == s3[j - 1]
+
+    for i in range(1, len(s1) + 1):
+        reachable[0] = reachable[0] and s1[i - 1] == s3[i - 1]
+        for j in range(1, len(s2) + 1):
+            from_s1 = reachable[j] and s1[i - 1] == s3[i + j - 1]
+            from_s2 = reachable[j - 1] and s2[j - 1] == s3[i + j - 1]
+            reachable[j] = from_s1 or from_s2
+
+    return reachable[len(s2)]`,
+    complexity: {
+      time: 'O(m * n) — every (i, j) prefix pair is decided once with two constant-time checks.',
+      space: 'O(n) — one rolling row over s2\'s prefixes instead of the full m by n table.',
+    },
+    followUps: [
+      'What if there are three source strings? The table gains a dimension and the cost becomes O(n^3).',
+      'What if you must return which source each character came from?',
+      'Why does a greedy character-by-character match fail — give the smallest counterexample.',
+    ],
   },
   {
     id: 'dsa-329-longest-increasing-path-in-a-matrix',
@@ -4789,6 +5476,40 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'Longest path in a grid, but the strictly-increasing rule makes the graph acyclic — so memoisation is safe and no visited set is needed.',
+    approach: `Because every move must go strictly up in value, no path can revisit a cell, and
+the implicit graph is a DAG. That means the longest path from a cell is a pure
+function of the cell, so memoise it: each cell is computed once and read many
+times, turning exponential search into linear work.`,
+    solution: `from functools import lru_cache
+
+
+def longest_increasing_path(matrix: list[list[int]]) -> int:
+    if not matrix or not matrix[0]:
+        return 0
+
+    rows, cols = len(matrix), len(matrix[0])
+
+    @lru_cache(maxsize=None)
+    def longest(r: int, c: int) -> int:
+        best = 1
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nr, nc = r + dr, c + dc
+            # strictly increasing means the graph is acyclic, so no visited set
+            if 0 <= nr < rows and 0 <= nc < cols and matrix[nr][nc] > matrix[r][c]:
+                best = max(best, 1 + longest(nr, nc))
+        return best
+
+    return max(longest(r, c) for r in range(rows) for c in range(cols))`,
+    complexity: {
+      time: 'O(rows * cols) — each cell\'s value is computed once and reused; four neighbour checks each.',
+      space: 'O(rows * cols) — the memo table, plus recursion depth up to the path length.',
+    },
+    followUps: [
+      'What if equal values could be stepped onto? Cycles reappear and memoisation is no longer valid.',
+      'What if the matrix is too large for recursion? Peel it by topological order of increasing value.',
+      'What if you must return the path itself, not just its length?',
+    ],
   },
   {
     id: 'dsa-115-distinct-subsequences',
@@ -4800,6 +5521,29 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: [],
     minutes: 45,
+    signal: 'Count how many ways one string appears as a subsequence of another — counting, not matching, so every choice must be summed.',
+    approach: `Walk prefixes of both strings. If the characters differ, the only option is to skip
+a character of the source. If they match you may either consume both or skip the
+source character, and the counts add. Iterating the target backwards lets a
+single array serve as the whole table.`,
+    solution: `def num_distinct(s: str, t: str) -> int:
+    ways = [1] + [0] * len(t)  # one way to match the empty target
+
+    for ch in s:
+        for j in range(len(t), 0, -1):  # backwards so each source char is used once
+            if t[j - 1] == ch:
+                ways[j] += ways[j - 1]
+
+    return ways[len(t)]`,
+    complexity: {
+      time: 'O(m * n) — each source character sweeps the target array once, with a single addition per match.',
+      space: 'O(n) — one array over the target\'s prefixes rather than an m by n table.',
+    },
+    followUps: [
+      'What if the counts overflow? Real interviews want a modulus, or Python\'s big integers hide the issue.',
+      'What if you needed the longest common subsequence instead — why does max replace the sum?',
+      'Why must the inner loop run backwards? Trace what a forward loop double-counts.',
+    ],
   },
   {
     id: 'dsa-72-edit-distance',
@@ -4811,6 +5555,37 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google', 'meta', 'amazon'],
     minutes: 30,
+    signal: 'Minimum operations to turn one string into another — three edits map to three neighbouring cells in a prefix-pair table.',
+    approach: `dist(i, j) compares prefixes. Matching last characters cost nothing and move
+diagonally; otherwise take the cheapest of delete (from above), insert (from the
+left) or replace (diagonal), plus one. Base cases are the empty prefixes, which
+cost exactly their own length.`,
+    solution: `def min_distance(word1: str, word2: str) -> int:
+    previous = list(range(len(word2) + 1))  # cost of deleting all of word2's prefix
+
+    for i, a in enumerate(word1, start=1):
+        current = [i] + [0] * len(word2)
+        for j, b in enumerate(word2, start=1):
+            if a == b:
+                current[j] = previous[j - 1]
+            else:
+                current[j] = 1 + min(
+                    previous[j],  # delete from word1
+                    current[j - 1],  # insert into word1
+                    previous[j - 1],  # replace
+                )
+        previous = current
+
+    return previous[len(word2)]`,
+    complexity: {
+      time: 'O(m * n) — every prefix pair is resolved once from three already-known neighbours.',
+      space: 'O(n) — two rows; the full table is only needed if you must reconstruct the edit script.',
+    },
+    followUps: [
+      'What if the operations have different costs? Weight each of the three terms; the recurrence is unchanged.',
+      'What if transposing adjacent characters is also allowed? That is Damerau-Levenshtein, with a fourth term.',
+      'What if you only care whether the distance is at most k? Only a diagonal band of the table matters.',
+    ],
   },
   {
     id: 'dsa-312-burst-balloons',
@@ -4822,6 +5597,34 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'The value of each choice depends on what has already been removed — so decide what is burst LAST in an interval, not first.',
+    approach: `Choosing what to burst first makes the neighbours change unpredictably. Reverse
+the view: if balloon k is the last one burst in an open interval, its neighbours
+are the fixed interval boundaries, and the two sides become independent
+subproblems. Padding with virtual 1s removes the edge cases.`,
+    solution: `def max_coins(nums: list[int]) -> int:
+    balloons = [1] + [n for n in nums if n > 0] + [1]  # virtual 1s at both ends
+    n = len(balloons)
+    best = [[0] * n for _ in range(n)]
+
+    for width in range(2, n):  # width is the distance between the fixed boundaries
+        for lo in range(n - width):
+            hi = lo + width
+            for last in range(lo + 1, hi):
+                # last is burst last, so its neighbours are the untouched boundaries
+                gain = balloons[lo] * balloons[last] * balloons[hi]
+                best[lo][hi] = max(best[lo][hi], best[lo][last] + gain + best[last][hi])
+
+    return best[0][n - 1]`,
+    complexity: {
+      time: 'O(n^3) — O(n^2) intervals, each trying every interior balloon as the last to burst.',
+      space: 'O(n^2) — the interval table over pairs of boundaries.',
+    },
+    followUps: [
+      'Why does deciding what to burst first fail? Trace how the neighbours change under that framing.',
+      'What if balloons are in a circle rather than a line? Duplicate the array, as with circular DP generally.',
+      'What if n is 500 — is O(n^3) still acceptable, and what would you profile first?',
+    ],
   },
   {
     id: 'dsa-10-regular-expression-matching',
@@ -4833,6 +5636,39 @@ def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
     core: false,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'A pattern where one token can consume any number of characters — every \'*\' is a branch, so the state is a pair of positions.',
+    approach: `Match prefixes of text against prefixes of pattern. A '*' either matches zero
+occurrences, skipping two pattern characters, or one more occurrence, consuming
+a text character while staying on the same pattern token. Everything else is a
+plain character or '.' comparison, and memoising the position pair kills the
+exponential blowup.`,
+    solution: `from functools import lru_cache
+
+
+def is_match(s: str, p: str) -> bool:
+    @lru_cache(maxsize=None)
+    def match(i: int, j: int) -> bool:
+        if j == len(p):
+            return i == len(s)
+
+        first = i < len(s) and p[j] in (s[i], ".")
+
+        if j + 1 < len(p) and p[j + 1] == "*":
+            # zero occurrences, or one more occurrence of the same token
+            return match(i, j + 2) or (first and match(i + 1, j))
+
+        return first and match(i + 1, j + 1)
+
+    return match(0, 0)`,
+    complexity: {
+      time: 'O(m * n) — there are m+1 by n+1 distinct states and each is evaluated once thanks to the memo.',
+      space: 'O(m * n) — the memo table, plus recursion depth up to m + n.',
+    },
+    followUps: [
+      'What if \'+\' and \'?\' are added? Both are sugar over the same two branches.',
+      'What if the pattern is applied to millions of strings? Compile it to an NFA or DFA once instead.',
+      'How does this differ from wildcard matching, where \'*\' is standalone rather than attached to a token?',
+    ],
   },
 
   // --- Greedy (8) ---
