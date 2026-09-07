@@ -4,10 +4,12 @@ import {
   lldPatternSchema, lldQuestionSchema,
   topicSchema, topicQuestionSchema, projectSchema, milestoneSchema,
   docSchema, readingSchema, weekSchema, daySchema,
+  behaviouralPrincipleSchema, behaviouralQuestionSchema, storySlotSchema, companyGuideSchema,
 } from '@/lib/content/schema'
 import type {
   DsaPattern, DsaProblem, SdPattern, SdQuestion, LldPattern, LldQuestion,
   Topic, TopicQuestion, Project, Milestone, Doc, Reading, Week, Day,
+  BehaviouralPrinciple, BehaviouralQuestion, StorySlot, CompanyGuide,
 } from '@/lib/content/schema'
 
 export interface ValidatableContent {
@@ -17,6 +19,19 @@ export interface ValidatableContent {
   topics: Topic[]; topicQuestions: TopicQuestion[]
   projects: Project[]; milestones: Milestone[]; docs: Doc[]
   readings: Reading[]; weeks: Week[]; days: Day[]
+  /**
+   * The interview-readiness banks. Optional so a fixture can name only the
+   * fields it is exercising; `validate` reads every one of them through
+   * `bank()` and treats an absent bank as an empty one.
+   */
+  behaviouralPrinciples?: BehaviouralPrinciple[]
+  behaviouralQuestions?: BehaviouralQuestion[]
+  storySlots?: StorySlot[]
+  companyGuides?: CompanyGuide[]
+}
+
+function bank<T>(items: T[] | undefined): T[] {
+  return items ?? []
 }
 
 const WEEK_MIN = 1290
@@ -26,9 +41,18 @@ const LLD_PATTERNS_EXPECTED = 8
 const LLD_QUESTIONS_EXPECTED = 25
 const LLD_PATTERN_ID = /^lldp-[a-z0-9-]+$/
 const LLD_QUESTION_ID = /^lldq-[a-z0-9-]+$/
+const COMPANY_GUIDES_EXPECTED = 6
+const BP_ID = /^bp-[a-z0-9-]+$/
+const BQ_ID = /^bq-[a-z0-9-]+$/
+const STORY_ID = /^story-[a-z0-9-]+$/
+const CO_ID = /^co-[a-z0-9-]+$/
 
 export function validate(c: ValidatableContent): string[] {
   const errors: string[] = []
+  const principles = bank(c.behaviouralPrinciples)
+  const questions = bank(c.behaviouralQuestions)
+  const stories = bank(c.storySlots)
+  const guides = bank(c.companyGuides)
 
   // 1. Shape: every item must satisfy its schema.
   const shapes = [
@@ -39,6 +63,8 @@ export function validate(c: ValidatableContent): string[] {
     [c.projects, projectSchema], [c.milestones, milestoneSchema],
     [c.docs, docSchema], [c.readings, readingSchema],
     [c.weeks, weekSchema], [c.days, daySchema],
+    [principles, behaviouralPrincipleSchema], [questions, behaviouralQuestionSchema],
+    [stories, storySlotSchema], [guides, companyGuideSchema],
   ] as const
   for (const [items, schema] of shapes) {
     for (const item of items) {
@@ -55,6 +81,7 @@ export function validate(c: ValidatableContent): string[] {
     ...c.dsaPatterns, ...c.dsaProblems, ...c.sdPatterns, ...c.sdQuestions,
     ...c.lldPatterns, ...c.lldQuestions, ...c.topics, ...c.topicQuestions, ...c.projects, ...c.milestones,
     ...c.docs, ...c.readings, ...c.weeks, ...c.days,
+    ...principles, ...questions, ...stories, ...guides,
   ]
   const seen = new Set<string>()
   for (const item of all) {
@@ -173,6 +200,49 @@ export function validate(c: ValidatableContent): string[] {
     }
   }
 
+  // 9. Behavioural bank integrity.
+  //
+  // The bank is three lists that only mean anything together: a question is a
+  // question about a principle, and a story is a story that answers principles.
+  // A dangling `bp-` in either direction is invisible on the page — the filter
+  // simply matches nothing, and the coverage view silently under-counts — so it
+  // has to fail here instead.
+  const principleIds = new Set(principles.map((p) => p.id))
+  for (const p of principles) {
+    if (!BP_ID.test(p.id)) errors.push(`${p.id}: behavioural principle id must match ${BP_ID}`)
+  }
+  for (const q of questions) {
+    if (!BQ_ID.test(q.id)) errors.push(`${q.id}: behavioural question id must match ${BQ_ID}`)
+    for (const ref of q.principleIds) {
+      if (!principleIds.has(ref)) errors.push(`${q.id}: unknown principle ${ref}`)
+    }
+  }
+  for (const s of stories) {
+    if (!STORY_ID.test(s.id)) errors.push(`${s.id}: story slot id must match ${STORY_ID}`)
+    for (const ref of s.covers) {
+      if (!principleIds.has(ref)) errors.push(`${s.id}: covers unknown principle ${ref}`)
+    }
+  }
+
+  // 10. Company guides: all six, prefixed, and with a distinct `order`.
+  //
+  // `order` is the index page's ranking by how realistic each loop is for this
+  // candidate — two guides sharing an order makes that ranking arbitrary, which
+  // is the whole value of the page.
+  for (const g of guides) {
+    if (!CO_ID.test(g.id)) errors.push(`${g.id}: company guide id must match ${CO_ID}`)
+  }
+  if (guides.length > 0) {
+    if (guides.length !== COMPANY_GUIDES_EXPECTED) {
+      errors.push(`company bank has ${guides.length} guides, expected ${COMPANY_GUIDES_EXPECTED}`)
+    }
+    const orders = new Set<number>()
+    for (const g of guides) {
+      if (orders.has(g.order)) errors.push(`duplicate company guide order: ${g.order} (${g.id})`)
+      orders.add(g.order)
+    }
+  }
+
   return errors
 }
 
@@ -187,6 +257,10 @@ function main(): void {
     `content validation passed: ${content.dsaProblems.length} problems, ` +
       `${content.sdQuestions.length} system design questions, ` +
       `${content.lldPatterns.length} lld patterns, ${content.lldQuestions.length} lld questions, ` +
+      `${content.behaviouralPrinciples.length} behavioural principles, ` +
+      `${content.behaviouralQuestions.length} behavioural questions, ` +
+      `${content.storySlots.length} story slots, ` +
+      `${content.companyGuides.length} company guides, ` +
       `${content.days.length} days`,
   )
 }

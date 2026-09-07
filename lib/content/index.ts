@@ -4,6 +4,8 @@ import { lldPatterns, lldQuestions } from '@/content/lld'
 import { topics, topicQuestions } from '@/content/ai-ml'
 import { projects, milestones } from '@/content/projects'
 import { readings } from '@/content/readings'
+import { behaviouralPrinciples, behaviouralQuestions, storySlots } from '@/content/behavioural'
+import { companyGuides } from '@/content/companies'
 import { weeks, days } from '@/content/plan'
 import { slugOf } from './ids'
 import type { ContentItem, DayTask, Doc } from './schema'
@@ -32,6 +34,8 @@ export const content = {
   sdPatterns, sdQuestions,
   lldPatterns, lldQuestions,
   topics, topicQuestions,
+  behaviouralPrinciples, behaviouralQuestions, storySlots,
+  companyGuides,
   projects, milestones, docs: allDocs,
   readings, weeks, days,
 }
@@ -42,6 +46,8 @@ export const byId: Map<string, ContentItem> = new Map(
     ...sdPatterns, ...sdQuestions,
     ...lldPatterns, ...lldQuestions,
     ...topics, ...topicQuestions,
+    ...behaviouralPrinciples, ...behaviouralQuestions, ...storySlots,
+    ...companyGuides,
     ...projects, ...milestones, ...allDocs,
     ...readings, ...weeks, ...days,
   ].map((item) => [item.id, item as ContentItem]),
