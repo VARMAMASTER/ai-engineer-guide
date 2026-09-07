@@ -5,11 +5,13 @@ import {
   topicSchema, topicQuestionSchema, projectSchema, milestoneSchema,
   docSchema, readingSchema, weekSchema, daySchema,
   behaviouralPrincipleSchema, behaviouralQuestionSchema, storySlotSchema, companyGuideSchema,
+  csTopicSchema, csQuestionSchema, hwTopicSchema, hwQuestionSchema,
 } from '@/lib/content/schema'
 import type {
   DsaPattern, DsaProblem, SdPattern, SdQuestion, LldPattern, LldQuestion,
   Topic, TopicQuestion, Project, Milestone, Doc, Reading, Week, Day,
   BehaviouralPrinciple, BehaviouralQuestion, StorySlot, CompanyGuide,
+  CsTopic, CsQuestion, HwTopic, HwQuestion,
 } from '@/lib/content/schema'
 
 export interface ValidatableContent {
@@ -28,6 +30,10 @@ export interface ValidatableContent {
   behaviouralQuestions?: BehaviouralQuestion[]
   storySlots?: StorySlot[]
   companyGuides?: CompanyGuide[]
+  csTopics?: CsTopic[]
+  csQuestions?: CsQuestion[]
+  hwTopics?: HwTopic[]
+  hwQuestions?: HwQuestion[]
 }
 
 function bank<T>(items: T[] | undefined): T[] {
@@ -46,6 +52,10 @@ const BP_ID = /^bp-[a-z0-9-]+$/
 const BQ_ID = /^bq-[a-z0-9-]+$/
 const STORY_ID = /^story-[a-z0-9-]+$/
 const CO_ID = /^co-[a-z0-9-]+$/
+const CST_ID = /^cst-[a-z0-9-]+$/
+const CSQ_ID = /^csq-[a-z0-9-]+$/
+const HWT_ID = /^hwt-[a-z0-9-]+$/
+const HWQ_ID = /^hwq-[a-z0-9-]+$/
 
 export function validate(c: ValidatableContent): string[] {
   const errors: string[] = []
@@ -53,6 +63,10 @@ export function validate(c: ValidatableContent): string[] {
   const questions = bank(c.behaviouralQuestions)
   const stories = bank(c.storySlots)
   const guides = bank(c.companyGuides)
+  const csTopicsBank = bank(c.csTopics)
+  const csQuestionsBank = bank(c.csQuestions)
+  const hwTopicsBank = bank(c.hwTopics)
+  const hwQuestionsBank = bank(c.hwQuestions)
 
   // 1. Shape: every item must satisfy its schema.
   const shapes = [
@@ -65,6 +79,8 @@ export function validate(c: ValidatableContent): string[] {
     [c.weeks, weekSchema], [c.days, daySchema],
     [principles, behaviouralPrincipleSchema], [questions, behaviouralQuestionSchema],
     [stories, storySlotSchema], [guides, companyGuideSchema],
+    [csTopicsBank, csTopicSchema], [csQuestionsBank, csQuestionSchema],
+    [hwTopicsBank, hwTopicSchema], [hwQuestionsBank, hwQuestionSchema],
   ] as const
   for (const [items, schema] of shapes) {
     for (const item of items) {
@@ -243,6 +259,29 @@ export function validate(c: ValidatableContent): string[] {
     }
   }
 
+
+  // 11. CS fundamentals: topic ids well-formed, every question resolves to a
+  // real topic. A dangling topicId is invisible on the page the same way a
+  // dangling principle is — the topic page just renders one fewer question.
+  const csTopicIds = new Set(csTopicsBank.map((t) => t.id))
+  for (const t of csTopicsBank) {
+    if (!CST_ID.test(t.id)) errors.push(`${t.id}: cs topic id must match ${CST_ID}`)
+  }
+  for (const q of csQuestionsBank) {
+    if (!CSQ_ID.test(q.id)) errors.push(`${q.id}: cs question id must match ${CSQ_ID}`)
+    if (!csTopicIds.has(q.topicId)) errors.push(`${q.id}: unknown cs topic ${q.topicId}`)
+  }
+
+  // 12. Hardware: same shape as CS fundamentals.
+  const hwTopicIds = new Set(hwTopicsBank.map((t) => t.id))
+  for (const t of hwTopicsBank) {
+    if (!HWT_ID.test(t.id)) errors.push(`${t.id}: hardware topic id must match ${HWT_ID}`)
+  }
+  for (const q of hwQuestionsBank) {
+    if (!HWQ_ID.test(q.id)) errors.push(`${q.id}: hardware question id must match ${HWQ_ID}`)
+    if (!hwTopicIds.has(q.topicId)) errors.push(`${q.id}: unknown hardware topic ${q.topicId}`)
+  }
+
   return errors
 }
 
@@ -261,6 +300,8 @@ function main(): void {
       `${content.behaviouralQuestions.length} behavioural questions, ` +
       `${content.storySlots.length} story slots, ` +
       `${content.companyGuides.length} company guides, ` +
+      `${content.csTopics.length} cs fundamentals topics, ${content.csQuestions.length} cs fundamentals questions, ` +
+      `${content.hwTopics.length} hardware topics, ${content.hwQuestions.length} hardware questions, ` +
       `${content.days.length} days`,
   )
 }

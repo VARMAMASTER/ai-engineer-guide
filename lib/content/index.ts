@@ -6,6 +6,8 @@ import { projects, milestones } from '@/content/projects'
 import { readings } from '@/content/readings'
 import { behaviouralPrinciples, behaviouralQuestions, storySlots } from '@/content/behavioural'
 import { companyGuides } from '@/content/companies'
+import { csTopics, csQuestions } from '@/content/cs-fundamentals'
+import { hwTopics, hwQuestions } from '@/content/hardware'
 import { weeks, days } from '@/content/plan'
 import { slugOf } from './ids'
 import type { ContentItem, DayTask, Doc } from './schema'
@@ -36,6 +38,8 @@ export const content = {
   topics, topicQuestions,
   behaviouralPrinciples, behaviouralQuestions, storySlots,
   companyGuides,
+  csTopics, csQuestions,
+  hwTopics, hwQuestions,
   projects, milestones, docs: allDocs,
   readings, weeks, days,
 }
@@ -48,6 +52,8 @@ export const byId: Map<string, ContentItem> = new Map(
     ...topics, ...topicQuestions,
     ...behaviouralPrinciples, ...behaviouralQuestions, ...storySlots,
     ...companyGuides,
+    ...csTopics, ...csQuestions,
+    ...hwTopics, ...hwQuestions,
     ...projects, ...milestones, ...allDocs,
     ...readings, ...weeks, ...days,
   ].map((item) => [item.id, item as ContentItem]),
