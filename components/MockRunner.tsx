@@ -563,6 +563,7 @@ export default function MockRunner({ kind }: { kind: MockKind }) {
               Back to Mock
             </Link>
           </div>
+          <MockHistory kind={kind} />
         </>
       ) : null}
     </div>

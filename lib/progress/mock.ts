@@ -100,10 +100,19 @@ export function isRunning(session: MockSession | null): boolean {
   return session !== null && session.endedAt === null && session.pausedAt === null
 }
 
-/** `MM:SS` counting down, or `+MM:SS` once the box is blown. */
+/**
+ * `MM:SS` counting down, or `+MM:SS` once the box is blown.
+ *
+ * The countdown rounds UP, the way every clock does: a 25-minute box reads
+ * 25:00 for its first second rather than flicking to 24:59 the instant you
+ * press start. Overtime rounds down for the same reason — the first second
+ * past zero should read +00:00, not +00:01.
+ */
 export function formatClock(remainingMs: number): string {
   const over = remainingMs < 0
-  const total = Math.floor(Math.abs(remainingMs) / 1000)
+  const total = over
+    ? Math.floor(-remainingMs / 1000)
+    : Math.ceil(remainingMs / 1000)
   const mm = String(Math.floor(total / 60)).padStart(2, '0')
   const ss = String(total % 60).padStart(2, '0')
   return `${over ? '+' : ''}${mm}:${ss}`
