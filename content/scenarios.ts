@@ -566,5 +566,396 @@ export const scenarios: Scenario[] = [
       'They route by query type instead of trying to make one retriever handle both semantic and literal lookups, and they can say in one sentence why dense retrieval is structurally bad at exact tokens.',
     minutes: 12,
   },
+  // ---------------------------------------------------------------- Agent failures
+  {
+    id: 'scn-agent-infinite-loop',
+    area: 'agent',
+    symptom:
+      'A support agent that is meant to resolve a ticket in four or five steps sometimes runs to the 40-step cap. Reading the trace, steps 12 through 40 are the same pair: search_orders with the same arguments, then a sentence saying "let me check the order again". The tool returns the same empty list every time and the agent never treats that as an answer.',
+    firstQuestions: [
+      'What exactly does the tool return in the looping case? Read the raw tool result, not the summary. An empty array, a 200 with an error string in the body, and a null are three different bugs and only one of them is the model\'s fault.',
+      'Does the previous tool result stay in context, or is it being summarised away? If step 30 cannot see that step 12 already tried this, repeating is the rational move.',
+      'Is the loop tight - identical arguments - or drifting slightly each time? Identical arguments means the agent has no memory of the attempt; drifting means it is genuinely searching and just has no stopping rule.',
+      'What fraction of sessions hit the cap, and are they concentrated in one intent or one tenant?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The tool signals failure in a way the model does not read as failure - an empty list, or a 200 response whose body says "no records found for this customer".',
+        check:
+          'Diff the tool result bytes between a looping session and a healthy one. If the looping case is `{"results": []}` with no explanatory field, the model has nothing to conclude from.',
+      },
+      {
+        hypothesis:
+          'History compaction drops prior tool calls once the context crosses a threshold, so the agent loses the record of what it already tried and re-derives the same first step.',
+        check:
+          'Log the assembled message list at each step and check whether the step-12 tool call is still present at step 25. Correlate loop onset with the step at which compaction first fires.',
+      },
+      {
+        hypothesis:
+          'There is no terminal state the agent can reach: the prompt tells it to resolve the ticket and never authorises "this cannot be resolved with the tools I have", so looping is the only behaviour consistent with its instructions.',
+        check:
+          'Add an explicit escalate_to_human tool and re-run the failing sessions. If loops collapse into a single escalation, the missing exit was the cause.',
+      },
+    ],
+    fix:
+      'Three layers, cheapest first. Make failure legible: every tool returns a structured status with a human-readable reason, so "no orders found for customer 8812 - the account may be under a different email" is what lands in context rather than an empty bracket. Give the agent an exit: an escalate tool, and a system prompt that names it as a legitimate successful outcome rather than a defeat. Then add a loop guard outside the model - hash the tool name plus normalised arguments, and on the second identical repeat inject a message saying this call has already been made with this result, on the third force escalation. Cap by cost and wall-clock as well as by step count.',
+    tradeoff:
+      'The loop guard blocks legitimate retries - a genuinely flaky API that succeeds on attempt three now fails, so the guard has to exempt known-transient error classes, which is a list someone has to maintain. Forced escalation moves load onto the human queue, and if the underlying tools are actually inadequate you will see that as a support-cost spike rather than as an agent metric.',
+    seniorSignal:
+      'They fix the tool contract before they touch the prompt, because a loop is usually the model behaving reasonably given an unreadable failure signal - and they add the guard outside the model rather than asking the prompt politely not to repeat itself.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-agent-token-burn',
+    area: 'agent',
+    symptom:
+      'Average tokens per agent session is 180k against a design estimate of 25k. The distribution is not fat-tailed - the median session is 140k. Tracing one, step 1 sends 4k tokens and step 14 sends 190k, because every step resends the full transcript including four raw API responses of 30k tokens each.',
+    firstQuestions: [
+      'Plot input tokens per step for a single session. Linear growth means transcript accumulation; a step change means one specific tool result is enormous.',
+      'What is the largest single item in context, and does the agent need all of it? Measure the byte size of each tool result. A 30k-token JSON blob where the agent uses three fields is the whole bug.',
+      'Is prompt caching enabled and actually hitting? Check the cache-read token counts in the API response. Resending a stable prefix is cheap; resending a mutating one is not.',
+      'How many steps does a successful session need versus what it takes? If the median is 14 steps for a 4-step job, the burn is a planning problem, not a context problem.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Raw tool output goes straight into context - full API payloads, entire file contents, unpaginated search results - and is then resent on every subsequent step.',
+        check:
+          'Instrument tool results by token count and rank them. Then check what the agent actually cited from the largest ones in the final answer.',
+      },
+      {
+        hypothesis:
+          'The system prompt is huge - dozens of tool schemas plus long few-shot examples - and it is being resent uncached because something mutable, a timestamp or the user name, sits near the top of it.',
+        check:
+          'Count system-prompt tokens and multiply by step count; compare against total. Inspect the cache-read versus cache-write token split for a session to see whether the prefix is stable.',
+      },
+      {
+        hypothesis:
+          'The agent is taking far more steps than the task needs because it re-reads state it already has, and each redundant step pays for the entire accumulated transcript.',
+        check:
+          'Count distinct tool calls versus total tool calls per session. A ratio near 0.4 means most calls are re-reads.',
+      },
+    ],
+    fix:
+      'Attack the largest term first, which is almost always tool output. Give each tool a projection - return the fields the agent needs, paginate, and put the full payload behind a reference id the agent can fetch a slice of if it truly needs more. Then make the prefix cacheable: move everything static, tool schemas and instructions, above everything dynamic, and let the provider cache do the rest. Finally compact old turns - keep the last two tool results verbatim and replace earlier ones with a one-line record of what was called and what it returned, preserving the fact of the call so the loop guard still works.',
+    tradeoff:
+      'Projected tool output means the agent occasionally cannot see a field it needed and has to make a second call, which costs a round trip - and choosing the projection is a product decision you will get wrong for some intents. Compaction is lossy by construction: a summarised step-3 result will sometimes drop the detail that step 12 needed, and that failure mode is subtle because the agent proceeds confidently without it.',
+    seniorSignal:
+      'They measure where the tokens are before touching anything and go after the biggest term, rather than reaching for a smaller model - and they know that a stable cacheable prefix is often a bigger win than any prompt edit.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-agent-wrong-tool-selection',
+    area: 'agent',
+    symptom:
+      'Asked "how much did we spend on AWS last month", the agent calls search_documents and returns a paragraph from a two-year-old architecture doc, when there is a query_billing tool that would answer it exactly. It picks search_documents for roughly a third of all questions regardless of what they are about.',
+    firstQuestions: [
+      'What do the tool descriptions actually say? Read them as the model sees them. A description like "search company documents for information" reads as a universal fallback for anything.',
+      'Is the failure concentrated in one tool being over-selected, or is selection diffuse? Build a confusion matrix of intended tool against chosen tool over a labelled sample.',
+      'How many tools are in the schema? Selection accuracy tends to fall off a cliff somewhere past a dozen or two, and the shape of the fall tells you whether it is crowding or description quality.',
+      'Does the model pick correctly when given only the two candidate tools? That isolates "cannot distinguish these two" from "drowning in options".',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Tool descriptions overlap semantically: two or three of them are plausible for the same question and nothing in the text says which wins.',
+        check:
+          'Embed the tool descriptions and the failing queries and look at the similarity matrix. Descriptions that sit close together are ones the model cannot separate either.',
+      },
+      {
+        hypothesis:
+          'One tool is described in generic terms that make it a catch-all, so it is a defensible choice for everything and the model defaults to it under uncertainty.',
+        check:
+          'Count selections per tool against the true intent distribution. A tool chosen far more often than its intent warrants is a catch-all.',
+      },
+      {
+        hypothesis:
+          'Too many tools are exposed at once and the correct one is buried in the middle of a long schema list, where attention is weakest.',
+        check:
+          'Re-run failures with a filtered tool list of five candidates. A large accuracy jump means crowding, and the fix is routing, not wording.',
+      },
+    ],
+    fix:
+      'Rewrite descriptions as contracts rather than labels: what the tool is for, what it is explicitly not for, when to prefer a sibling, and one concrete example query. "Use query_billing for any question about spend, invoices or cost by service. Do not use search_documents for cost questions - it searches prose, not ledgers." Then add a routing layer: classify the request into a small tool group with a cheap model or an embedding match, and expose only that group\'s schemas. Log every selection with the query so the confusion matrix stays live.',
+    tradeoff:
+      'Routing adds a hop and a new failure mode - the router now mis-routes, and that error is harder to see because the agent never had the right tool to choose. Negative instructions in descriptions inflate the system prompt, which costs tokens on every single step. And hand-written contracts drift as tools change unless the description lives next to the implementation and is reviewed with it.',
+    seniorSignal:
+      'They treat tool descriptions as the model\'s only documentation and rewrite them with anti-examples, instead of adding "be careful to choose the right tool" to the system prompt and hoping.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-agent-right-tool-wrong-parameters',
+    area: 'agent',
+    symptom:
+      'The agent correctly picks query_billing but passes `{"start": "last month", "end": "now"}` against a schema that wants ISO dates, or passes `region: "US"` where the enum is `us-east-1`. The API returns 400, the agent apologises, retries with a different malformed value, and eventually gives up. Selection accuracy is 94%; argument validity is 71%.',
+    firstQuestions: [
+      'Which parameters fail, and how? Group the 400s by field name and error type. Date parsing, enum mismatch and missing required field are three different fixes.',
+      'Does the schema express the constraint at all? Check whether the failing field has a format, an enum, a pattern and a description, or is just typed `string`.',
+      'What does the agent see when it fails? If the API returns a bare "400 Bad Request", the agent has no way to correct itself and the retry is a guess.',
+      'Is the information even available to the agent? "Last month" cannot be resolved to dates without knowing today\'s date - check whether the current date is in the system prompt.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The JSON schema under-specifies: a date field typed as plain string with no format or example, so any string is schema-valid and only the backend rejects it.',
+        check:
+          'Validate the failing arguments against the declared schema. If they pass schema validation and fail at the API, the schema is the gap.',
+      },
+      {
+        hypothesis:
+          'The agent lacks the context needed to compute the value - no current date, no tenant timezone, no list of valid region codes anywhere in the prompt.',
+        check:
+          'Inject today\'s date and the enum values into the system prompt and re-run the failing set. A sharp drop in 400s confirms it.',
+      },
+      {
+        hypothesis:
+          'Error responses are opaque, so the retry is uninformed and the agent flails through plausible-looking variants.',
+        check:
+          'Read the exact error body the agent receives. "400" versus "start must be ISO-8601 date, got \'last month\'" produce completely different retry behaviour.',
+      },
+    ],
+    fix:
+      'Push the constraint into the schema where the model can see it: enums as real enums, dates with a format and a description that gives an example, required fields marked required, and sane defaults so the model does not have to invent optional values. Add a validation layer between model and API that checks arguments against the schema and, on failure, returns a structured message naming the field, the received value, the expected shape and one valid example - then allow exactly one repair attempt before escalating. For relative-time arguments, resolve them outside the model: accept a `period: "last_month"` enum and compute the dates server-side rather than asking a language model to do calendar arithmetic.',
+    tradeoff:
+      'Rich schemas cost tokens on every step, and a long enum of 200 region codes is worse than a lookup tool. The repair loop doubles latency on the failing tail, and capping it at one attempt means some recoverable calls now fail. Moving relative dates server-side reduces flexibility - a user asking for "the first three weeks of March" no longer has a path.',
+    seniorSignal:
+      'They stop asking the model to produce values the system could compute, and they make the error message a teaching signal rather than a status code - a weak answer just adds "always use ISO dates" to the prompt.',
+    minutes: 13,
+  },
+  {
+    id: 'scn-agent-irreversible-action',
+    area: 'agent',
+    symptom:
+      'A billing agent issued the same $4,200 refund three times in ninety seconds. The trace shows three identical calls to issue_refund; the first succeeded but the response timed out at the gateway, so the agent saw a timeout, concluded it had failed, and tried again. Twice.',
+    firstQuestions: [
+      'Did the first call actually succeed downstream? Check the payment provider, not your own logs. This decides whether you have a retry bug or a genuine triple-execution.',
+      'Is issue_refund idempotent? If the same idempotency key is not being sent, the API cannot protect you and no prompt change will.',
+      'Who or what retried - the agent, an HTTP client with automatic retries, or a queue redelivery? Three identical calls in the model trace and three at the provider are different stories.',
+      'What is the blast radius of the other write tools? Enumerate every tool that mutates state and note which are reversible.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'No idempotency key: the refund endpoint treats each request as new, so any retry at any layer duplicates the effect.',
+        check:
+          'Inspect the outbound request headers and body for an idempotency key. Send the same key twice against staging and see whether you get one refund or two.',
+      },
+      {
+        hypothesis:
+          'A transport-level retry - the HTTP client, a load balancer, or a workflow redelivery - is firing beneath the agent, so the model is not the retrier at all.',
+        check:
+          'Count calls at the agent layer and at the provider. If the model made one and the provider saw three, stop reading the trace and read the client config.',
+      },
+      {
+        hypothesis:
+          'Timeout is being surfaced to the agent as an unambiguous failure when it is in fact an unknown outcome, and the agent is instructed to retry on failure.',
+        check:
+          'Read the tool result string for the timed-out call. If it says "error: request failed", the agent is behaving correctly on wrong information.',
+      },
+    ],
+    fix:
+      'Irreversible actions get a different pipeline from reads. Generate an idempotency key deterministically from the intent - customer, invoice, amount, session - and send it on every write, so a duplicate is a no-op at the provider regardless of how many layers retry. Surface timeouts as `unknown`, never as `failed`, and make the only legal response to unknown a status check rather than a retry. Put an approval gate on writes above a threshold: the agent proposes the refund, a human or a rules engine confirms, and the tool executes. Log every write with its key to an append-only ledger so a duplicate is detectable within seconds rather than at month-end reconciliation.',
+    tradeoff:
+      'Approval gates destroy the automation benefit for exactly the cases where it mattered most, so the threshold has to be set from the loss distribution rather than from nervousness - and every gate is a queue with a latency of its own. Deterministic idempotency keys mean a genuinely intended second identical refund is silently swallowed, which is its own support ticket. Status-check-on-unknown adds a round trip to every timeout.',
+    seniorSignal:
+      'They design the system so the failure is impossible rather than unlikely - idempotency at the API boundary beats any amount of prompt discipline - and they distinguish "failed" from "unknown", which is the actual bug here.',
+    minutes: 16,
+  },
+  {
+    id: 'scn-agent-conflicting-tool-outputs',
+    area: 'agent',
+    symptom:
+      'Asked for a customer\'s current plan, the CRM tool says Enterprise and the billing tool says Pro. The agent silently picks one - not consistently the same one - and states it as fact with no hedge. Roughly 4% of account questions hit some version of this.',
+    firstQuestions: [
+      'Which source is authoritative for this field? Not "which is right this time" - which system is the system of record. If nobody can answer that in one sentence, the bug is organisational and the agent is just where it became visible.',
+      'Is the disagreement real or a timing artefact? Compare the update timestamps on both records. A CRM that lags billing by an hour disagrees constantly and correctly.',
+      'How often do they disagree overall? Run a batch reconciliation across all customers. 4% of questions might be 0.2% of accounts, or it might be 30%.',
+      'Does the agent even see both values, or does one tool result get truncated away before the answer is composed?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'There is no declared system of record, so both tools are presented as equally authoritative and the model has no principled basis to choose.',
+        check:
+          'Read the tool descriptions. If neither says "this is authoritative for plan tier", the model is guessing by design.',
+      },
+      {
+        hypothesis:
+          'Replication lag: one store is eventually consistent and the disagreement window is minutes to hours after any plan change.',
+        check:
+          'Correlate disagreements with recent plan-change events. If nearly all conflicts are within N hours of a change, it is lag, not corruption.',
+      },
+      {
+        hypothesis:
+          'The two fields are not the same field - "plan" in the CRM is the contracted tier and "plan" in billing is what is currently being invoiced, and they legitimately differ during a trial or a downgrade.',
+        check:
+          'Read both schemas and ask the owning team what the field means. Pull ten conflicting accounts and see whether the difference has a consistent business explanation.',
+      },
+    ],
+    fix:
+      'Resolve precedence outside the model. Declare the system of record per field in a small resolution table, and have a single get_account_plan tool that reads both, applies precedence, and returns one value plus a `conflict: true` flag with both raw values and their timestamps when they disagree. The agent then has one input and an explicit signal to hedge on. When conflict is set, the prompt requires the answer to state the authoritative value, note that another system disagrees, and offer to escalate - and the flag is emitted as a metric so the data-quality problem gets an owner instead of being absorbed by the agent.',
+    tradeoff:
+      'Precedence rules are business logic that will be wrong for some field the day someone changes a process, and they now live in a place the data teams do not look. Surfacing conflicts to users erodes confidence even when the answer given is correct, so the hedging language needs care. And the merged tool hides the raw sources, which makes debugging harder unless both values stay in the trace.',
+    seniorSignal:
+      'They refuse to let the model arbitrate a data-governance question, and they make the conflict a measured event with an owner rather than something the agent papers over.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-agent-budget-overrun',
+    area: 'agent',
+    symptom:
+      'Per-session cost is capped at $0.50 in the design doc. Last month the mean was $0.38 and finance is happy, but 0.4% of sessions cost between $9 and $40 each, and those account for 31% of the bill. Every expensive session is a research-style request that fanned out into dozens of sub-searches.',
+    firstQuestions: [
+      'What is the actual cost distribution, not the mean? Plot p50, p95, p99 and max. A mean inside budget with a heavy tail is a completely different problem from uniform overspend.',
+      'Is there a hard stop anywhere in the code, or only a target in a document? Grep for the enforcement. Very often the answer is that nothing enforces it.',
+      'What do the expensive sessions have in common - intent, tenant, input length, a specific tool that fans out?',
+      'Do expensive sessions produce better outcomes? If the $40 sessions resolve and the $0.30 ones do not, the budget is wrong, not the agent.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The budget exists as a design target and is enforced nowhere, so there is simply no mechanism that could have stopped it.',
+        check:
+          'Search the codebase for any cost accumulator or check. Absence of a counter is the finding.',
+      },
+      {
+        hypothesis:
+          'One tool fans out - a search that spawns a sub-agent per result, or a document reader that recurses into links - so cost is superlinear in a way the step cap does not bound.',
+        check:
+          'Count LLM calls per session and group by which tool preceded the fan-out. A session with 200 calls behind a 40-step cap means something nested.',
+      },
+      {
+        hypothesis:
+          'Retries multiply cost invisibly: each failed structured-output parse or tool error triggers a full re-call including the whole transcript.',
+        check:
+          'Count LLM calls against agent steps. A ratio well above one means retries, and the difference is pure waste.',
+      },
+    ],
+    fix:
+      'Enforce the budget in the loop, not in the doc. Accumulate cost from each API response\'s token counts into a session ledger; at 70% inject a message telling the agent to converge on an answer with what it has, at 100% stop and return the best available answer plus an escalation. Bound nesting explicitly - sub-agents inherit the parent\'s remaining budget rather than getting a fresh one, which is the usual bug. Tier the caps by request class so a research request legitimately gets $3 and a status lookup gets $0.05, and price the tail into the product rather than pretending it away.',
+    tradeoff:
+      'A hard stop turns an expensive success into a cheap failure, which users experience as the assistant giving up on hard questions - the exact questions where it was most valuable. The soft warning at 70% consumes context and sometimes causes premature convergence on questions that were nearly solved. Tiered budgets need a classifier, which is another thing that can be wrong.',
+    seniorSignal:
+      'They look at the distribution rather than the mean and find the fan-out, and they make sub-agents inherit the remaining budget instead of adding another top-level cap that the nesting already escapes.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-agent-latency-unacceptable',
+    area: 'agent',
+    symptom:
+      'The agent answers correctly but takes 45 seconds. Users abandon at 12. The trace shows nine sequential steps; six are tool calls that do not depend on each other, and each waits for the previous one to finish before starting.',
+    firstQuestions: [
+      'Break the 45 seconds down: how much is model inference, how much is tool execution, how much is your own orchestration overhead? Optimising the wrong term is the default mistake.',
+      'Which tool calls actually depend on each other? Draw the dependency graph for a real session. Six independent calls run sequentially is the finding, and it is usually the whole answer.',
+      'Is anything streamed to the user, or do they stare at a spinner for the full duration? Perceived latency and measured latency are different problems with different fixes.',
+      'Do all nine steps contribute to the final answer? Count how many tool results are actually cited.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The agent loop is strictly sequential by construction - one tool call per turn - even when the model would happily request several at once.',
+        check:
+          'Check whether the loop handles multiple tool calls in a single assistant message, or takes only the first. Many hand-rolled loops silently drop the rest.',
+      },
+      {
+        hypothesis:
+          'One slow tool dominates: a report query or an external API with a multi-second p95 that is called on almost every session.',
+        check:
+          'Rank tools by total contributed latency, which is p95 times call frequency, not p95 alone.',
+      },
+      {
+        hypothesis:
+          'The model is doing exploratory steps that a cheaper deterministic path could have skipped - resolving a customer id by three separate lookups, for instance.',
+        check:
+          'Read ten traces and mark each step as necessary or exploratory. A high exploratory share means the tool set is too granular.',
+      },
+    ],
+    fix:
+      'Parallelise first, because it is the largest and cheapest win: allow the model to emit multiple tool calls per turn and execute them concurrently, which typically collapses six sequential calls into one wait of the slowest. Then compress the graph - merge chatty granular tools into composite ones so "resolve customer, fetch plan, fetch invoices" is a single call. Cache tool results that are stable within a session. Finally, stream: show the plan and each tool as it completes, so the user sees motion from second one. If it is still too slow for the interactive path, split the product - answer immediately from a fast path and deliver the deep result asynchronously.',
+    tradeoff:
+      'Parallel tool execution breaks any implicit ordering the agent was relying on and makes write tools genuinely dangerous, so writes must stay serialised. Composite tools reduce flexibility and grow a combinatorial surface of near-duplicate endpoints. Streaming intermediate steps exposes the agent\'s reasoning, including its wrong turns, which some users find alarming and which leaks a little about your internals.',
+    seniorSignal:
+      'They fix the dependency structure before reaching for a faster model, and they separate perceived from actual latency - a weak answer swaps to a smaller model and loses the accuracy that made the agent worth building.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-agent-silent-tool-failure',
+    area: 'agent',
+    symptom:
+      'The agent confidently reports "you have no open invoices" for customers who plainly do. The invoice tool is returning HTTP 200 with `{"data": null, "error": "auth token expired"}`, and the wrapper turns any 200 into a success, so `null` reaches the model as an empty result and the model reports it faithfully.',
+    firstQuestions: [
+      'What does the tool wrapper do with a 200 that contains an error field? Read the code path, not the API docs.',
+      'How often is this happening? Count 200-with-error responses over the last week - this class of failure produces no error metric, so it may have been running for months.',
+      'Is the agent given any way to distinguish "no data" from "could not fetch"? Look at the exact string it receives in each case.',
+      'When did the token start expiring - is this a new credential-rotation behaviour or has it always failed under some condition?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The tool adapter treats HTTP status as the only success signal and never inspects the response envelope.',
+        check:
+          'Read the adapter. Replay a captured error-bearing 200 through it and observe what the model receives.',
+      },
+      {
+        hypothesis:
+          'Credentials expire mid-session and there is no refresh, so early calls succeed and later ones return the auth error - which explains why it looks intermittent.',
+        check:
+          'Correlate failures with session elapsed time and token issue time. A cliff at a fixed age is conclusive.',
+      },
+      {
+        hypothesis:
+          'Empty and error are conflated at the schema level - the tool\'s contract has no way to express "I could not tell you", so even a correct adapter would have nothing to say.',
+        check:
+          'Read the tool\'s declared return type. If it is just a list, the failure was unrepresentable from the start.',
+      },
+    ],
+    fix:
+      'Make unavailability representable and then loud. The tool return type becomes a tagged union - `ok` with data, `empty` with a reason, `error` with a class and message - and the adapter maps a 200-with-error to `error`, never to `empty`. The system prompt states that on `error` the agent must say the system could not be reached and must not infer absence from it. Add a canary: a synthetic request per tool per minute whose expected non-empty result alerts if it comes back empty, which catches this class without waiting for a user to notice. Fix the credential refresh, and fail closed on auth errors rather than degrading to a plausible-looking answer.',
+    tradeoff:
+      'Failing closed means outages become visible to users as "I cannot check that right now" instead of being silently absorbed, which raises the apparent error rate even though the true error rate just became honest. Canaries cost quota and add alert volume that needs tuning or it gets muted. And the tagged union is a breaking change to every tool and every prompt that reads them.',
+    seniorSignal:
+      'They recognise that the dangerous failure is the one that produces a confident wrong answer rather than an exception, and they add detection that does not depend on a user complaining.',
+    minutes: 13,
+  },
+  {
+    id: 'scn-agent-goal-drift-long-task',
+    area: 'agent',
+    symptom:
+      'Given "reconcile the March invoices and flag any over $10k that lack a PO", the agent spends steps 1-6 on the reconciliation, then at step 19 is writing a summary of vendor payment terms nobody asked for. The final answer never mentions purchase orders. Short tasks are fine; anything over about 15 steps drifts.',
+    firstQuestions: [
+      'Is the original instruction still in the context at step 19? Dump the assembled messages and look. If compaction ate it, the agent is not drifting, it is working on a different task.',
+      'Where does the last on-task step sit relative to the compaction threshold or the context limit?',
+      'Is there any representation of the goal outside the transcript - a task list, a plan object, a checklist - or does the goal exist only as the first user message?',
+      'Does the agent drift toward something specific, like whatever the most recent tool returned? That would point at recency dominance rather than forgetting.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'History compaction summarises early turns including the original instruction, so the goal is paraphrased into vagueness and then lost.',
+        check:
+          'Read the compacted summary that replaced turns 1-8. If "flag anything over $10k without a PO" has become "review invoices", you have found it.',
+      },
+      {
+        hypothesis:
+          'Recency dominance: the tail of the context is full of vendor-terms data from a recent tool call, and the model follows the most salient recent material rather than the distant instruction.',
+        check:
+          'Re-run from the step-15 state with the original goal re-appended at the end. If it returns to task, position is the cause, not loss.',
+      },
+      {
+        hypothesis:
+          'The task has no decomposition, so there is no structure that could record which sub-goals remain and no signal that the PO check was never done.',
+        check:
+          'Check whether anything in the system tracks subtask completion. If the only state is the message list, nothing can notice an unfinished sub-goal.',
+      },
+    ],
+    fix:
+      'Give the goal a home outside the transcript. On receipt, decompose into an explicit checklist of subtasks held as structured state; re-render that checklist with completion status into every step\'s prompt, near the end where attention is strongest, and never let compaction touch it. Compaction then only ever summarises tool results, never instructions. Before the agent is allowed to finalise, run a completion check against the checklist - unfinished items either get worked or get named in the answer as not done. For long tasks, checkpoint the state so a session can resume rather than restarting.',
+    tradeoff:
+      'Re-rendering the checklist every step costs tokens that grow with task size, and the decomposition step adds a model call and a new failure mode - a bad decomposition locks in the wrong plan. Rigid checklists also suppress useful adaptation: an agent that discovers the real problem is something else now has to fight its own plan, so the plan needs an explicit revision path.',
+    seniorSignal:
+      'They put the goal in durable state instead of trusting the context window to hold it, and they add a completion check so an unfinished sub-goal fails loudly rather than being quietly omitted from a confident summary.',
+    minutes: 15,
+  },
   // CHUNK_MARKER
 ]
