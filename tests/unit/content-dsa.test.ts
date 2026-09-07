@@ -51,4 +51,50 @@ describe('dsa bank', () => {
       expect(p.pitfalls.length, p.id).toBeGreaterThanOrEqual(2)
     }
   })
+
+  it('gives every problem all five study fields', () => {
+    for (const p of dsaProblems) {
+      expect(p.signal, p.id).toBeTruthy()
+      expect(p.approach, p.id).toBeTruthy()
+      expect(p.solution, p.id).toBeTruthy()
+      expect(p.complexity, p.id).toBeTruthy()
+      expect(p.followUps, p.id).toBeTruthy()
+    }
+  })
+
+  it('gives every problem a runnable Python solution', () => {
+    for (const p of dsaProblems) {
+      // Python only, and a function or method definition every time.
+      expect(p.solution, p.id).toContain('def ')
+      expect(p.solution!.length, p.id).toBeGreaterThan(40)
+    }
+  })
+
+  it('states a reason alongside every complexity bound', () => {
+    // "O(n)" on its own teaches nothing. Each bound is written "O(...) — why",
+    // so assert the reason exists and is a real sentence rather than a word.
+    for (const p of dsaProblems) {
+      for (const [field, value] of Object.entries(p.complexity!)) {
+        const label = `${p.id}.${field}`
+        expect(value, label).toMatch(/^O\(/)
+        expect(value, label).toContain('—')
+        const reason = value.slice(value.indexOf('—') + 1).trim()
+        expect(reason.length, label).toBeGreaterThanOrEqual(20)
+      }
+    }
+  })
+
+  it('gives every problem at least two follow-up questions', () => {
+    for (const p of dsaProblems) {
+      expect(p.followUps!.length, p.id).toBeGreaterThanOrEqual(2)
+      for (const f of p.followUps!) expect(f.length, p.id).toBeGreaterThan(20)
+    }
+  })
+
+  it('keeps every signal to a single scannable line', () => {
+    for (const p of dsaProblems) {
+      expect(p.signal!.length, p.id).toBeLessThan(200)
+      expect(p.signal, p.id).not.toContain('\n')
+    }
+  })
 })

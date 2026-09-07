@@ -874,7 +874,7 @@ to its predecessor, and after recording a hit skip equal values on both sides.`,
     return out`,
     complexity: {
       time: 'O(n^2) — an O(n log n) sort, then for each of n fixed elements a linear two-pointer sweep.',
-      space: 'O(1) beyond the output if the sort is in place, since only indices are held.',
+      space: 'O(1) beyond the output — the sort is in place and only indices are held, so nothing else scales with n.',
     },
     followUps: [
       'What if it is 4Sum? Fix two elements and reuse the same sweep — the pattern generalises to kSum at O(n^(k-1)).',
@@ -1390,7 +1390,7 @@ valid results instead of filtering 2^(2n) candidates.`,
     return out`,
     complexity: {
       time: 'O(4^n / sqrt(n)) — the number of valid strings is the nth Catalan number and each costs O(n) to emit.',
-      space: 'O(n) for the recursion depth and the working buffer, excluding the output list.',
+      space: 'O(n) — the recursion depth and the working buffer, excluding the output list.',
     },
     followUps: [
       'What if there are three bracket types? The invariant needs a stack, not two counters.',
@@ -1752,7 +1752,7 @@ class TimeMap:
         i = bisect_right(times, timestamp)
         return self._values[key][i - 1] if i else ""`,
     complexity: {
-      time: 'O(1) amortised per set (append to the end), O(log n) per get where n is that key\'s version count.',
+      time: 'O(1) amortised per set, O(log n) per get — a set appends to an already-sorted list, and a get binary searches the versions stored under that key.',
       space: 'O(total sets) — every version is retained because any of them may still be the answer to some query.',
     },
     followUps: [
@@ -3232,7 +3232,7 @@ class Twitter:
     def unfollow(self, follower_id: int, followee_id: int) -> None:
         self._following[follower_id].discard(followee_id)`,
     complexity: {
-      time: 'O(1) for post, follow and unfollow; O(k log k) for a feed, since only the last 10 tweets of each of the k followees can qualify.',
+      time: 'O(1) for post, follow and unfollow, O(k log k) for a feed — only the last 10 tweets of each of the k followees can possibly qualify.',
       space: 'O(total tweets + total follow edges) — tweets are never discarded and each edge is stored once.',
     },
     followUps: [
@@ -3277,7 +3277,7 @@ class MedianFinder:
             return float(-self._low[0])
         return (-self._low[0] + self._high[0]) / 2`,
     complexity: {
-      time: 'O(log n) per insert for the pushes and the rebalance; O(1) per median query, which only reads two roots.',
+      time: 'O(log n) per insert, O(1) per median — the insert does two heap operations plus a rebalance, while the query only reads two roots.',
       space: 'O(n) — every value seen is retained, split across the two heaps.',
     },
     followUps: [
@@ -3320,7 +3320,7 @@ possible — the output size is the lower bound.`,
     return out`,
     complexity: {
       time: 'O(n * 2^n) — there are 2^n subsets and copying each costs up to n.',
-      space: 'O(n) for the recursion depth and working list, excluding the 2^n results returned.',
+      space: 'O(n) — the recursion depth and working list, excluding the 2^n results returned.',
     },
     followUps: [
       'What if the input has duplicates? Sort first and skip repeated values at the same depth, which is Subsets II.',
@@ -3452,7 +3452,7 @@ factorial and no pruning exists for the unconstrained case.`,
     return out`,
     complexity: {
       time: 'O(n * n!) — there are n! permutations and each costs O(n) to build and copy.',
-      space: 'O(n) for the used array, the working list and the recursion depth, excluding the output.',
+      space: 'O(n) — the used array, the working list and the recursion depth, excluding the output.',
     },
     followUps: [
       'What if the input has duplicates? Sort and skip equal values whose predecessor is unused, or you emit repeats.',
@@ -3798,8 +3798,8 @@ class WordDictionary:
 
         return dfs(self.root, 0)`,
     complexity: {
-      time: 'O(len(word)) with no wildcards; O(26^w * len(word)) worst case, where w is the number of dots that each fork the search.',
-      space: 'O(total characters) for the trie, plus O(len(word)) recursion depth during a search.',
+      time: 'O(len(word)) with no wildcards, O(26^w * len(word)) worst case — each of the w dots forks the walk into every child.',
+      space: 'O(total characters) — the trie itself, plus O(len(word)) recursion depth during a search.',
     },
     followUps: [
       'What if \'*\' matching any number of characters were allowed? The DFS must also try consuming zero characters.',
@@ -3865,7 +3865,7 @@ def find_words(board: list[list[str]], words: list[str]) -> list[str]:
     return found`,
     complexity: {
       time: 'O(rows * cols * 4 * 3^(L-1)) where L is the longest word — the trie collapses all words into one walk instead of one per word.',
-      space: 'O(total characters in words) for the trie, plus O(L) recursion depth.',
+      space: 'O(total characters in words) — the trie stores every word once with prefixes shared, plus O(L) recursion depth.',
     },
     followUps: [
       'What if a found word should be prunable from the trie entirely, not just unmarked? Delete childless nodes on the way back up.',
@@ -4919,7 +4919,7 @@ Robber sweep, so nothing new has to be invented.`,
     return max(rob_line(nums[:-1]), rob_line(nums[1:]))`,
     complexity: {
       time: 'O(n) — two linear sweeps over slices of the array, which is still linear overall.',
-      space: 'O(n) for the two slices; slicing in place with index bounds would make it O(1).',
+      space: 'O(n) — the two slices; iterating with index bounds instead of slicing would bring it to O(1).',
     },
     followUps: [
       'Why is it not enough to run the linear version and subtract the smaller of the ends?',
@@ -5682,6 +5682,30 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['google', 'meta'],
     minutes: 30,
+    signal: 'Best contiguous sum — the moment the running total goes negative it can only hurt whatever follows, so it is worth discarding.',
+    approach: `Kadane's insight: a prefix with a negative sum is never worth carrying, because
+starting fresh at the next element is strictly better. So keep a running sum,
+reset it to the current element whenever extending is worse, and track the best
+seen. That is one pass instead of the O(n^2) sum over all subarrays.`,
+    solution: `def max_sub_array(nums: list[int]) -> int:
+    if not nums:
+        return 0
+
+    best = current = nums[0]
+    for n in nums[1:]:
+        current = max(n, current + n)  # extend, or start fresh here
+        best = max(best, current)
+
+    return best`,
+    complexity: {
+      time: 'O(n) — one pass with two comparisons per element, versus O(n^2) for summing every subarray.',
+      space: 'O(1) — two running scalars, no prefix-sum array.',
+    },
+    followUps: [
+      'What if the array is circular? The answer is either the plain maximum or total minus the minimum subarray.',
+      'What if you must return the subarray\'s bounds? Record the start whenever the running sum resets.',
+      'What if updates arrive and the maximum must stay current? A segment tree storing prefix, suffix and best per node.',
+    ],
   },
   {
     id: 'dsa-55-jump-game',
@@ -5693,6 +5717,27 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Reachability with variable step sizes — you never need which path, only how far anything can reach.',
+    approach: `Track the furthest index reachable so far. Walk forward; if the current index is
+beyond that reach, you are stuck. Otherwise extend the reach. There is no need
+to try individual jumps, because reach is monotone — the DP over every jump
+choice is O(n^2) and computes nothing extra.`,
+    solution: `def can_jump(nums: list[int]) -> bool:
+    reach = 0
+    for i, jump in enumerate(nums):
+        if i > reach:
+            return False  # this index was never reachable
+        reach = max(reach, i + jump)
+    return True`,
+    complexity: {
+      time: 'O(n) — one pass updating a single running maximum.',
+      space: 'O(1) — one integer, versus O(n) for a reachability DP array.',
+    },
+    followUps: [
+      'What if you need the minimum number of jumps? That is Jump Game II, a level-by-level greedy.',
+      'What if you may also jump backwards? Reach is no longer monotone and it becomes a BFS.',
+      'What if some indices are forbidden landing spots?',
+    ],
   },
   {
     id: 'dsa-45-jump-game-ii',
@@ -5704,6 +5749,32 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Fewest jumps to the end — each jump defines a window of newly reachable indices, so the answer is a BFS level count.',
+    approach: `Think of it as BFS where level k is everything reachable in k jumps. Sweep the
+current level's index range, computing the furthest index any of them reaches;
+that becomes the next level. Incrementing the count once per level, rather than
+per index, is what makes it linear instead of O(n^2).`,
+    solution: `def jump(nums: list[int]) -> int:
+    jumps = 0
+    current_end = 0  # last index reachable with \`jumps\` jumps
+    furthest = 0
+
+    for i in range(len(nums) - 1):
+        furthest = max(furthest, i + nums[i])
+        if i == current_end:  # exhausted this level, so take another jump
+            jumps += 1
+            current_end = furthest
+
+    return jumps`,
+    complexity: {
+      time: 'O(n) — one pass; the level boundary advances monotonically so no index is revisited.',
+      space: 'O(1) — three integers, no queue and no DP table.',
+    },
+    followUps: [
+      'What if some positions are unreachable? Guard the loop, or furthest stalls and the count is meaningless.',
+      'What if each jump had a cost rather than counting one each? Then it is Dijkstra, not a greedy sweep.',
+      'What if you must return the actual sequence of landing indices?',
+    ],
   },
   {
     id: 'dsa-134-gas-station',
@@ -5715,6 +5786,33 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'A circular route feasible from exactly one start — if the total is non-negative, the failure points themselves tell you where to begin.',
+    approach: `If total gas is less than total cost no start works. Otherwise sweep once with a
+running tank: the moment it goes negative, no station from the current candidate
+up to here can be the start, so the next station becomes the candidate. That
+single pass replaces trying all n starts at O(n^2).`,
+    solution: `def can_complete_circuit(gas: list[int], cost: list[int]) -> int:
+    if sum(gas) < sum(cost):
+        return -1  # not enough fuel overall, so no start can work
+
+    start = 0
+    tank = 0
+    for i, (g, c) in enumerate(zip(gas, cost)):
+        tank += g - c
+        if tank < 0:  # nothing from \`start\` to i can be the answer
+            start = i + 1
+            tank = 0
+
+    return start`,
+    complexity: {
+      time: 'O(n) — two sums plus one sweep, versus O(n^2) for simulating every possible start.',
+      space: 'O(1) — a running tank and a candidate index.',
+    },
+    followUps: [
+      'Prove the greedy: why can no station between the old start and the failure point be a valid start?',
+      'What if the tank has a maximum capacity? The prefix argument breaks and it becomes a simulation.',
+      'What if several valid starts exist — does this return the smallest index?',
+    ],
   },
   {
     id: 'dsa-1296-divide-array-in-sets-of-k-consecutive-numbers',
@@ -5726,6 +5824,38 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Partition into runs of consecutive values — the smallest remaining value has no choice about which run it starts.',
+    approach: `The smallest unused number must be the head of a run, since nothing smaller exists
+to precede it. So repeatedly take the smallest, and consume one of each of the
+next k-1 values; if any is missing, the partition is impossible. Counting with a
+dict keeps each removal O(1).`,
+    solution: `from collections import Counter
+
+
+def is_possible_divide(nums: list[int], k: int) -> bool:
+    if k <= 0 or len(nums) % k:
+        return False
+
+    counts = Counter(nums)
+    for value in sorted(counts):
+        need = counts[value]
+        if need <= 0:
+            continue
+        for offset in range(k):  # the smallest left must head its own run
+            if counts[value + offset] < need:
+                return False
+            counts[value + offset] -= need
+
+    return True`,
+    complexity: {
+      time: 'O(n log n + d * k) — the sort over d distinct values dominates, and each value extends its runs k steps.',
+      space: 'O(d) — one counter entry per distinct value.',
+    },
+    followUps: [
+      'What if runs may be of any length at least k? The greedy must decide how far to extend each run.',
+      'What if values are huge but few? A heap over the distinct values avoids sorting the whole array.',
+      'What if the numbers arrive as a stream and hands must be formed online?',
+    ],
   },
   {
     id: 'dsa-1899-merge-triplets-to-form-target-triplet',
@@ -5737,6 +5867,31 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'The operation takes a component-wise maximum, so any triplet exceeding the target in any position is permanently poisonous.',
+    approach: `Because merging only ever raises values, a triplet with any component above the
+target can never be used — including it would overshoot forever. Every other
+triplet is free to merge, so simply check whether the usable ones collectively
+supply each target component exactly.`,
+    solution: `def merge_triplets(triplets: list[list[int]], target: list[int]) -> bool:
+    found = [False, False, False]
+
+    for triplet in triplets:
+        if any(t > g for t, g in zip(triplet, target)):
+            continue  # merging can only raise values, so this one is unusable
+        for i in range(3):
+            if triplet[i] == target[i]:
+                found[i] = True
+
+    return all(found)`,
+    complexity: {
+      time: 'O(n) — one pass with a constant three comparisons per triplet.',
+      space: 'O(1) — three booleans regardless of input size.',
+    },
+    followUps: [
+      'What if merging took the minimum instead? The whole poisonous-triplet argument inverts.',
+      'What if there were k components rather than three — does anything but the loop bound change?',
+      'What if you must report which triplets to merge, not just whether it is possible?',
+    ],
   },
   {
     id: 'dsa-763-partition-labels',
@@ -5748,6 +5903,33 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: 'Cut a string so each character lives in exactly one piece — a piece cannot end before the last occurrence of anything inside it.',
+    approach: `Record each character's last index in one pass. Then sweep, extending the current
+piece's end to the furthest last-occurrence seen so far; when the scan index
+reaches that end, nothing inside can appear later, so it is safe to cut. That is
+two linear passes and no backtracking.`,
+    solution: `def partition_labels(s: str) -> list[int]:
+    last = {ch: i for i, ch in enumerate(s)}  # last occurrence of each character
+
+    out: list[int] = []
+    start = end = 0
+
+    for i, ch in enumerate(s):
+        end = max(end, last[ch])
+        if i == end:  # nothing inside this piece appears later
+            out.append(end - start + 1)
+            start = i + 1
+
+    return out`,
+    complexity: {
+      time: 'O(n) — two passes, one to record last occurrences and one to cut.',
+      space: 'O(k) — one entry per distinct character, so O(1) for a fixed alphabet.',
+    },
+    followUps: [
+      'What if you want the fewest pieces instead of the greedy ones — is this already optimal?',
+      'What if some characters may appear in two pieces? The interval-merging argument collapses.',
+      'What if the string is a stream? Last occurrences are unknown ahead of time, so this fails outright.',
+    ],
   },
   {
     id: 'dsa-678-valid-parenthesis-string',
@@ -5759,6 +5941,36 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'A wildcard that may be an opener, a closer, or nothing — instead of branching, carry the range of possible open counts.',
+    approach: `Trying every interpretation of '*' is exponential. Instead track the minimum and
+maximum number of unmatched openers still possible. A '*' widens that range by
+one in both directions; the minimum is clamped at zero. The string is valid if
+the maximum never drops below zero and the minimum ends at zero.`,
+    solution: `def check_valid_string(s: str) -> bool:
+    low = high = 0  # possible range of unmatched open brackets
+
+    for ch in s:
+        if ch == "(":
+            low, high = low + 1, high + 1
+        elif ch == ")":
+            low, high = low - 1, high - 1
+        else:  # '*' may be '(', ')' or empty
+            low, high = low - 1, high + 1
+
+        if high < 0:
+            return False  # too many closers under every interpretation
+        low = max(low, 0)
+
+    return low == 0`,
+    complexity: {
+      time: 'O(n) — one pass carrying two counters, versus exponential branching on each wildcard.',
+      space: 'O(1) — two integers instead of a stack of positions.',
+    },
+    followUps: [
+      'Why is clamping low at zero correct rather than a bug that hides errors?',
+      'What if there were multiple bracket types plus wildcards? The interval trick fails and you need a stack per type.',
+      'What if you must return one valid assignment of the wildcards, not just a yes or no?',
+    ],
   },
 
   // --- Intervals (6) ---
@@ -5772,6 +5984,37 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'The list is already sorted and disjoint — so the new interval touches one contiguous run, and everything else is copied untouched.',
+    approach: `Walk the sorted list in three phases: intervals ending before the new one starts
+are emitted as is; intervals that overlap are absorbed by widening the new
+interval's bounds; the rest are emitted after. Because the input is sorted, one
+pass suffices and no re-sorting is needed.`,
+    solution: `def insert_interval(intervals: list[list[int]], new: list[int]) -> list[list[int]]:
+    out: list[list[int]] = []
+    start, end = new
+    i, n = 0, len(intervals)
+
+    while i < n and intervals[i][1] < start:  # strictly before: no overlap
+        out.append(intervals[i])
+        i += 1
+
+    while i < n and intervals[i][0] <= end:  # overlapping: absorb
+        start = min(start, intervals[i][0])
+        end = max(end, intervals[i][1])
+        i += 1
+
+    out.append([start, end])
+    out.extend(intervals[i:])
+    return out`,
+    complexity: {
+      time: 'O(n) — each interval is examined once across the three phases; no sort is needed because the input is sorted.',
+      space: 'O(n) — the output list; the input itself is not copied or mutated.',
+    },
+    followUps: [
+      'What if the list were unsorted? You would sort first and it becomes Merge Intervals at O(n log n).',
+      'What if many inserts arrive? A balanced BST or interval tree gives O(log n) per insert instead of O(n).',
+      'What if touching endpoints should not merge — which comparison changes?',
+    ],
   },
   {
     id: 'dsa-56-merge-intervals',
@@ -5783,6 +6026,32 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 30,
+    signal: 'Overlapping ranges to collapse — sorting by start is what makes overlap a purely local, adjacent-pair question.',
+    approach: `Once sorted by start, any interval can only overlap the one currently being built,
+because everything later starts even later. So sweep: extend the current
+interval's end when the next one starts within it, otherwise close it out and
+begin a new one. Without the sort you would need all-pairs comparisons.`,
+    solution: `def merge_intervals(intervals: list[list[int]]) -> list[list[int]]:
+    if not intervals:
+        return []
+
+    out: list[list[int]] = []
+    for start, end in sorted(intervals):
+        if out and start <= out[-1][1]:  # overlaps the interval being built
+            out[-1][1] = max(out[-1][1], end)
+        else:
+            out.append([start, end])
+
+    return out`,
+    complexity: {
+      time: 'O(n log n) — dominated by the sort; the merging sweep itself is linear.',
+      space: 'O(n) — the output list, plus whatever the sort needs.',
+    },
+    followUps: [
+      'What if intervals arrive as a stream? An interval tree or a sorted container maintains the merge online.',
+      'What if you want the gaps between intervals rather than the merged ranges?',
+      'What if intervals are on a circular timeline, like times of day wrapping midnight?',
+    ],
   },
   {
     id: 'dsa-435-non-overlapping-intervals',
@@ -5794,6 +6063,33 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Remove the fewest intervals to leave a disjoint set — equivalently keep the most, which is interval scheduling, so sort by END.',
+    approach: `Keeping the most intervals means always choosing the one that frees up the timeline
+soonest, so sort by end time and greedily keep any interval starting at or after
+the last kept end. Sorting by start is the classic wrong move: one long early
+interval then blocks several short ones.`,
+    solution: `def erase_overlap_intervals(intervals: list[list[int]]) -> int:
+    if not intervals:
+        return 0
+
+    kept = 0
+    last_end = float("-inf")
+
+    for start, end in sorted(intervals, key=lambda iv: iv[1]):  # by END, not start
+        if start >= last_end:
+            kept += 1
+            last_end = end
+
+    return len(intervals) - kept`,
+    complexity: {
+      time: 'O(n log n) — the sort by end time dominates; the greedy sweep is one linear pass.',
+      space: 'O(n) — the sorted copy; the greedy sweep itself keeps only two values.',
+    },
+    followUps: [
+      'Why sort by end rather than start? Construct the counterexample that breaks sorting by start.',
+      'What if intervals have weights and you want the maximum total weight? Greedy fails; it becomes DP with binary search.',
+      'What if touching endpoints counted as overlapping — which comparison flips?',
+    ],
   },
   {
     id: 'dsa-252-meeting-rooms',
@@ -5805,6 +6101,26 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 20,
+    signal: 'Can one resource serve everything — after sorting by start, only adjacent pairs can conflict.',
+    approach: `Sort by start time. If any meeting begins before its predecessor ends, one room is
+not enough, and if no adjacent pair conflicts then no pair does — because starts
+are non-decreasing. That is why checking neighbours is sufficient and the
+all-pairs comparison is wasted work.`,
+    solution: `def can_attend_meetings(intervals: list[list[int]]) -> bool:
+    ordered = sorted(intervals)
+    return all(
+        current[0] >= previous[1]  # starts only after the previous one ends
+        for previous, current in zip(ordered, ordered[1:])
+    )`,
+    complexity: {
+      time: 'O(n log n) — the sort dominates; the adjacent-pair scan is linear.',
+      space: 'O(n) — the sorted copy of the intervals.',
+    },
+    followUps: [
+      'What if you need how many rooms are required? That is Meeting Rooms II, a sweep or a heap.',
+      'What if meetings arrive one at a time and each must be accepted or rejected immediately?',
+      'What if a meeting ending exactly when another starts counts as a conflict?',
+    ],
   },
   {
     id: 'dsa-253-meeting-rooms-ii',
@@ -5816,6 +6132,37 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Maximum number of simultaneous intervals — the answer is the peak of a sweep, not a property of any single interval.',
+    approach: `Rooms needed at any moment is the number of meetings then in progress. Separate
+the starts and the ends, sort both, and sweep in time order: a start increments
+the occupancy and an end decrements it. The peak occupancy is the answer; a
+min-heap of end times computes the same thing.`,
+    solution: `def min_meeting_rooms(intervals: list[list[int]]) -> int:
+    if not intervals:
+        return 0
+
+    starts = sorted(iv[0] for iv in intervals)
+    ends = sorted(iv[1] for iv in intervals)
+
+    rooms = peak = 0
+    e = 0
+    for start in starts:
+        while ends[e] <= start:  # a room freed up before this meeting begins
+            e += 1
+            rooms -= 1
+        rooms += 1
+        peak = max(peak, rooms)
+
+    return peak`,
+    complexity: {
+      time: 'O(n log n) — two sorts dominate; the sweep advances each pointer at most n times.',
+      space: 'O(n) — the two sorted lists of endpoints.',
+    },
+    followUps: [
+      'What if you must say which meeting goes in which room? The heap version pops the room that frees first.',
+      'What if the timeline is huge and sparse — does a difference array still fit in memory?',
+      'What if rooms have capacities and meetings have sizes?',
+    ],
   },
   {
     id: 'dsa-1851-minimum-interval-to-include-each-query',
@@ -5827,6 +6174,39 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 45,
+    signal: 'Per-query answers over a static interval set — sorting both sides turns it into one sweep with a heap of live candidates.',
+    approach: `Answer the queries in increasing order. Push every interval whose start has been
+passed into a min-heap keyed by length, then discard heap entries whose end has
+already been passed. The heap's root is then the shortest live interval covering
+this query, so each query costs a logarithmic amount.`,
+    solution: `import heapq
+
+
+def min_interval(intervals: list[list[int]], queries: list[int]) -> list[int]:
+    ordered = sorted(intervals)
+    answers: dict[int, int] = {}
+    heap: list[tuple[int, int]] = []  # (length, end)
+    i = 0
+
+    for q in sorted(queries):
+        while i < len(ordered) and ordered[i][0] <= q:
+            start, end = ordered[i]
+            heapq.heappush(heap, (end - start + 1, end))
+            i += 1
+        while heap and heap[0][1] < q:  # already ended, so no longer a candidate
+            heapq.heappop(heap)
+        answers[q] = heap[0][0] if heap else -1
+
+    return [answers[q] for q in queries]`,
+    complexity: {
+      time: 'O((n + q) log n) — sorting both inputs, plus each interval entering and leaving the heap at most once.',
+      space: 'O(n) — the sorted intervals, the heap and the per-query answer map.',
+    },
+    followUps: [
+      'What if queries must be answered online, in the order given? Offline sorting is no longer allowed; use a segment tree.',
+      'What if intervals could be added and removed between queries?',
+      'Why is popping expired intervals lazily correct rather than deleting them eagerly?',
+    ],
   },
 
   // --- Math & Geometry (8) ---
@@ -5840,6 +6220,29 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['meta'],
     minutes: 30,
+    signal: 'An in-place matrix rotation — express it as a composition of two simple involutions rather than juggling four cells at once.',
+    approach: `Rotating 90 degrees clockwise equals transposing the matrix and then reversing each
+row. Both steps are trivially in place, so no temporary matrix is needed and the
+four-way index arithmetic that people get wrong disappears. Counter-clockwise is
+the same with the reversal applied to columns.`,
+    solution: `def rotate(matrix: list[list[int]]) -> None:
+    n = len(matrix)
+
+    for r in range(n):  # transpose across the main diagonal
+        for c in range(r + 1, n):
+            matrix[r][c], matrix[c][r] = matrix[c][r], matrix[r][c]
+
+    for row in matrix:  # then mirror each row
+        row.reverse()`,
+    complexity: {
+      time: 'O(n^2) — each of the n^2 cells is touched a constant number of times across the two passes.',
+      space: 'O(1) — every swap is in place; no second matrix is allocated.',
+    },
+    followUps: [
+      'What about rotating counter-clockwise? Transpose, then reverse the columns instead of the rows.',
+      'What if the matrix is not square? In-place is impossible, because the shape itself changes.',
+      'What if the matrix is huge and stored row-major on disk — is transposition still cheap?',
+    ],
   },
   {
     id: 'dsa-54-spiral-matrix',
@@ -5851,6 +6254,48 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['meta'],
     minutes: 30,
+    signal: 'No algorithm to discover — the whole difficulty is boundary bookkeeping that must stay correct as the region shrinks.',
+    approach: `Keep four boundaries and peel one edge at a time, shrinking the corresponding
+boundary after each. The trap is the final row or column of a non-square matrix:
+after the top and right passes, you must re-check that a row and a column still
+remain before walking back, or values get emitted twice.`,
+    solution: `def spiral_order(matrix: list[list[int]]) -> list[int]:
+    if not matrix or not matrix[0]:
+        return []
+
+    top, bottom = 0, len(matrix) - 1
+    left, right = 0, len(matrix[0]) - 1
+    out: list[int] = []
+
+    while top <= bottom and left <= right:
+        for c in range(left, right + 1):
+            out.append(matrix[top][c])
+        top += 1
+
+        for r in range(top, bottom + 1):
+            out.append(matrix[r][right])
+        right -= 1
+
+        if top <= bottom:  # re-check: a single row must not be walked twice
+            for c in range(right, left - 1, -1):
+                out.append(matrix[bottom][c])
+            bottom -= 1
+
+        if left <= right:  # re-check: a single column must not be walked twice
+            for r in range(bottom, top - 1, -1):
+                out.append(matrix[r][left])
+            left += 1
+
+    return out`,
+    complexity: {
+      time: 'O(rows * cols) — every cell is appended exactly once.',
+      space: 'O(1) beyond the output — four boundary indices, no visited matrix.',
+    },
+    followUps: [
+      'What if you must generate a spiral matrix rather than read one? Same boundaries, writing instead of reading.',
+      'What if the spiral goes counter-clockwise, or starts from the centre?',
+      'Why are the two re-checks necessary — which shapes break without them?',
+    ],
   },
   {
     id: 'dsa-73-set-matrix-zeroes',
@@ -5862,6 +6307,39 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Marks must be recorded before they are acted on — writing zeroes eagerly destroys the information you still need to read.',
+    approach: `Zeroing a cell immediately would make later cells look like original zeroes. Use
+the first row and first column as the mark storage, with one extra flag for the
+first column's own fate. Two passes — mark, then apply — give O(1) extra space
+where the obvious solution needs O(rows + cols) sets.`,
+    solution: `def set_zeroes(matrix: list[list[int]]) -> None:
+    if not matrix or not matrix[0]:
+        return
+
+    rows, cols = len(matrix), len(matrix[0])
+    first_col_zero = any(matrix[r][0] == 0 for r in range(rows))
+
+    for r in range(rows):  # mark in the first row and column
+        for c in range(1, cols):
+            if matrix[r][c] == 0:
+                matrix[r][0] = 0
+                matrix[0][c] = 0
+
+    for r in range(rows - 1, -1, -1):  # apply backwards so marks survive
+        for c in range(cols - 1, 0, -1):
+            if matrix[r][0] == 0 or matrix[0][c] == 0:
+                matrix[r][c] = 0
+        if first_col_zero:
+            matrix[r][0] = 0`,
+    complexity: {
+      time: 'O(rows * cols) — two passes over the grid, each doing constant work per cell.',
+      space: 'O(1) — the marks live in the first row and column, plus a single boolean flag.',
+    },
+    followUps: [
+      'Why must the apply pass run backwards? Trace what a forward pass does to the marker row.',
+      'What if the matrix is sparse? Storing the zero rows and columns as sets is simpler and smaller.',
+      'What if the matrix arrives as a stream of updates rather than all at once?',
+    ],
   },
   {
     id: 'dsa-202-happy-number',
@@ -5873,6 +6351,30 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 20,
+    signal: 'Repeatedly apply a function until it stabilises — an eventually-periodic sequence, so the failure mode is a cycle.',
+    approach: `The digit-square-sum sequence is bounded, so it must eventually repeat: either it
+reaches 1 or it enters a cycle. A seen-set detects the cycle in O(1) per step,
+and Floyd's tortoise and hare does the same in O(1) space by running the
+function at two speeds.`,
+    solution: `def is_happy(n: int) -> bool:
+    def next_value(x: int) -> int:
+        return sum(int(d) ** 2 for d in str(abs(x)))
+
+    slow, fast = n, next_value(n)
+    while fast != 1 and slow != fast:
+        slow = next_value(slow)
+        fast = next_value(next_value(fast))
+
+    return fast == 1`,
+    complexity: {
+      time: 'O(log n) — each step sums digit squares in O(log n), and only O(log n) steps pass before the value drops below 1000.',
+      space: 'O(1) — two running values, versus O(log n) for a seen-set of visited numbers.',
+    },
+    followUps: [
+      'What if the exponent were 3 instead of 2? More cycles exist, but the same detection works.',
+      'What if the base were not 10? The bound argument still holds, only the digit extraction changes.',
+      'Can you name the unhappy cycle without running the loop? It is the 4, 16, 37, 58, 89, 145, 42, 20 loop.',
+    ],
   },
   {
     id: 'dsa-66-plus-one',
@@ -5884,6 +6386,30 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: ['amazon'],
     minutes: 20,
+    signal: 'Digit-array arithmetic — the whole question is what happens when the carry runs off the front.',
+    approach: `Walk from the least significant digit. A digit below 9 absorbs the increment and
+you are done immediately; a 9 becomes 0 and the carry continues. If the loop
+finishes still carrying, every digit was a 9, so the answer is a 1 followed by
+that many zeros — one digit longer than the input.`,
+    solution: `def plus_one(digits: list[int]) -> list[int]:
+    result = digits[:]
+
+    for i in range(len(result) - 1, -1, -1):
+        if result[i] < 9:
+            result[i] += 1
+            return result
+        result[i] = 0  # 9 rolls over and the carry continues
+
+    return [1] + result  # every digit was a 9`,
+    complexity: {
+      time: 'O(n) worst case — every digit being a 9 makes the carry run the whole way; it is O(1) whenever the last digit is below 9.',
+      space: 'O(n) — the copy of the digits; mutating the input in place would make it O(1) extra.',
+    },
+    followUps: [
+      'What if you must add an arbitrary number rather than one? The carry can then exceed a single digit.',
+      'What if the digits were stored most-significant-last — does the loop direction flip?',
+      'What if the number is stored as a linked list, where you cannot walk backwards?',
+    ],
   },
   {
     id: 'dsa-50-powx-n',
@@ -5895,6 +6421,32 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Exponentiation where n can be enormous — squaring halves the exponent, so the work is logarithmic rather than linear.',
+    approach: `x^n = (x^(n/2))^2 for even n, and one extra factor of x for odd n. Each step halves
+the exponent, so only log n multiplications are needed instead of n. A negative
+exponent is handled once up front by inverting the base, and n = 0 must return 1
+before anything else.`,
+    solution: `def my_pow(x: float, n: int) -> float:
+    if n < 0:
+        x, n = 1 / x, -n
+
+    result = 1.0
+    while n:
+        if n & 1:  # an odd exponent leaves one factor behind
+            result *= x
+        x *= x
+        n >>= 1
+
+    return result`,
+    complexity: {
+      time: 'O(log n) — the exponent is halved every iteration, so there are at most log2(n) multiplications.',
+      space: 'O(1) — the iterative form uses no recursion stack.',
+    },
+    followUps: [
+      'What if the result must be taken modulo a prime? Reduce at every multiplication, which is modular exponentiation.',
+      'What if x is a matrix? The same halving computes Fibonacci in O(log n).',
+      'What about floating point drift over many squarings — how much precision is lost?',
+    ],
   },
   {
     id: 'dsa-43-multiply-strings',
@@ -5906,6 +6458,35 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Arbitrary-precision multiplication by hand — digit i times digit j always lands at positions i+j and i+j+1.',
+    approach: `Allocate m + n digit slots. The product of digits at positions i and j contributes
+to slots i+j (the carry) and i+j+1 (the ones), so accumulate there and normalise
+carries as you go. That positional identity is what makes the whole thing one
+double loop with no string concatenation.`,
+    solution: `def multiply(num1: str, num2: str) -> str:
+    if num1 == "0" or num2 == "0":
+        return "0"
+
+    m, n = len(num1), len(num2)
+    digits = [0] * (m + n)
+
+    for i in range(m - 1, -1, -1):
+        for j in range(n - 1, -1, -1):
+            product = int(num1[i]) * int(num2[j]) + digits[i + j + 1]
+            digits[i + j + 1] = product % 10
+            digits[i + j] += product // 10  # carry into the higher slot
+
+    out = "".join(map(str, digits)).lstrip("0")
+    return out or "0"`,
+    complexity: {
+      time: 'O(m * n) — every pair of digits is multiplied exactly once, the schoolbook bound.',
+      space: 'O(m + n) — the digit accumulator, which is exactly the maximum result width.',
+    },
+    followUps: [
+      'What if the numbers have a million digits? Karatsuba is O(n^1.58) and FFT-based multiplication is O(n log n).',
+      'What if negative numbers or decimal points were allowed?',
+      'Why is m + n always enough slots — what is the tightest bound on the product\'s digit count?',
+    ],
   },
   {
     id: 'dsa-2013-detect-squares',
@@ -5917,6 +6498,39 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Count configurations through a query point — fix the diagonal partner and the other two corners are fully determined.',
+    approach: `Iterate over stored points sharing neither coordinate with the query and forming a
+proper diagonal, meaning equal horizontal and vertical distance. That pins the
+other two corners exactly, so multiply their counts. Storing counts rather than
+a point list is what lets duplicates multiply correctly.`,
+    solution: `from collections import defaultdict
+
+
+class DetectSquares:
+    def __init__(self) -> None:
+        self._counts: dict[tuple[int, int], int] = defaultdict(int)
+
+    def add(self, point: list[int]) -> None:
+        self._counts[(point[0], point[1])] += 1
+
+    def count(self, point: list[int]) -> int:
+        px, py = point
+        total = 0
+        for (x, y), n in list(self._counts.items()):
+            if abs(x - px) != abs(y - py) or x == px or y == py:
+                continue  # not a proper diagonal partner
+            # the diagonal pins the other two corners exactly
+            total += n * self._counts[(px, y)] * self._counts[(x, py)]
+        return total`,
+    complexity: {
+      time: 'O(1) per add, O(p) per count — a count checks each of the p distinct stored points as a possible diagonal partner.',
+      space: 'O(p) — one counter entry per distinct point, so duplicates cost nothing extra.',
+    },
+    followUps: [
+      'What if squares could be rotated off-axis? The diagonal test generalises but the corner lookup does not.',
+      'What if points can be removed? Decrement the counter, and drop the key at zero.',
+      'What if there are millions of points — would indexing by x and by y beat scanning all of them?',
+    ],
   },
 
   // --- Bit Manipulation (7) ---
@@ -5930,6 +6544,26 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: ['meta'],
     minutes: 20,
+    signal: 'Everything pairs up except one, and O(1) space is demanded — XOR annihilates pairs and preserves the odd one out.',
+    approach: `XOR is its own inverse, so x ^ x is 0, and it is commutative, so order does not
+matter. XOR-ing the whole array therefore cancels every pair and leaves the
+unique value. A hash set gives the same answer but costs O(n) memory, which the
+problem explicitly forbids.`,
+    solution: `from functools import reduce
+from operator import xor
+
+
+def single_number(nums: list[int]) -> int:
+    return reduce(xor, nums, 0)  # x ^ x == 0, so every pair cancels`,
+    complexity: {
+      time: 'O(n) — one XOR per element, with no hashing or sorting.',
+      space: 'O(1) — a single accumulator, versus O(n) for a set-based solution.',
+    },
+    followUps: [
+      'What if every element appears three times except one? XOR no longer cancels; count bits modulo 3.',
+      'What if two elements appear once? Split the array by a set bit of the total XOR.',
+      'What if the array is a stream — does XOR still work with no memory of what came before?',
+    ],
   },
   {
     id: 'dsa-191-number-of-1-bits',
@@ -5941,6 +6575,26 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['google'],
     minutes: 20,
+    signal: 'Count set bits — the trick n & (n - 1) clears the lowest set bit, so the loop runs once per one, not once per bit.',
+    approach: `Subtracting one flips the lowest set bit to zero and sets everything below it, so
+ANDing with the original clears exactly that bit. Looping until zero therefore
+iterates once per set bit — far fewer than 32 iterations on sparse values. This
+is Brian Kernighan's algorithm.`,
+    solution: `def hamming_weight(n: int) -> int:
+    count = 0
+    while n:
+        n &= n - 1  # clears the lowest set bit
+        count += 1
+    return count`,
+    complexity: {
+      time: 'O(number of set bits) — at most 32 for a 32-bit word, and far fewer for sparse values.',
+      space: 'O(1) — a counter and the working value.',
+    },
+    followUps: [
+      'What if you must do it for every number from 0 to n? Reuse previous answers — that is Counting Bits.',
+      'What if the input is a 64-bit or arbitrary-precision integer? The loop bound scales with the set bits, not the width.',
+      'How would a lookup table over bytes compare, and when is that actually faster?',
+    ],
   },
   {
     id: 'dsa-338-counting-bits',
@@ -5952,6 +6606,25 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: [],
     minutes: 20,
+    signal: 'The same count for every number up to n — each answer is one bit-shift away from a smaller answer already computed.',
+    approach: `Dropping the lowest bit of i gives i >> 1, whose count is already known, so
+bits(i) = bits(i >> 1) + (i & 1). Every value is then O(1) work instead of an
+O(32) popcount, and the whole table is linear. i & (i - 1) gives an equally
+valid recurrence.`,
+    solution: `def count_bits(n: int) -> list[int]:
+    out = [0] * (n + 1)
+    for i in range(1, n + 1):
+        out[i] = out[i >> 1] + (i & 1)  # reuse the answer for i without its last bit
+    return out`,
+    complexity: {
+      time: 'O(n) — each value does one shift, one mask and one addition, reusing an already-computed answer.',
+      space: 'O(n) — the output array, which is the required result.',
+    },
+    followUps: [
+      'What if n is 10^9? The output alone is too big, so the question has to change to a per-query popcount.',
+      'What if you need the count of set bits over a range sum rather than per value?',
+      'Can you derive the same table using i & (i - 1) instead — which recurrence is clearer?',
+    ],
   },
   {
     id: 'dsa-190-reverse-bits',
@@ -5963,6 +6636,26 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: [],
     minutes: 20,
+    signal: 'A fixed-width bit reversal — the width is part of the specification, so leading zeros must be preserved.',
+    approach: `Shift the result left and push in the input's lowest bit, thirty-two times exactly.
+Looping a fixed 32 times rather than until the value is zero is what preserves
+the leading zeros; stopping early would silently truncate them and give the
+wrong answer for small inputs.`,
+    solution: `def reverse_bits(n: int) -> int:
+    result = 0
+    for _ in range(32):  # fixed width: stopping early would drop leading zeros
+        result = (result << 1) | (n & 1)
+        n >>= 1
+    return result`,
+    complexity: {
+      time: 'O(1) — exactly 32 iterations regardless of the input value.',
+      space: 'O(1) — one accumulator and the working value.',
+    },
+    followUps: [
+      'What if reverse_bits is called millions of times? Precompute a byte-level table and reverse four bytes.',
+      'What if the width were 64 bits, or configurable? The loop bound becomes a parameter.',
+      'Can you do it in O(log w) with a divide-and-conquer swap of bit groups?',
+    ],
   },
   {
     id: 'dsa-268-missing-number',
@@ -5974,6 +6667,25 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: ['amazon'],
     minutes: 20,
+    signal: 'One value missing from a known complete range — pair each index with each value and everything cancels except the gap.',
+    approach: `XOR every index from 0 to n together with every value in the array. Each present
+number is XOR-ed twice and cancels, leaving only the missing one. Summing the
+range and subtracting gives the same answer but can overflow fixed-width
+integers; XOR never can.`,
+    solution: `def missing_number(nums: list[int]) -> int:
+    result = len(nums)
+    for i, n in enumerate(nums):
+        result ^= i ^ n  # every present value cancels against its index
+    return result`,
+    complexity: {
+      time: 'O(n) — one pass with two XORs per element.',
+      space: 'O(1) — a single accumulator, with no set and no sorting.',
+    },
+    followUps: [
+      'What if two numbers are missing? XOR gives their combined value; split by a differing bit to separate them.',
+      'What if the array is huge and on disk? XOR is associative, so it maps and reduces perfectly.',
+      'Why prefer XOR over the sum formula — what breaks first with 32-bit integers?',
+    ],
   },
   {
     id: 'dsa-371-sum-of-two-integers',
@@ -5985,6 +6697,31 @@ def is_match(s: str, p: str) -> bool:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Addition with the plus operator banned — XOR is addition without carry, and AND shifted left is the carry.',
+    approach: `XOR gives the sum of each bit position ignoring carries; AND then shifted left one
+place gives exactly the carries. Repeat until no carry remains. Python's
+unbounded integers make negatives loop forever, so mask to 32 bits and convert
+the result back from two's complement at the end.`,
+    solution: `def get_sum(a: int, b: int) -> int:
+    mask = 0xFFFFFFFF
+    a, b = a & mask, b & mask
+
+    while b:
+        carry = (a & b) << 1  # AND finds the carries
+        a = (a ^ b) & mask  # XOR adds without them
+        b = carry & mask
+
+    # Python ints are unbounded, so reinterpret as signed 32-bit
+    return a if a <= 0x7FFFFFFF else ~(a ^ mask)`,
+    complexity: {
+      time: 'O(1) — at most 32 iterations, since each round pushes the carry one bit further left.',
+      space: 'O(1) — three fixed-width working values.',
+    },
+    followUps: [
+      'Why does the naive loop never terminate for negatives in Python? Trace what the sign extension does to the carry.',
+      'How would you implement subtraction, or multiplication, with the same primitives?',
+      'What changes for 64-bit operands — is the mask the only thing?',
+    ],
   },
   {
     id: 'dsa-7-reverse-integer',
@@ -5996,5 +6733,35 @@ def is_match(s: str, p: str) -> bool:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'The reversal itself is easy — the question is really about detecting 32-bit overflow before it happens.',
+    approach: `Peel digits off with divmod and rebuild the number, but check before each append
+whether the running value has already passed the point where one more digit
+would overflow. Checking after the fact is not allowed in a language with
+wrapping integers, so the guard must be predictive.`,
+    solution: `def reverse_integer(x: int) -> int:
+    INT_MAX, INT_MIN = 2**31 - 1, -(2**31)
+
+    sign = -1 if x < 0 else 1
+    value = abs(x)
+    result = 0
+
+    while value:
+        value, digit = divmod(value, 10)
+        # check before appending, because after the fact is already too late
+        if result > (INT_MAX - digit) // 10:
+            return 0
+        result = result * 10 + digit
+
+    result *= sign
+    return result if INT_MIN <= result <= INT_MAX else 0`,
+    complexity: {
+      time: 'O(log x) — one iteration per decimal digit, so at most ten for a 32-bit value.',
+      space: 'O(1) — three integer accumulators, no string conversion.',
+    },
+    followUps: [
+      'Why check before appending rather than after? In C the addition would already have wrapped.',
+      'What about the asymmetry of two\'s complement, where INT_MIN has no positive counterpart?',
+      'What if trailing zeros must be preserved, so 1200 reverses to 0021?',
+    ],
   },
 ]
