@@ -2714,6 +2714,408 @@ const trainingQuestions: AiSdQuestion[] = [
   },
 ]
 
+/**
+ * Pattern 8 — AI inside a product. Per-unit economics that survive volume, a cheap
+ * deterministic tier before any GPU is touched, human review where the stakes demand it, and
+ * a threshold that is a policy decision wearing a hyperparameter costume.
+ */
+const productQuestions: AiSdQuestion[] = [
+  {
+    id: 'aisdq-meeting-summariser',
+    patternId: 'aisdp-ai-product',
+    title: 'Design a meeting summariser at a million meetings a day',
+    companies: ['microsoft', 'google'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What is the output — a summary, action items, decisions, or all three — and who reads it?',
+        'When must it be ready, and does anyone actually need it in real time?',
+        'What does a bad summary cost, and is that different for a summary and for an action item?',
+      ],
+      data: [
+        'Size the input: how many tokens is a typical meeting transcript?',
+        'What context beyond the transcript makes the summary better?',
+        'What retention applies to transcripts and summaries, and who decides?',
+      ],
+      architecture: [
+        'Draw the pipeline from a finished meeting to a delivered summary.',
+        'How do you handle a three-hour meeting that exceeds the context window?',
+        'How do you keep the per-meeting cost low enough to include this in a seat price?',
+      ],
+      evaluate: [
+        'How do you evaluate a summary at this volume without reading them?',
+        'How do you measure whether action items are right, which is a different problem from whether the summary is good?',
+      ],
+      deploy: [
+        'How do you roll out a prompt or model change across a million daily meetings?',
+        'What happens when the summary is wrong about something consequential?',
+      ],
+      wrapup: [
+        'What is the cost per meeting and per seat per month?',
+        'What would you cut if the feature had to be free?',
+      ],
+    },
+    solution: {
+      define:
+        'Three outputs with different readers and different stakes: a narrative summary for someone who missed the meeting, decisions for the record, and action items with owners for people who must do something. I would separate them in the pipeline rather than asking for one blob, because they have different accuracy requirements and different failure costs. A slightly vague summary is a minor annoyance; a wrong action item assigned to the wrong person is a real workplace problem, and a fabricated decision is worse. Timing: almost nobody needs it in real time, and treating this as a batch job that completes within two minutes of the meeting ending unlocks an order of magnitude of cost efficiency. The temptation to make it live should be resisted unless the product genuinely has a live surface.',
+      data:
+        'A 45-minute meeting at roughly 150 words per minute is about 6,750 words, call it 9,000 tokens of transcript with speaker labels and timestamps. A three-hour meeting is around 36,000 tokens, still inside a modern context window but at four times the cost, and the length distribution has a long tail. Context beyond the transcript is what separates a mediocre summary from a good one: the calendar invite title and agenda, the participant list with roles, the shared document or deck, and prior meetings in the same recurring series — because most meetings are episodes, and a summary that knows what was decided last week is far more useful. Retention is a policy question owned by the customer administrator, not by us: transcripts are sensitive workplace content, and the defaults I would ship are transcripts retained per the customer setting with a conservative default, and summaries retained with the meeting record.',
+      architecture:
+        'Meeting ends, transcript is finalised, a job is enqueued. A worker assembles context, runs a single pass for a normal-length meeting, and produces the three outputs as a structured object rather than prose to be parsed. For a long meeting the approach is chunked map-reduce with an important detail: chunk on topic boundaries derived from the transcript rather than on token counts, summarise each chunk with the running context of decisions so far, then reduce. Naive fixed-size chunking splits a discussion mid-decision and produces a reduce step that cannot tell which conclusion won. Cost control is the design constraint at this volume and it has three parts: use a small model, because summarisation with the source text present is exactly the task small models do well; run in batch, which many providers price at a substantial discount and which suits a two-minute SLA perfectly; and skip meetings nobody will read — a meeting with two participants and four minutes of speech gets a heuristic one-liner rather than a model call, and that alone removes a large fraction of volume in a real corpus.',
+      evaluate:
+        'Nobody reads a million summaries, so evaluation is layered. A permanent gold set of a few hundred meetings with human-written reference summaries and human-verified action items, scored by a calibrated judge, is the regression gate. Production signals give continuous coverage: the rate at which users edit an action item, the rate at which they delete one, whether assigned owners open the item, and explicit feedback. Action items get their own evaluation because they are a structured extraction problem rather than a summarisation one — precision on owner and on the existence of the commitment matters far more than recall, since a missed action item is invisible and a fabricated one wastes someone afternoon and erodes trust in the whole feature. So I would tune the extraction conservatively and report precision and recall separately rather than an F1 that hides the asymmetry.',
+      deploy:
+        'A prompt or model change goes to the offline gold set first, then to 1 percent of meetings with the production signals compared over a week, then ramps. Because the output is not shown in real time there is a useful option unavailable to chat products: shadow generation, where both versions summarise the same meetings and only one is shown, giving a paired comparison on identical inputs that removes almost all the variance from an A/B test. I would use that as the primary rollout mechanism. When a summary is consequentially wrong the recovery path must exist in the product: every claim in the summary links to the transcript timestamp that supports it, so a disputed statement is checkable in one click, and an edit by any participant is stored and shown, because the social fix — letting the room correct the record — is more reliable than trying to make the model never wrong.',
+      wrapup:
+        'Cost per meeting: about 9,000 input tokens plus context and 600 output tokens on a small model at an assumed 0.15 and 0.60 USD per million is roughly 0.0018 USD, and batch pricing typically halves that. At one million meetings a day that is under 1,000 USD a day of inference, or well under 0.10 USD per seat per month for a typical usage rate, which comfortably fits inside a seat price. If it had to be free, I would cut long-meeting handling to a truncated single pass, drop the narrative summary and keep only decisions and action items, which are the parts people actually use, and apply the heuristic filter much more aggressively — a summariser that only summarises the 20 percent of meetings that matter is a better free product than one that does a worse job on all of them.',
+      numbers: [
+        'Input size: a 45-minute meeting at roughly 150 words/minute is about 9,000 tokens; a 3-hour meeting is about 36,000, so the long tail is 4x the cost of the median.',
+        'Cost per meeting: 9,000 input at an assumed 0.15 USD/M plus 600 output at 0.60 USD/M = about 0.0018 USD, halved again with batch pricing.',
+        'Daily spend: 1M meetings x 0.0018 USD = about 1,800 USD/day of inference, under 0.10 USD per seat per month at typical meeting rates.',
+        'Heuristic filter: skipping meetings under about 5 minutes or with fewer than 3 speakers typically removes a large share of volume for near-zero user impact, and every skipped meeting is pure margin.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 6, estimates: 7, apiAndData: 7, architecture: 11, deepDive: 10, wrapUp: 4 },
+      opening:
+        'I want to split the output into summary, decisions and action items early, because they have different accuracy requirements and a fabricated action item is a much worse failure than a vague paragraph.',
+      traps: [
+        'Making it real-time. Nobody is waiting, and treating it as a two-minute batch job unlocks batch pricing and much better scheduling.',
+        'Fixed-size chunking of a long transcript. Splitting mid-discussion produces a reduce step that cannot tell which decision won; chunk on topic boundaries.',
+        'Reaching for the frontier model. Summarisation with the source present is what small models are good at, and at a million a day the model choice is most of the P&L.',
+        'One quality metric for summary and action items. Action-item precision matters far more than recall, and an F1 hides exactly that asymmetry.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Would a long-context model not do better than map-reduce?',
+          answer:
+            'For a three-hour meeting a single long-context pass is simpler and usually better, and I would prefer it when the cost allows. The reason I keep the chunked path is the tail: some meetings are all-day workshops, and the cost of a single pass grows with the square of attention while the map-reduce path is linear. So single-pass below a threshold, chunked above it, with the threshold set by cost rather than capability.',
+        },
+        {
+          challenge: 'Users will not trust it if it is ever wrong.',
+          answer:
+            'They will not trust it if it is confidently wrong with no way to check, which is a design problem rather than a model problem. Timestamp-linked claims and participant-editable summaries change the failure from an unverifiable assertion into a correctable draft, and that is a much lower bar than never being wrong.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  END["Meeting ends, transcript finalised"] --> FILTER{"Worth summarising? (length, speakers)"}
+  FILTER -->|no| ONE["Heuristic one-liner, no model call"]
+  FILTER -->|yes| JOB["Batch queue (2-minute SLA)"]
+  CTX[("Invite, agenda, participants, shared docs, prior meetings in series")] --> ASM["Assemble context"]
+  JOB --> ASM
+  ASM --> LEN{"Transcript length"}
+  LEN -->|under threshold| ONEPASS["Single pass, small model"]
+  LEN -->|long tail| TOPIC["Topic-boundary chunking"]
+  TOPIC --> MAP["Map: summarise chunk with running decisions"]
+  MAP --> RED["Reduce"]
+  ONEPASS --> OUT["Structured output"]
+  RED --> OUT
+  OUT --> S1["Narrative summary"]
+  OUT --> S2["Decisions (timestamp-linked)"]
+  OUT --> S3["Action items: owner + commitment, precision-tuned"]
+  S3 -->|edit / delete / open rate| SIG[("Production quality signals")]
+  GOLD[("Gold set: human summaries + verified action items")] --> GATE["Regression gate"]
+  NEW["Prompt or model change"] --> SHADOW["Shadow generation: both versions, same meetings, paired comparison"]`,
+  },
+  {
+    id: 'aisdq-resume-screening',
+    patternId: 'aisdp-ai-product',
+    title: 'Design resume screening at 100K applications a week',
+    companies: ['amazon', 'microsoft'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What decision is the system making, and what decision is it explicitly not making?',
+        'Who is accountable for an outcome, and what does the candidate have a right to?',
+        'What legal and regulatory constraints apply, and how do they change the architecture?',
+      ],
+      data: [
+        'What features are you allowed to use, and which apparently neutral ones are proxies for protected attributes?',
+        'Where would training or calibration data come from, and what bias does it already contain?',
+        'What must be retained to defend a decision, and for how long?',
+      ],
+      architecture: [
+        'Draw the pipeline and mark where a human is required rather than optional.',
+        'How do you structure the model task so its output is auditable rather than a score?',
+        'How do you handle the fact that candidates will optimise their resumes against your system?',
+      ],
+      evaluate: [
+        'How do you measure fairness, and which definition of fairness are you choosing?',
+        'How do you validate that the screening predicts job performance rather than resume style?',
+      ],
+      deploy: [
+        'How do you roll this out given a bad week is a discrimination claim, not an error budget?',
+        'What is the audit trail, and who can read it?',
+      ],
+      wrapup: [
+        'What does this save, and what liability does it create?',
+        'What would you refuse to build?',
+      ],
+    },
+    solution: {
+      define:
+        'The system ranks and surfaces applications against a structured set of job requirements, and it explicitly does not reject anyone. That distinction is the whole design: an automated reject at scale is a legally hazardous, ethically poor and technically unjustifiable use of a model whose error rate on individual judgements is real. So the output is a shortlist plus, for every candidate, a structured extraction of the evidence found against each requirement. A human recruiter is accountable for every advance or reject decision and must record a reason. Candidates have a right, in an increasing number of jurisdictions, to know that automated processing was used, to a meaningful explanation, and to human review — the EU AI Act treats employment screening as high-risk, New York City requires an annual independent bias audit and candidate notice for automated employment decision tools, and Illinois regulates AI in video interviews. Those are not a compliance appendix; they force the human-in-the-loop tier, the audit trail and the explanation output to be architecture rather than features.',
+      data:
+        'Permitted features are the ones relevant to job requirements: skills, demonstrated experience, credentials where genuinely required, and work samples. Prohibited are the protected attributes directly, and the harder problem is proxies, which is where these systems fail: name, photo, address and postcode, university, graduation year (a proxy for age), gaps in employment history (a proxy for parental leave and disability), membership of affinity organisations, and even writing style, which correlates with first language. My default is to redact name, contact details, address, photo, and dates that reveal age from the model input entirely, and to treat university as a feature that must be justified per role rather than used by default. Training data is the deeper trap: historical hiring decisions encode historical bias, so a model trained to predict who was hired learns who was hired, not who succeeded. Where a supervised model is used at all, the target must be a validated performance outcome, not a hiring decision, and if that data does not exist — it usually does not — then the honest design is requirement extraction and matching rather than a learned score. Retention: applications, extracted evidence, model version, ranking, the recruiter decision and reason, retained for the statutory period, which in several jurisdictions is one to three years.',
+      architecture:
+        'Stage one is deterministic and cheap: parse the application, extract structured fields, and apply hard requirements that are objective and job-related — work authorisation, a required licence — with those checks logged. Stage two is the model, and its task is deliberately structured as extraction rather than scoring: for each stated job requirement, find the evidence in the application and label it as met, partially met, or not found, with the supporting quote. That output is auditable in a way a similarity score never is, and it is also more useful to a recruiter. Stage three is ranking, which is a transparent function over the requirement matrix — weights set by the hiring manager and visible — rather than a learned ranker, so the reason one candidate is above another can be stated. Stage four is human review, and it is mandatory for both directions: every advance and every reject is a human decision, and the interface deliberately presents the evidence rather than the rank first, to reduce anchoring. Candidates optimising against the system is inevitable and largely benign — keyword stuffing is defeated by requiring evidence with a supporting quote rather than a keyword match — but I would monitor for it, and I would rather publish the requirements clearly than rely on obscurity, since obscurity advantages candidates who have access to insider knowledge about how to game screening.',
+      evaluate:
+        'Fairness definitions conflict mathematically and you must choose, so I would choose openly and document it. The operative standard in US employment law is adverse impact, conventionally assessed with the four-fifths rule: the selection rate for any protected group should be at least 80 percent of the highest group rate. I measure that at every stage — hard filters, model shortlist, human decision — because the stage where disparity enters is the thing you need to know, and it is frequently the hard filters rather than the model. Alongside it I measure equal opportunity: among candidates who went on to succeed, was the shortlist rate similar across groups. Validation that screening predicts job performance rather than resume polish requires outcome data, and the honest position is that this is very hard: the only sound evidence is a comparison of screened-in candidates who were hired against their later performance ratings, which takes a year to accumulate and is censored because rejected candidates have no outcome. Until that exists, the claim the system can support is that it finds evidence of stated requirements accurately — measurable against human-labelled applications — and not that it predicts performance. I would insist on that distinction in how the product is described.',
+      deploy:
+        'The rollout is not an error-budget exercise, because the failure is a discrimination claim rather than a latency spike. So: shadow mode first, where the model ranks but recruiters never see the output, and adverse-impact ratios and agreement with recruiter decisions are measured on real applications with zero candidate exposure. Then a single job family, with a pre-registered bias audit before exposure and an independent audit afterwards. Then expansion, family by family, each with its own audit — because requirements differ per role and a system fair for engineering roles is not thereby fair for sales. The audit trail records, per application: the version of every model and rule, the extracted evidence, the ranking inputs and weights, the recruiter decision and reason, and every screen the recruiter saw. It is readable by the candidate in the jurisdictions that require it, by the compliance team, and by an external auditor, and it is immutable.',
+      wrapup:
+        'What it saves: at 100K applications a week and an assumed 4 minutes of recruiter time per initial screen, that is 6,700 hours a week, and structured evidence extraction plausibly halves it — a large, real saving. Inference cost is nearly irrelevant here: 100K applications at roughly 1,300 tokens each on a mid-tier model is a few tens of dollars a week, which is a useful thing to say out loud, because it tells you the constraint is not cost and any design pressure toward a cheaper model is misplaced. The liability created is substantial and permanent: an automated system applies any bias it has uniformly and at scale, and it produces a discoverable record of having done so. What I would refuse to build: automated rejection, personality or culture-fit inference, video-interview scoring on facial expression or voice, and any model trained to predict past hiring decisions.',
+      numbers: [
+        'Volume and saving: 100K applications/week at an assumed 4 minutes per manual screen is about 6,700 recruiter-hours weekly; halving screening time saves roughly 3,300 hours a week.',
+        'Inference cost: 100K x roughly 1,300 tokens = 130M tokens/week, about 20-40 USD at mid-tier rates — so cost is not a design constraint here and model choice should be driven purely by extraction accuracy.',
+        'Adverse impact: the four-fifths rule means a group selection rate below 80 percent of the highest group rate triggers scrutiny; measured per stage, since hard filters often contribute more disparity than the model.',
+        'Audit volume: a full decision record of roughly 20KB per application x 5.2M applications a year is about 100GB retained for the statutory period — trivially affordable and non-negotiable.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 10, estimates: 6, apiAndData: 12, architecture: 14, deepDive: 13, wrapUp: 5 },
+      opening:
+        'I want to state the scope narrowly at the start: this system ranks and surfaces evidence, it never rejects, and a human decides every outcome. That constraint comes from the regulatory position and it shapes the architecture rather than sitting on top of it.',
+      traps: [
+        'Training on historical hiring decisions. The model learns who was hired, not who succeeded, and reproduces every bias in that record with perfect consistency.',
+        'Outputting a score. A similarity number cannot be explained to a candidate or an auditor; structured evidence per requirement can.',
+        'Ignoring proxies. Postcode, university, graduation year and employment gaps are proxies for protected attributes, and removing the protected field alone does nothing.',
+        'Measuring fairness only at the model. Disparity frequently enters at the hard filters or at the human decision, and a per-stage adverse-impact measurement is what finds it.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'The business wants auto-reject for obviously unqualified applications.',
+          answer:
+            'I would allow it only for objective, job-related, verifiable criteria — no work authorisation, no required licence — applied as deterministic rules, logged, and with a candidate-visible reason. What I will not do is let a model output drive a reject, because the model error rate on an individual judgement is real and the aggregate effect of that error is a discrimination claim with a written record of the mechanism.',
+        },
+        {
+          challenge: 'How do you know your evidence extraction is not itself biased?',
+          answer:
+            'By testing it directly rather than assuming. I run counterfactual pairs: the same application with the name, university and address varied across groups, and the extraction and ranking must be invariant. Any measurable movement is a defect, and that test is cheap, deterministic and runs in CI, unlike the outcome study which takes a year.',
+        },
+        {
+          challenge: 'Recruiters will just rubber-stamp the ranking, so the human is not a real control.',
+          answer:
+            'That is the most likely way this fails and I would design against it explicitly: present evidence before rank, require a written reason for both advances and rejects, sample and audit recruiter decisions for agreement rates that are suspiciously high, and periodically inject a shuffled ordering to test whether reasons track evidence or position. If agreement is near total, the human tier is theatre and I would say so to the accountable owner.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  APP["Application"] --> PARSE["Parse + structure; redact name, contact, address, photo, dates"]
+  PARSE --> HARD["Deterministic hard requirements: work authorisation, required licence (logged)"]
+  HARD --> EXTRACT["Model task: evidence per stated requirement + supporting quote"]
+  EXTRACT --> MATRIX[("Requirement matrix: met / partial / not found")]
+  MATRIX --> RANK["Transparent weighted ranking; weights set and visible to hiring manager"]
+  RANK --> UI["Recruiter view: evidence first, rank second"]
+  UI --> HUMAN["Human decides every advance AND every reject, with written reason"]
+  HUMAN --> TRAIL[("Immutable audit trail: model versions, evidence, weights, decision, reason")]
+  TRAIL --> CAND["Candidate access where required"]
+  TRAIL --> AUD["Independent bias audit"]
+  HARD --> AI1["Adverse impact per stage"]
+  RANK --> AI1
+  HUMAN --> AI1
+  CF["Counterfactual pairs: name, university, address varied"] --> EXTRACT
+  SHADOW["Shadow mode: rank hidden, ratios measured"] --> UI`,
+  },
+  {
+    id: 'aisdq-content-moderation',
+    patternId: 'aisdp-ai-product',
+    title: 'Design content moderation for user-generated content',
+    companies: ['google', 'amazon', 'microsoft'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What are you moderating for, and who wrote the policy you are enforcing?',
+        'What is the volume, and what fraction is actually violating?',
+        'What are the two error types here, and who bears each one?',
+      ],
+      data: [
+        'What signals exist besides the content itself?',
+        'Where do labels come from, and how noisy are human moderator labels?',
+        'How do you handle policy changing under a model trained on the old policy?',
+      ],
+      architecture: [
+        'Draw the pipeline and put the cheap tiers first.',
+        'How much volume can you remove before an LLM is involved, and how?',
+        'How do you handle content that must be blocked before publication versus reviewed after?',
+        'How do you route to human review with finite reviewer capacity?',
+      ],
+      evaluate: [
+        'How do you set a threshold, and whose decision is that?',
+        'How do you measure performance on a class that is 0.1 percent of traffic?',
+        'How do you evaluate against an adversary who adapts?',
+      ],
+      deploy: [
+        'How do you ship a policy change across a model, a rulebook and a reviewer workforce at once?',
+        'What is the appeal path, and how does it feed back?',
+      ],
+      wrapup: [
+        'What is the cost per item, and what dominates?',
+        'What would you tell a regulator about how this works?',
+      ],
+    },
+    solution: {
+      define:
+        'Moderating against a written policy owned by a trust-and-safety policy team, not by engineering — that separation matters, because the model enforces a policy and does not define one, and every threshold conversation should route back to a policy owner. Assume 10 million items a day with a violation rate around 0.5 percent, and within that a much rarer tier of severe categories at a few per million. The two errors land on different people and that asymmetry is the design: a false negative harms the person who sees the content and, for severe categories, can be catastrophic and irreversible; a false positive harms the creator whose legitimate content was removed, silently and with a bad appeals experience. Because they are not symmetric, a single threshold is wrong — each policy category gets its own operating point, and severe categories run at a recall-favouring threshold with human review absorbing the false positives.',
+      data:
+        'Signals beyond the content are frequently stronger than the content itself and are underused: account age and history, prior violations, posting velocity, network signals such as coordinated behaviour across accounts, engagement patterns, and reports from users. A brand-new account posting at high velocity is a far better prior than any classifier reading a single message. Labels come from human moderators and they are noisy — inter-annotator agreement on borderline policy categories is often in the 0.6 to 0.8 range, which puts a hard ceiling on measurable model accuracy and must be reported alongside it, otherwise the team chases the last few points of an unattainable number. I handle policy change explicitly with policy versioning on every label and every decision, so a model trained under policy v3 is never evaluated against v4 labels without an acknowledged migration, and a policy change triggers a re-labelling campaign on a stratified sample rather than a blanket retrain.',
+      architecture:
+        'Cheap tiers first, and the ordering is where the economics live. Tier one is deterministic: hash matching against known-violating media, URL and domain blocklists, and account-level signals, which handles a large share of the worst content at essentially zero cost and with perfect precision on known items. Tier two is a small classifier — a distilled encoder running in single-digit milliseconds on CPU — which is highly confident on the vast majority of content in both directions; it clears the clearly-benign and flags the clearly-violating, and only the uncertain band goes further. Tier three is an LLM, used on the uncertain band and on the categories where policy nuance genuinely requires reading context, which is where it earns its cost. Tier four is human review. That cascade typically leaves 1 to 5 percent of volume reaching the LLM, which is the difference between an affordable system and an impossible one. Pre-publication blocking is reserved for the severe categories where the tier-one and tier-two checks are fast enough to sit inline, adding tens of milliseconds; everything else is post-publication review, because blocking every post behind an LLM call would add seconds to the publishing path and would still be wrong sometimes. Reviewer routing is a priority queue over expected harm — severity times reach times confidence — rather than first-in-first-out, because reviewer capacity is fixed and a queue that processes in arrival order spends it on low-harm items while a viral severe item waits.',
+      evaluate:
+        'The threshold is a policy decision presented as a hyperparameter, and I would refuse to set it in engineering: I produce the precision-recall curve per category with the concrete consequences at each point — at this threshold we remove this many legitimate posts a day and miss this many violations — and the policy owner chooses. Documenting who chose is part of the design. For a class at 0.1 percent of traffic, accuracy is meaningless and even a global precision-recall number is dominated by the common categories, so evaluation is stratified per category with fixed evaluation sets that oversample positives, and the reported metrics are precision and recall per category with the human-agreement ceiling alongside. Prevalence — the estimated fraction of violating content that remains live after moderation — is estimated separately by sampling published content and reviewing it, because that is the number that actually describes user experience and it cannot be derived from classifier metrics. Against adapting adversaries, static evaluation sets rot quickly: I keep a rolling adversarial set harvested from what got through, and I track the age distribution of evasion patterns, because a rising share of novel evasions is the early signal that a category is being actively probed.',
+      deploy:
+        'A policy change is not a model deploy, it is a coordinated change to a rulebook, a labelling guideline, a reviewer training, and only then a model. The order matters: guidelines and reviewer training first, then re-label a stratified sample under the new policy, then evaluate the existing model against the new labels to size the gap, then retrain or adjust thresholds, then ship. Shipping the model first means reviewers and model disagree systematically and both sets of labels become untrustworthy. Appeals are a first-class path, not a support ticket: an appeal goes to a different reviewer than the original decision, the outcome is recorded as a label, and a category with a high appeal-overturn rate is a signal that the threshold or the policy is wrong. Overturn rate per category is one of the most informative metrics in the whole system and it is generated for free by giving users a real appeal.',
+      wrapup:
+        'Cost per item: tiers one and two are fractions of a cent per thousand items; the LLM tier at an assumed 3 percent of 10 million items is 300,000 calls a day at roughly 700 tokens each, about 630 USD a day at 0.30 USD per million blended for a small model; human review at 1 in 2,000 items is 5,000 reviews a day, which at an assumed 30 seconds each is about 42 reviewer-hours daily and is by a wide margin the largest cost. That ranking — humans first, then the LLM tier, then everything else — is what tells you the highest-leverage optimisation is improving the routing to reviewers, not making the model cheaper. To a regulator I would describe: the policy and who owns it, the tiered pipeline and what each tier decides, the per-category operating points and who chose them, prevalence estimates, appeal volumes and overturn rates, and the human review capacity — and I would be explicit that the system has both error types, quantify them, and not claim it catches everything.',
+      numbers: [
+        'Cascade economics: at 10M items/day, tiers 1 and 2 clear roughly 97 percent, leaving about 300K LLM calls/day at roughly 700 tokens = 210M tokens, about 630 USD/day at an assumed 0.30 USD per million blended.',
+        'Human cost dominates: 5,000 reviews/day at an assumed 30 seconds each is about 42 reviewer-hours/day, which at a loaded rate of 25 USD/hour is roughly 1,050 USD/day — more than the model tier.',
+        'Base rate: at a 0.5 percent violation rate, a classifier with 95 percent recall and 90 percent precision still surfaces 5,555 items/day of which 555 are legitimate content removed, which is the number a policy owner should see before choosing a threshold.',
+        'Label ceiling: inter-annotator agreement of 0.6-0.8 on borderline categories caps measurable model accuracy, so reporting model performance without the human-agreement baseline invites chasing points that do not exist.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 9, estimates: 8, apiAndData: 10, architecture: 15, deepDive: 13, wrapUp: 5 },
+      opening:
+        'I want to build this as a cascade with the cheap deterministic tiers first, and I want to be explicit that the threshold on each category is a policy decision I will present rather than a hyperparameter I will tune.',
+      traps: [
+        'Sending everything to an LLM. At 10 million items a day the cascade is not an optimisation, it is the difference between a viable system and an impossible one.',
+        'One threshold across categories. The two error types land on different people and the balance differs sharply between a spam category and a severe-harm one.',
+        'Ignoring the label noise ceiling. If moderators agree only 70 percent of the time, no model can measurably exceed that, and the team will burn quarters trying.',
+        'First-in-first-out reviewer queues. Reviewer capacity is the scarcest resource in the system and it should be spent in order of expected harm.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not block everything pre-publication and be safe?',
+          answer:
+            'Because it adds seconds to every post and it is still wrong, so you get a slow product and false positives. I block pre-publication only for the severe categories where the inline tiers are fast and the harm is irreversible, and the rest is post-publication with fast takedown. That is a deliberate trade and I would put the prevalence estimate in front of the policy owner as the cost of it.',
+        },
+        {
+          challenge: 'Your model will be worse in low-resource languages, and that is where you have the fewest reviewers.',
+          answer:
+            'That is correct and it is the most common real failure of these systems. I would measure and report per-language performance rather than a global number, lower the LLM-routing threshold for languages where the small classifier is weak — spending more compute exactly where the model is worse — and treat reviewer coverage per language as a launch requirement for that market rather than something to fix later.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  UGC["User-generated content"] --> T1["Tier 1: hash match, blocklists, account signals (~0 cost)"]
+  ACCT[("Account age, history, velocity, network, user reports")] --> T1
+  T1 -->|known violating| BLOCK["Block + enforce"]
+  T1 --> T2["Tier 2: distilled classifier, single-digit ms CPU"]
+  T2 -->|confident benign| PUB["Publish"]
+  T2 -->|confident violating, severe| BLOCK
+  T2 -->|uncertain band, ~3%| T3["Tier 3: LLM with policy context"]
+  T3 -->|clear| PUB
+  T3 --> PQ["Priority queue: severity x reach x confidence"]
+  PQ --> HR["Human review (capacity-bound, the dominant cost)"]
+  HR --> DEC["Decision + label (policy version stamped)"]
+  DEC --> APP["Appeal: different reviewer"]
+  APP -->|overturn rate per category| POLICY["Policy owner sets per-category operating point"]
+  POLICY -->|PR curve with real consequences| T2
+  SAMPLE["Sampled published content review"] --> PREV[("Prevalence estimate")]
+  ADV[("Rolling adversarial set from what got through")] --> T2`,
+  },
+  {
+    id: 'aisdq-anomaly-detection-product',
+    patternId: 'aisdp-ai-product',
+    title: 'Design anomaly detection inside a product',
+    companies: ['amazon', 'microsoft'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What is an anomaly here, and who acts on it?',
+        'What is the alert budget — how many can a human look at per day?',
+        'What is the cost of a missed anomaly versus a false alarm, and are they comparable?',
+      ],
+      data: [
+        'What is the base rate, and what does that do to precision at any plausible recall?',
+        'Do you have labels, and if not, what does that force?',
+        'What seasonality and structure exist in this data that a naive model will call anomalous?',
+      ],
+      architecture: [
+        'Draw the detection path from event to alert.',
+        'Do you use statistical baselines, a learned model, or an LLM, and where does each fit?',
+        'How do you group related anomalies so one incident is one alert?',
+        'How do you explain an anomaly to the person who has to act on it?',
+      ],
+      evaluate: [
+        'How do you evaluate a detector when you never learn about the anomalies you missed?',
+        'What metric would you report to the team that owns the alerts?',
+      ],
+      deploy: [
+        'How do you introduce a new detector without flooding the on-call?',
+        'How do you retire a detector that nobody acts on?',
+      ],
+      wrapup: [
+        'What is the real cost of this system, and is it the compute?',
+        'When would you not build anomaly detection at all?',
+      ],
+    },
+    solution: {
+      define:
+        'An anomaly is only meaningful relative to an action, so I would refuse to build a general anomaly detector and instead ask what the person receiving the alert will do. Take a concrete case: unusual spending patterns on a business account, where the recipient is a fraud analyst who will freeze or investigate. That framing gives an alert budget, which is the hard constraint everyone skips: if the team can investigate 50 alerts a day, then the system produces at most 50 alerts a day, and every design decision follows from that number rather than from a detection threshold. Costs are not comparable — a missed fraud is a direct financial loss with a known expected value, while a false alarm costs analyst time and, if it results in a freeze, an angry customer. Because they are quantifiable in different units, the operating point is a business decision, and I would put the expected-loss arithmetic in front of the owner rather than picking a threshold.',
+      data:
+        'Base rate is brutal and it must be said out loud early: if 0.1 percent of accounts have an anomalous week, then a detector with 99 percent specificity produces ten false alarms for every true one, and no amount of model quality escapes that arithmetic — it is the base-rate fallacy and it is why anomaly-detection projects usually fail on precision rather than recall. Labels are typically sparse and delayed: confirmed fraud arrives weeks later and only for cases someone investigated, which means the labelled set is censored by past detection. That pushes the design toward semi-supervised: unsupervised or statistical detection to generate candidates, supervised ranking on the labels that do exist to prioritise them. Structure a naive model will misread: weekly and monthly seasonality, month-end and quarter-end spikes, paydays, holidays, and product launches. Modelling that structure explicitly rather than letting a detector rediscover it as anomalies is most of the practical work.',
+      architecture:
+        'Three layers, matched to what each is good at. A statistical baseline per entity — a robust estimate of the expected value with seasonality decomposed, and a deviation measured in robust units such as median absolute deviation rather than standard deviations, which are wrecked by the very outliers you are looking for. That layer is cheap, explainable and handles the majority of real signal. A learned model on top for multivariate patterns no single metric shows, ranked by a supervised model trained on the confirmed cases. And an LLM at the end, not as a detector — it is a poor and expensive detector — but as an explainer and triager: given the anomalous entity, its history, the deviating signals and relevant context, produce the narrative an analyst would otherwise assemble by hand, with the evidence. That is a genuinely good use of an LLM here and it attacks the actual bottleneck, which is analyst time per alert rather than detection. Grouping is essential to respecting the alert budget: anomalies are clustered by entity, by time window and by correlated signal, so one incident affecting forty accounts is one alert with forty members rather than forty pages. Without grouping, the first real incident exhausts the day alert budget in a minute.',
+      evaluate:
+        'You never learn about what you missed, so recall is not directly measurable and anyone claiming a recall number for a detector like this should be asked how. The honest instruments are: injected synthetic anomalies with known characteristics, which give a detection rate for the classes you thought of; a periodic audit where analysts investigate a random sample of non-alerted entities, which is expensive and is the only unbiased estimate of the miss rate; and post-hoc analysis of incidents discovered by other means — a customer report, a downstream loss — asking whether the signal was present in the data and simply not alerted. The metric I would report to the owning team is precision and the action rate: of the alerts we sent, what fraction did an analyst act on. Action rate is the number that actually tracks whether the system is useful, it is free to collect, and a detector whose action rate falls below a threshold should be retired.',
+      deploy:
+        'A new detector goes into shadow first, producing alerts nobody sees, for long enough to see its volume across a full seasonal cycle including a month-end — most detectors that look fine for a week produce a hundred alerts on the last day of the quarter. Then it runs at a low volume cap, deliberately limited to the top-scoring few per day, and the cap is raised only if the action rate justifies it. That volume cap is the single most useful operational control in an alerting system and it is routinely missing. Retirement is the discipline nobody has: every detector is reviewed on a schedule against its action rate, and one that nobody acts on is disabled rather than left running, because a channel full of ignored alerts trains the team to ignore the channel, which silently degrades every other detector in it.',
+      wrapup:
+        'The real cost is not compute — statistical baselines over even a large entity set are cheap, and the LLM explainer at 50 alerts a day is pennies. The real cost is analyst time and the attention tax on the team, and the second-order cost is what a badly tuned system does to trust in alerting generally. I would not build anomaly detection at all when the base rate is so low that no achievable precision produces an actionable alert stream, when nobody is committed to investigating the alerts, or when a simple threshold on one well-chosen metric captures most of the value — which is more often than practitioners like to admit, and starting there gives you a baseline that a learned detector must beat rather than merely differ from.',
+      numbers: [
+        'Base rate: at 0.1 percent anomalous entities and 99 percent specificity, alerts are 0.001 x recall true positives against 0.999 x 0.01 false positives — roughly 10 false alarms per true one even at perfect recall.',
+        'Alert budget: an analyst team handling 50 investigations a day at an assumed 20 minutes each is about 17 analyst-hours daily, and that capacity, not a threshold, is what sets the system operating point.',
+        'Grouping: one incident touching 40 accounts must be 1 alert, not 40, or a single event consumes 80 percent of a 50-alert daily budget.',
+        'LLM explainer cost: 50 alerts/day at roughly 4,000 tokens of context each is 200K tokens/day, well under 1 USD — negligible against 17 analyst-hours, which is where the money is.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 7, estimates: 7, apiAndData: 6, architecture: 11, deepDive: 10, wrapUp: 4 },
+      opening:
+        'I want to start from the alert budget rather than from the detector, because how many alerts a human can investigate per day is the binding constraint, and the base-rate arithmetic makes that constraint much tighter than people expect.',
+      traps: [
+        'Ignoring the base rate. At a 0.1 percent prevalence even a very good detector produces mostly false alarms, and that arithmetic — not model quality — is what kills these projects.',
+        'Using standard deviations for outlier detection. The outliers inflate the standard deviation, so the very anomalies you want are what hide them; use robust statistics.',
+        'No grouping. One incident affecting forty entities becomes forty pages, and the first real event exhausts the day capacity.',
+        'Never retiring detectors. A stream of ignored alerts trains the team to ignore the whole channel, degrading every other detector alongside it.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not have an LLM read the data and find the anomalies?',
+          answer:
+            'Because it is an expensive and unreliable detector over numeric series and it does not scale to millions of entities. Where it is genuinely excellent is the step after detection: assembling the context, the history and the deviating signals into the explanation an analyst would otherwise build by hand. That attacks the real bottleneck, which is minutes per alert, not detection itself.',
+        },
+        {
+          challenge: 'You cannot measure recall, so how do you know it works?',
+          answer:
+            'I would not pretend to a recall number. What I can measure is the detection rate on injected synthetic anomalies, the action rate on real alerts, and — expensively but genuinely — the miss rate from a random audit of non-alerted entities. I would also count incidents found by other means and check whether the signal was present, because that is the most credible evidence of a gap.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  EV["Event stream per entity"] --> SEAS["Seasonality decomposition: weekly, monthly, month-end, holidays"]
+  SEAS --> BASE["Robust baseline per entity (median absolute deviation, not std dev)"]
+  BASE --> CAND["Candidate anomalies"]
+  EV --> MV["Multivariate learned detector"]
+  MV --> CAND
+  LBL[("Sparse, delayed confirmed cases")] --> RANK["Supervised ranker over candidates"]
+  CAND --> RANK
+  RANK --> GRP["Group by entity, time window, correlated signal"]
+  GRP --> CAP["Volume cap: top N per day = alert budget"]
+  CAP --> LLM["LLM explainer: history + deviating signals + context, with evidence"]
+  LLM --> ALERT["Analyst alert"]
+  ALERT --> ACT[("Action rate per detector")]
+  ACT -->|below floor| RETIRE["Retire detector"]
+  SYN["Injected synthetic anomalies"] --> CAND
+  AUDIT["Random audit of non-alerted entities"] --> MISS[("Unbiased miss-rate estimate")]
+  NEW["New detector"] --> SHADOW["Shadow through a full seasonal cycle"]
+  SHADOW --> CAP`,
+  },
+]
+
 export const aiSdQuestions: AiSdQuestion[] = [
   ...servingQuestions,
   ...gatewayQuestions,
@@ -2722,4 +3124,5 @@ export const aiSdQuestions: AiSdQuestion[] = [
   ...evalQuestions,
   ...multimodalQuestions,
   ...trainingQuestions,
+  ...productQuestions,
 ]
