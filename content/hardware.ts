@@ -228,4 +228,167 @@ export const hwQuestions: HwQuestion[] = [
       'This is why decode cannot be cached out of its bandwidth problem: it is a streaming workload with almost no temporal reuse, which is the one access pattern caches cannot help.',
     minutes: 10,
   },
+
+  // ---------------------------------------------------------------- topic 3
+  {
+    id: 'hwq-nvlink-vs-pcie',
+    topicId: 'hwt-interconnect',
+    text: 'How much faster is NVLink than PCIe, and what decision does that gap actually drive?',
+    answer:
+      'NVLink 4.0 on H100 is 18 bidirectional links at 50 GB/s each, so 900 GB/s bidirectional per GPU. A PCIe Gen4 x16 slot gives you about 31.5 GB/s per direction, and Gen5 x16 about 63 GB/s per direction. That makes NVLink roughly 14x a Gen4 x16 link and about 7x a Gen5 one. The decision it drives is whether tensor parallelism is viable at all: TP puts a collective on the critical path of every layer, so on PCIe-only boxes the communication usually costs more than the compute you saved.',
+    numbers: [
+      'NVLink 4.0 (H100): 18 bidirectional links x 50 GB/s = 900 GB/s bidirectional per GPU',
+      'PCIe Gen4 x16: ~1.969 GB/s per lane -> ~31.5 GB/s per direction (~63 GB/s full-duplex)',
+      'PCIe Gen5 x16: ~3.938 GB/s per lane -> ~63 GB/s per direction (~127-128 GB/s full-duplex)',
+      'NVLink 4.0 is roughly 14x a PCIe Gen4 x16 link and ~7x a Gen5 x16 link',
+    ],
+    keyPoint:
+      'Quote NVLink bidirectionally and PCIe per-direction consistently, or the comparison silently drifts by 2x — that unit confusion is the most common way this answer goes wrong.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-tp-allreduce-cost',
+    topicId: 'hwt-interconnect',
+    text: 'Why is the all-reduce in tensor parallelism more damaging than the all-reduce in data parallelism?',
+    answer:
+      'Because of where it sits, not how big it is. Data-parallel gradient all-reduce happens during the backward pass and can be overlapped with compute — you bucket gradients and start reducing early layers while later ones are still computing, so the network time hides behind arithmetic. Tensor-parallel all-reduce sits inside the forward and backward pass at every layer boundary: the next layer literally cannot start until the partial outputs are summed. There is nothing to hide it behind, so it adds directly to wall-clock latency per token.',
+    keyPoint:
+      'It also fires once or twice per layer per token, so the cost multiplies by depth — a 2 ms collective on an 80-layer model is not 2 ms of overhead, it is the dominant term in your inter-token latency.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-nvswitch-vs-mesh',
+    topicId: 'hwt-interconnect',
+    text: 'What does NVSwitch give you that a full-mesh NVLink topology does not?',
+    answer:
+      'In a pure point-to-point full mesh of 8 GPUs, each GPU has to divide its total NVLink bandwidth across 7 peer links, so the direct link between any specific pair is only about an eighth of the aggregate bandwidth leaving that GPU. NVSwitch replaces the wiring with a central crossbar, so every pair can talk at the full per-GPU NVLink bandwidth simultaneously. That is why NVSwitch-based DGX/HGX 8-GPU systems scale all-reduce so much better than mesh wiring. The trade-off is cost, power and cooling, which is why it is a datacenter-only part.',
+    numbers: [
+      'Full mesh of 8 GPUs: any single peer link carries only ~1/8 of a GPU\'s aggregate NVLink bandwidth',
+      'NVSwitch: full per-GPU NVLink bandwidth (900 GB/s bidirectional on H100) available to every pair simultaneously',
+    ],
+    keyPoint:
+      'Collectives are dominated by the slowest pairwise hop, so a mesh degrades exactly on the all-to-all patterns that tensor parallelism and MoE expert routing depend on.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-pcie-only-strategy',
+    topicId: 'hwt-interconnect',
+    text: 'You have 8 GPUs in a box with no NVLink, only PCIe Gen4. How would you shard a model that does not fit on one card?',
+    answer:
+      'I would avoid tensor parallelism and reach for pipeline parallelism first. TP needs an all-reduce on the critical path of every layer, and at ~31.5 GB/s per direction that collective will dominate the per-token time. Pipeline parallelism only sends activations at stage boundaries — a handful of transfers per forward pass of a tensor the size of one hidden state, not one per layer — so the traffic is orders of magnitude smaller. If the model does fit on one card, plain data parallelism with independent replicas is better still, because there is no cross-GPU traffic during inference at all.',
+    numbers: ['PCIe Gen4 x16: ~31.5 GB/s per direction, versus 900 GB/s bidirectional for NVLink 4.0'],
+    keyPoint:
+      'Pipeline parallelism trades that bandwidth problem for a bubble problem — you need enough concurrent microbatches or requests in flight to keep every stage fed, or GPUs idle waiting on their predecessor.',
+    minutes: 12,
+  },
+  {
+    id: 'hwq-tp-across-nodes',
+    topicId: 'hwt-interconnect',
+    text: 'Why does tensor parallelism usually stop at the node boundary?',
+    answer:
+      'Inside a node you have NVLink and NVSwitch — 900 GB/s bidirectional per GPU with a crossbar behind it. Crossing to another node drops you onto the network fabric, which is a large step down in bandwidth and, more importantly, a large step up in latency and jitter. Since TP\'s collective is synchronous and on the critical path at every layer, that latency multiplies by layer count. So the standard layout is tensor parallel within the node, and pipeline or data parallel across nodes where the communication is sparser and more overlappable.',
+    numbers: ['Intra-node NVLink 4.0: 900 GB/s bidirectional per GPU — the budget TP depends on'],
+    keyPoint:
+      'The binding constraint across nodes is latency, not bandwidth: TP issues many small synchronous collectives, and small-message latency is exactly where a network fabric is worst relative to NVLink.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-pcie-generations',
+    topicId: 'hwt-interconnect',
+    text: 'How do you compute PCIe bandwidth from the generation and lane count?',
+    answer:
+      'Per-lane throughput times lanes, per direction, and PCIe is full-duplex so a combined figure doubles it. Gen4 is about 1.969 GB/s per lane after encoding, so a x16 slot is about 31.5 GB/s per direction, roughly 63 GB/s combined. Gen5 doubles the signalling to about 3.938 GB/s per lane, so x16 is about 63 GB/s per direction and 127-128 GB/s combined. Being able to derive it matters because a card in a x8 slot, or on a shared switch, silently gets half the bandwidth you assumed.',
+    numbers: [
+      'PCIe Gen4: ~1.969 GB/s per lane; x16 = ~31.5 GB/s per direction, ~63 GB/s combined',
+      'PCIe Gen5: ~3.938 GB/s per lane; x16 = ~63 GB/s per direction, ~127-128 GB/s combined',
+    ],
+    keyPoint:
+      'Check topology as well as generation — GPUs hanging off the same PCIe switch or crossing the CPU sockets share a link, so the effective peer-to-peer bandwidth can be well under the slot rating.',
+    minutes: 9,
+  },
+
+  // ---------------------------------------------------------------- topic 4
+  {
+    id: 'hwq-decode-memory-bound',
+    topicId: 'hwt-roofline',
+    text: 'Is LLM decode compute-bound or memory-bound, and what follows from the answer?',
+    answer:
+      'Decode is memory-bandwidth bound, not compute bound — each step re-reads the whole KV cache and weight matrices to produce one token, so arithmetic intensity stays near 1 FLOP per byte regardless of batch size. That is why H100\'s 3.35 TB/s HBM3 bandwidth caps decode throughput long before its FLOPS do, and why continuous batching exists — it pushes the FFN kernel into the compute-bound regime where the GPU is actually busy.',
+    numbers: [
+      'Decode arithmetic intensity: roughly ~1 FLOP/byte regardless of batch size',
+      'H100 SXM5: 3.35 TB/s HBM3 bandwidth — the ceiling decode actually hits',
+    ],
+    keyPoint:
+      'The tell is that decode throughput tracks HBM bandwidth across GPU generations rather than peak FLOPS, so a card with more FLOPS and the same bandwidth generates tokens at essentially the same rate.',
+    minutes: 12,
+  },
+  {
+    id: 'hwq-prefill-vs-decode',
+    topicId: 'hwt-roofline',
+    text: 'Why do prefill and decode sit on opposite sides of the roofline?',
+    answer:
+      'Prefill processes the whole prompt at once, so every token in the sequence goes through the same weight matrices in one big GEMM. You load the weights once and do a huge amount of arithmetic with them, so arithmetic intensity is high and the GPU is FLOP-limited — this is where Tensor Cores and raw FLOPS matter. Decode produces one token per step, so you load exactly the same weights plus the full KV cache and do a vector-matrix product with them. Same bytes moved, a tiny fraction of the arithmetic, so you fall off the compute roof onto the bandwidth slope.',
+    numbers: ['Prefill: compute-bound, FLOP-limited. Decode: memory-bandwidth-bound at ~1 FLOP/byte'],
+    keyPoint:
+      'This asymmetry is the reason the two phases get different SLOs, different batching policies and increasingly different hardware pools — optimising them together optimises neither.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-roofline-model',
+    topicId: 'hwt-roofline',
+    text: 'Explain the roofline model and how you would use it on a real kernel.',
+    answer:
+      'You plot achievable FLOPS against arithmetic intensity in FLOPs per byte. Below the knee you are bandwidth-limited and performance equals bandwidth times intensity — a diagonal line. Above it you are compute-limited and performance flattens at peak FLOPS. The knee sits at peak FLOPS divided by peak bandwidth. To use it, I measure a kernel\'s FLOPs and its HBM bytes moved, place it on the x-axis, and that tells me immediately whether to chase arithmetic or data movement.',
+    numbers: ['Roofline knee = peak FLOPS / peak bandwidth; on H100 the bandwidth term is 3.35 TB/s'],
+    keyPoint:
+      'The point of the model is that it tells you which optimisations are pointless: below the knee, a faster matmul instruction buys you nothing, and above it, better data layout buys you nothing.',
+    minutes: 12,
+  },
+  {
+    id: 'hwq-batch-crossover',
+    topicId: 'hwt-roofline',
+    text: 'As you grow the decode batch size, which kernels become compute-bound and which do not?',
+    answer:
+      'At small batches, roughly 4-16, both attention and the FFN are memory-bound during decode. Above about batch 32 the FFN kernel crosses over to compute-bound, because the weights are loaded once and shared by every sequence in the batch, so intensity grows with batch size. Attention does not cross over: growing the batch grows the KV cache proportionally, so the bytes read grow at the same rate as the arithmetic and intensity stays flat.',
+    numbers: [
+      'Batch 4-16: both attention and FFN kernels are memory-bound during decode',
+      'Above roughly batch 32: the FFN kernel crosses to compute-bound; attention stays memory-bound',
+    ],
+    keyPoint:
+      'That split is the actual justification for continuous batching — you batch aggressively to move the FFN onto the compute roof, and you accept that attention will remain bandwidth-limited whatever you do.',
+    minutes: 12,
+  },
+  {
+    id: 'hwq-layernorm-softmax-bound',
+    topicId: 'hwt-roofline',
+    text: 'Why are layernorm and softmax memory-bound, and what do you do about it?',
+    answer:
+      'They do almost no arithmetic per element — a few adds, a multiply, an exponential — but they read an entire activation tensor out of HBM and write one back. So the runtime is essentially bytes moved divided by bandwidth, and the arithmetic is free by comparison. The fix is kernel fusion: fold them into the neighbouring op so the intermediate never round-trips to HBM. FlashAttention is the canonical case, fusing attention and softmax into one kernel that never materialises the full score matrix and keeps intermediates in SRAM.',
+    numbers: ['SRAM is roughly 6-10x faster than HBM — the gap fusion is monetising'],
+    keyPoint:
+      'The win from fusion is measured in eliminated HBM round trips, not in saved arithmetic, which is why a fused kernel can do strictly more FLOPs and still be several times faster.',
+    minutes: 10,
+  },
+  {
+    id: 'hwq-diagnose-bound',
+    topicId: 'hwt-roofline',
+    text: 'How would you determine empirically whether a kernel is compute-bound or memory-bound?',
+    answer:
+      'Measure both sides and compare each to its ceiling. Take the kernel\'s HBM bytes read and written, divide by its runtime, and compare to peak bandwidth — 3.35 TB/s on an H100 SXM5. Do the same for FLOPs against peak FLOPS at the precision in use. Whichever fraction is close to 1 is your limiter. If neither is, you are latency-bound or occupancy-bound rather than either. A quick confirmation: down-clock memory and see whether runtime moves.',
+    numbers: ['Compare achieved HBM bandwidth against 3.35 TB/s peak on H100 SXM5'],
+    keyPoint:
+      'A kernel at, say, 40% of both ceilings is the interesting case — it is usually launch overhead, warp divergence or bad access patterns, and neither a faster matmul nor fewer bytes will fix it.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-flops-dont-help-decode',
+    topicId: 'hwt-roofline',
+    text: 'A vendor doubles peak FLOPS and keeps memory bandwidth the same. What happens to your serving numbers?',
+    answer:
+      'Prefill gets meaningfully faster, so time-to-first-token improves. Decode barely moves, because it is bandwidth-limited at roughly 1 FLOP per byte and you did not touch the bytes-per-second term. In roofline terms you raised the flat compute roof and left the diagonal bandwidth slope where it was, so anything left of the knee is unaffected — and you actually pushed the knee further right, meaning more kernels are now memory-bound than before.',
+    numbers: ['Decode stays pinned to the bandwidth slope at ~1 FLOP/byte; only the compute roof moved'],
+    keyPoint:
+      'Doubling FLOPS without bandwidth makes the memory-bound region larger, so a generation that looks twice as fast on paper can deliver almost no inter-token latency improvement.',
+    minutes: 11,
+  },
 ]
