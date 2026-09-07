@@ -368,4 +368,122 @@ const networkingQuestions: CsQuestion[] = [
   },
 ]
 
-export const csQuestions: CsQuestion[] = [...osQuestions, ...networkingQuestions]
+// ------------------------------------------------------------------------- Databases
+// Amazon only. The research places DBMS inside Amazon's dedicated round; Meta's screen
+// on the Production Engineer track is OS, networking and Linux internals, not databases.
+const databaseQuestions: CsQuestion[] = [
+  {
+    id: 'csq-acid',
+    topicId: 'cst-databases',
+    text: 'Explain the ACID properties using a bank transfer as the example.',
+    answer: "Atomicity is all or nothing: the transfer debits one account and credits the other, and if the credit fails the debit is rolled back, so the money is never in neither place. Consistency means the transaction takes the database from one state satisfying its constraints to another - the sum of the two balances is unchanged and no balance goes negative. Isolation means a concurrent reader never observes the intermediate state where the money has left one account and not yet arrived at the other. Durability means that once the transfer is acknowledged as committed, a power cut cannot lose it.",
+    keyPoint: 'Durability is the one with a mechanism worth naming: write-ahead logging means the log record is flushed to stable storage before the commit returns, while the data pages themselves are written back lazily and recovery replays the log. That flush is why a real commit latency is bounded by a disk sync rather than by CPU.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-isolation-levels',
+    topicId: 'cst-databases',
+    text: 'What are the four isolation levels, and which anomaly does each one allow?',
+    answer: "Read Uncommitted lets you see another transaction's uncommitted writes, so you get dirty reads. Read Committed blocks those, but a row you read twice in one transaction can change underneath you - a non-repeatable read. Repeatable Read pins the rows you have already read, but a new row can still appear in a range you re-query - a phantom. Serializable eliminates all three: the outcome has to be equivalent to having run the transactions one after another.",
+    keyPoint: 'The levels are defined by which anomalies they permit, not by how they are implemented, and vendors differ underneath the same name. Postgres implements both middle levels as MVCC snapshots, so its Repeatable Read already blocks phantoms, and the identically named level in InnoDB is not the same guarantee - always ask which engine.',
+    companies: ['amazon'],
+    minutes: 9,
+  },
+  {
+    id: 'csq-read-anomalies',
+    topicId: 'cst-databases',
+    text: 'Dirty read, non-repeatable read, phantom read - distinguish them.',
+    answer: "A dirty read is reading a value another transaction has written but not committed, so the value may never have legitimately existed. A non-repeatable read is reading the same row twice within one transaction and getting different values, because someone committed an update in between. A phantom read is running the same range query twice and getting a different set of rows, because someone committed an insert or a delete matching your predicate. So: uncommitted data, then a row changing, then the set of rows changing.",
+    keyPoint: 'The third needs a fundamentally different mechanism, which is the insight the question is fishing for: you cannot lock a row that does not exist yet, so preventing phantoms means locking the predicate or the gaps between keys - InnoDB next-key locks - or taking a serializable snapshot. That is why it costs more than the other two.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-normalization',
+    topicId: 'cst-databases',
+    text: 'Explain normalisation up to BCNF, and when you would denormalise.',
+    answer: "First normal form means atomic column values - no comma-separated list stuffed into a field. Second means no non-key column depends on only part of a composite key. Third means no non-key column depends on another non-key column, and the textbook fix is moving a zip-code-to-city mapping out into its own table. BCNF tightens third form so that every determinant is a candidate key. All of it is one idea in different dresses: store each fact exactly once, so changing it touches exactly one row.",
+    keyPoint: 'Denormalisation is a deliberate trade rather than a failure to normalise: you accept duplicated facts and the write-time work of keeping them in sync in order to remove a join from a hot read path. It is only safe when reads massively outnumber writes and you control every writer that has to maintain the copy.',
+    companies: ['amazon'],
+    minutes: 9,
+  },
+  {
+    id: 'csq-btree-vs-hash-index',
+    topicId: 'cst-databases',
+    text: 'B-tree versus hash index - when would you use each?',
+    answer: "A hash index maps a key to a bucket, which is about as fast as it gets for exact equality and useless for anything else: no ranges, no ordering, no prefix matching, and no help at all with a sort. A B+tree keeps keys in order with the data in linked leaves, so a lookup costs a handful of page reads - the tree stays three or four levels deep even for a very large table - and the same structure serves equality, ranges, prefixes, sorted retrieval and min or max.",
+    keyPoint: 'That generality is why B-trees are the default and hash indexes stay niche: the marginal gain on pure equality lookups is small next to losing every ordered access pattern. High fanout also means the upper levels stay resident in the buffer pool, so a lookup usually costs one actual disk read rather than four.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-composite-index',
+    topicId: 'cst-databases',
+    text: 'When does a composite index help, and when does it hurt?',
+    answer: "An index on (a, b, c) is sorted by a, then by b within equal a, then by c - so it serves a predicate on a, on a and b, or on all three, and it is useless for a predicate on b alone. That is the leftmost-prefix rule. It helps most when it becomes a covering index, so the engine answers the query entirely from the index and never touches the table at all. It hurts when you add one per query: every index is write amplification on insert and update, more space, and one more chance for the planner to pick wrong.",
+    keyPoint: 'Column order is the entire design decision, and the rule is to put equality predicates before the range predicate, because once the scan reaches an inequality it can only read forward from there. An index on (status, created_at) serves a status equality plus a date range as one contiguous range; the reverse order has to scan and filter.',
+    companies: ['amazon'],
+    minutes: 9,
+  },
+  {
+    id: 'csq-clustered-vs-nonclustered',
+    topicId: 'cst-databases',
+    text: 'Clustered versus non-clustered index?',
+    answer: "A clustered index defines the physical order of the rows - the table effectively is the index, with the full rows living in the leaves - so you get exactly one per table, and a range scan on that key is a sequential read. A non-clustered index is a separate structure holding the key plus a pointer back to the row, so any query needing columns the index does not carry pays an extra fetch per matching row.",
+    keyPoint: 'The consequence people miss is what it does to every other index and to write throughput: InnoDB stores the primary key as the pointer in each secondary index, so a wide or randomly ordered primary key such as a UUID bloats every secondary index and turns inserts into random page splits. That, rather than aesthetics, is the argument for a monotonic surrogate key.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-explain-plan',
+    topicId: 'cst-databases',
+    text: 'A query is slow. Walk me through how you read the query plan.',
+    answer: "I read it inside out, because the plan is a tree and the leaves execute first. First the access method per table: a sequential scan on a large table where I expected an index lookup is the headline. Then estimated rows against actual rows, because a large divergence means every join decision above that node was made on bad information. Then the join methods and their inputs - a nested loop over something the planner thought was tiny and is actually enormous is the classic cause of a query that was fine last month and is dying today.",
+    keyPoint: 'Estimated versus actual is the diagnostic that generalises, because the optimiser is rarely stupid and frequently misinformed. The fix is usually refreshed statistics, an index it would have chosen if it existed, or removing a predicate it cannot estimate - a function wrapped around a column, or two correlated columns - rather than forcing a plan with a hint.',
+    companies: ['amazon'],
+    minutes: 9,
+  },
+  {
+    id: 'csq-db-deadlock',
+    topicId: 'cst-databases',
+    text: 'How does a database handle deadlocks between transactions?',
+    answer: "Two transactions each hold a lock the other needs, so neither can move. Databases generally do not try to prevent that; they detect it. The engine maintains a waits-for graph between transactions and looks for a cycle, either continuously or once a lock wait exceeds a timeout, then picks a victim - typically the transaction that has done the least work or holds the fewest locks - rolls it back and returns a deadlock error to the client. The survivor proceeds normally.",
+    keyPoint: 'The application half is what gets missed: a deadlock error is retryable by design, so the calling code has to catch it and retry the whole transaction rather than treat it as a failure. Making it rare is a discipline question - acquire locks on shared objects in one consistent order everywhere, and keep transactions short.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-optimistic-vs-pessimistic',
+    topicId: 'cst-databases',
+    text: 'Optimistic versus pessimistic locking?',
+    answer: "Pessimistic locking takes the lock before it reads - a select for update - so conflicts are impossible, at the cost of concurrency and lock-wait time, and you own that lock for whatever happens next. Optimistic locking takes no lock: you read a version number along with the row, do your work, and on write assert that the version has not changed; if it has, you lost the race and retry. Optimistic wins when conflicts are rare, pessimistic wins when they are common or a retry is expensive.",
+    keyPoint: 'The deciding question is the cost of a retry against the cost of a wait, and optimistic is the only one that survives a long think time. Holding a database lock while a human fills in a form is how you accidentally serialise your entire application on one row.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-mvcc',
+    topicId: 'cst-databases',
+    text: 'What is MVCC and what does it cost you?',
+    answer: "Instead of making readers take locks, the engine keeps multiple versions of each row tagged with the transaction that wrote them, and every transaction reads whichever version was visible when its snapshot was taken. So readers never block writers and writers never block readers, and only two writers to the same row actually contend. The price is that old versions have to be retained until no live snapshot could still need them, and then cleaned up in the background.",
+    keyPoint: 'That cleanup is the operational reality of the design: one long-running transaction pins the oldest snapshot, so nothing newer can be reclaimed, the table bloats and every scan over it gets slower. It is why a reporting query someone left open for hours is a production incident rather than merely a slow query.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+  {
+    id: 'csq-index-not-used',
+    topicId: 'cst-databases',
+    text: 'You added an index and the query still does a full table scan. Why?',
+    answer: "Usually one of a small number of things. The predicate is not sargable - a function or a cast wrapped around the column, or a leading wildcard in a LIKE - so the index ordering no longer applies. Or the planner estimates the query touches enough of the table that a sequential scan with prefetching genuinely beats a large number of random index lookups plus row fetches. Or the statistics are stale, or the literal's type does not match the column's and an implicit cast is being applied.",
+    keyPoint: 'A scan is frequently the correct plan, so the first move is to check selectivity rather than to force the index. An index on a low-cardinality column such as a boolean flag cannot help unless the distribution is heavily skewed and you happen to be querying the rare value.',
+    companies: ['amazon'],
+    minutes: 8,
+  },
+]
+
+export const csQuestions: CsQuestion[] = [
+  ...osQuestions,
+  ...networkingQuestions,
+  ...databaseQuestions,
+]
