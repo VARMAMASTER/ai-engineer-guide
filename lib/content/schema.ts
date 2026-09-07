@@ -314,6 +314,55 @@ export const companyGuideSchema = z.object({
   marketNote: z.string().min(1),
 })
 
+/**
+ * CS fundamentals: OS, networking, databases, concurrency. The rounds most
+ * DSA-focused prep skips, and Google/Amazon/Microsoft still run them.
+ */
+export const csTopicSchema = z.object({
+  id: z.string().regex(/^cst-[a-z0-9-]+$/),
+  area: z.enum(['os', 'networking', 'databases', 'concurrency', 'oop']),
+  name: z.string().min(1),
+  order: z.number().int().positive(),
+  summary: z.string().min(1),
+})
+
+export const csQuestionSchema = z.object({
+  id: z.string().regex(/^csq-[a-z0-9-]+$/),
+  topicId: z.string().regex(/^cst-[a-z0-9-]+$/),
+  text: z.string().min(1),
+  // Answered the way you would say it, plus the one detail that separates a
+  // strong answer from a memorized definition.
+  answer: z.string().min(1),
+  keyPoint: z.string().min(1),
+  companies: z.array(z.string().min(1)),
+  minutes: z.number().int().positive(),
+})
+
+/**
+ * How LLMs actually use GPU/CPU hardware. Distinct from LLM serving system
+ * design: this is the hardware layer underneath it — memory hierarchy,
+ * interconnect, precision formats, roofline analysis.
+ */
+export const hwTopicSchema = z.object({
+  id: z.string().regex(/^hwt-[a-z0-9-]+$/),
+  name: z.string().min(1),
+  order: z.number().int().positive(),
+  summary: z.string().min(1),
+})
+
+export const hwQuestionSchema = z.object({
+  id: z.string().regex(/^hwq-[a-z0-9-]+$/),
+  topicId: z.string().regex(/^hwt-[a-z0-9-]+$/),
+  text: z.string().min(1),
+  answer: z.string().min(1),
+  // The concrete number(s) that make this answer credible rather than vague,
+  // e.g. "H100 SXM: 3.35 TB/s HBM3 bandwidth". Cite the source in the value
+  // where the figure could plausibly be challenged.
+  numbers: z.array(z.string().min(1)).optional(),
+  keyPoint: z.string().min(1),
+  minutes: z.number().int().positive(),
+})
+
 export type DsaPattern = z.infer<typeof dsaPatternSchema>
 export type DsaProblem = z.infer<typeof dsaProblemSchema>
 export type SdPattern = z.infer<typeof sdPatternSchema>
@@ -332,6 +381,10 @@ export type Milestone = z.infer<typeof milestoneSchema>
 export type Doc = z.infer<typeof docSchema>
 export type ReadingSummary = z.infer<typeof readingSummarySchema>
 export type Reading = z.infer<typeof readingSchema>
+export type CsTopic = z.infer<typeof csTopicSchema>
+export type CsQuestion = z.infer<typeof csQuestionSchema>
+export type HwTopic = z.infer<typeof hwTopicSchema>
+export type HwQuestion = z.infer<typeof hwQuestionSchema>
 export type BehaviouralPrinciple = z.infer<typeof behaviouralPrincipleSchema>
 export type BehaviouralQuestion = z.infer<typeof behaviouralQuestionSchema>
 export type StorySlot = z.infer<typeof storySlotSchema>
@@ -342,5 +395,6 @@ export type DayTask = z.infer<typeof dayTaskSchema>
 
 export type ContentItem =
   | DsaPattern | DsaProblem | SdPattern | SdQuestion | LldPattern | LldQuestion
-  | Topic | TopicQuestion | BehaviouralPrinciple | BehaviouralQuestion | StorySlot | CompanyGuide
+  | Topic | TopicQuestion | CsTopic | CsQuestion | HwTopic | HwQuestion
+  | BehaviouralPrinciple | BehaviouralQuestion | StorySlot | CompanyGuide
   | Project | Milestone | Doc | Reading | Week | Day

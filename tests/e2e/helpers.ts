@@ -18,6 +18,8 @@ export const STATIC_ROUTES = [
   '/ai-ml',
   '/projects',
   '/reading',
+  '/cs-fundamentals',
+  '/hardware',
   '/behavioural',
   '/companies',
   '/mock',
@@ -27,6 +29,8 @@ export const STATIC_ROUTES = [
 ] as const
 
 export const DYNAMIC_ROUTES = [
+  '/cs-fundamentals/networking',
+  '/hardware/memory-hierarchy',
   '/dsa/arrays-hashing',
   '/system-design/caching',
   '/lld/solid',
@@ -142,6 +146,8 @@ export function isMobile(testInfo: TestInfo): boolean {
  * because it re-read storage.
  */
 export const SECONDARY_HREFS = [
+  '/cs-fundamentals',
+  '/hardware',
   '/lld',
   '/ai-ml',
   '/reading',
