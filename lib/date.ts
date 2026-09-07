@@ -39,3 +39,29 @@ export function mostRecentMonday(iso: string): string {
   const back = (dow + 6) % 7
   return addDays(iso, -back)
 }
+
+const MINUTE = 60_000
+const HOUR = 3_600_000
+
+/**
+ * Short relative age for a feed timestamp: `just now`, `12m ago`, `3h ago`,
+ * `2d ago`, `3w ago`, and the plain calendar date beyond a month.
+ *
+ * Accepts either a full ISO instant or a bare `YYYY-MM-DD` (which `Date.parse`
+ * reads as UTC midnight), because arXiv and Algolia are only read at day
+ * resolution. A future timestamp — clock skew, or a publisher post-dating a
+ * story — clamps to `just now` rather than rendering "-3h ago". Unparseable
+ * input is returned verbatim so a bad date never blanks the readout.
+ */
+export function relativeTime(iso: string, now: Date = new Date()): string {
+  const then = Date.parse(iso)
+  if (Number.isNaN(then)) return iso
+  const ms = now.getTime() - then
+  if (ms < MINUTE) return 'just now'
+  if (ms < HOUR) return `${Math.floor(ms / MINUTE)}m ago`
+  if (ms < 24 * HOUR) return `${Math.floor(ms / HOUR)}h ago`
+  const days = Math.floor(ms / MS_PER_DAY)
+  if (days < 7) return `${days}d ago`
+  if (days < 30) return `${Math.floor(days / 7)}w ago`
+  return iso.slice(0, 10)
+}

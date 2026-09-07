@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?><feed
+	xmlns="http://www.w3.org/2005/Atom"
+	xmlns:thr="http://purl.org/syndication/thread/1.0"
+	xml:lang="en-US"
+	>
+	<title type="text">AI | The Verge</title>
+	<subtitle type="text">The Verge is about technology and how it makes us feel. Founded in 2011, we offer our audience everything from breaking news to reviews to award-winning features and investigations, on our site, in video, and in podcasts.</subtitle>
+
+	<updated>2026-09-06T23:43:53+00:00</updated>
+
+	<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence" />
+	<id>https://www.theverge.com/rss/ai-artificial-intelligence/index.xml</id>
+	<link rel="self" type="application/atom+xml" href="https://www.theverge.com/rss/ai-artificial-intelligence/index.xml" />
+
+	<icon>https://platform.theverge.com/wp-content/uploads/sites/2/2025/01/verge-rss-large_80b47e.png?w=150&amp;h=150&amp;crop=1</icon>
+		<entry>
+			
+			<author>
+				<name>Terrence O’Brien</name>
+			</author>
+			
+			<title type="html"><![CDATA[Seattle Times and Newsday sue OpenAI and Microsoft for infringement]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/990932/seattle-times-newsday-lawsuit-openai-microsoft" />
+			<id>https://www.theverge.com/?p=990932</id>
+			<updated>2026-09-06T19:43:53-04:00</updated>
+			<published>2026-09-06T19:36:04-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="Microsoft" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="OpenAI" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[The Seattle Times and Newsday are just the latest plaintiffs to take OpenAI to court, alleging copyright infringement. The two outlets say the company used their journalism as training data for its AI models without permission and often reproduces passages from their reporting in response to user queries. This is similar to lawsuits filed by [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="" data-caption="The OpenAI logo is displayed on a smartphone screen placed on a reflective surface on which the company&#039;s logo is projected in Creteil, France, on September 4, 2026, as OpenAI began rolling out GPT-6 Astra, its most advanced model to date. (Photo by Samuel Boivin/NurPhoto via Getty Images) | NurPhoto via Getty Images" data-portal-copyright="NurPhoto via Getty Images" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/gettyimages-2292926705.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+	The OpenAI logo is displayed on a smartphone screen placed on a reflective surface on which the company's logo is projected in Creteil, France, on September 4, 2026, as OpenAI began rolling out GPT-6 Astra, its most advanced model to date. (Photo by Samuel Boivin/NurPhoto via Getty Images) | NurPhoto via Getty Images	</figcaption>
+</figure>
+<p class="wp-block-paragraph"><em>The Seattle Times</em> and <em>Newsday</em> are just the latest plaintiffs to take OpenAI to court, <a href="https://www.reuters.com/legal/government/seattle-times-newsday-sue-openai-microsoft-alleging-copyright-infringement-2026-09-05/">alleging copyright infringement</a>. The two outlets say the company used their journalism as training data for its AI models without permission and often reproduces passages from their reporting in response to user queries. This is similar to lawsuits filed by <a href="https://www.theverge.com/2023/12/27/24016212/new-york-times-openai-microsoft-lawsuit-copyright-infringement"><em>The New York Times</em></a>, <a href="https://www.theverge.com/news/656044/ziff-davis-sues-openai-ign-cnet-pcmag">Ziff Davis</a>, <a href="https://www.theverge.com/ai-artificial-intelligence/895372/encyclopedia-britannica-openai-lawsuit">Merriam-Webster, and Encyclopedia Britannica</a> against OpenAI.</p>
+<p class="wp-block-paragraph"><em>The Seattle Times</em> and <em>Newsday</em> also named Microsoft as a defendant in the suit, since Copilot is built on OpenAI's technology. The publishers join a list of <a href="https://www.theverge.com/ai-artificial-intelligence/956543/nearly-400-local-newspapers-are-suing-openai-and-microsoft">nearly 400 local newspapers</a> that recently sued the two  …</p>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/990932/seattle-times-newsday-lawsuit-openai-microsoft">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Robert Hart</name>
+			</author>
+			
+			<title type="html"><![CDATA[OpenAI admits to German wiki ‘incident’]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/990773/openai-german-wiki-incident" />
+			<id>https://www.theverge.com/?p=990773</id>
+			<updated>2026-09-05T07:28:05-04:00</updated>
+			<published>2026-09-05T07:15:55-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="OpenAI" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[OpenAI says it needs to overhaul how and when it reports instances of AI models attacking real-world targets. The acknowledgement comes as the company manages the fallout from reports that a swarm of its out-of-control agents hijacked a German wiki site. Regarding the "'wiki incident,' where our agents wrote to several internet sites," OpenAI wrote [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="" data-caption="" data-portal-copyright="Image: The Verge" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/STKS533_AI_AGENTS_HACKING_D_54a015.png?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="wp-block-paragraph">OpenAI says it needs to overhaul how and when it reports instances of AI models attacking real-world targets. The acknowledgement comes as the company manages the fallout from <a href="https://www.theverge.com/ai-artificial-intelligence/990149/openai-rogue-agents-german-wiki" data-type="link" data-id="https://www.theverge.com/ai-artificial-intelligence/990149/openai-rogue-agents-german-wiki">reports that a swarm of its out-of-control agents hijacked a German wiki site</a>.</p>
+<p class="wp-block-paragraph">Regarding the "'wiki incident,' where our agents wrote to several internet sites," OpenAI wrote in <a href="https://x.com/openai/status/2096133504417616165?s=46&amp;t=vx29-32gzBE_H5suNoiKjQ">a post on X</a> on Saturday morning, "it's past time for us to define standards for when and how we share misalignment incidents, not just misalignment properties of our models."</p>
+<p class="wp-block-paragraph">OpenAI said it has typically treated cases of AI agents acting in unintended ways as a "research question," but that r …</p>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/990773/openai-german-wiki-incident">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Terrence O’Brien</name>
+			</author>
+			
+			<title type="html"><![CDATA[Roland is getting into generative AI music with Melody Flip]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/990197/roland-ai-music-melody-flip" />
+			<id>https://www.theverge.com/?p=990197</id>
+			<updated>2026-09-04T13:51:35-04:00</updated>
+			<published>2026-09-04T13:51:35-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="Apps" /><category scheme="https://www.theverge.com" term="Entertainment" /><category scheme="https://www.theverge.com" term="Music" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[It's not quite the "push button; get song" of Suno, but Roland's new Melody Flip tool marks the company's foray into generative AI music. Available as a plug-in for your digital audio workstation (DAW), Melody Flip offers around 250 "Palettes," which are essentially themed collections of musical ideas sorted by genre. You can start from [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="Melody Flip main window." data-caption="" data-portal-copyright="Image: Roland" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/Melody_Flip_Palettes-Fav.png?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="wp-block-paragraph">It's not quite the <a href="https://www.theverge.com/ai-artificial-intelligence/786349/suno-ai-music-generator-v5-review">"push button; get song" of Suno</a>, but Roland's new<a href="https://www.roland.com/global/products/rc_melody_flip/"> Melody Flip</a> tool marks the company's foray into generative AI music. Available as a plug-in for your digital audio workstation (DAW), Melody Flip offers around 250 "Palettes," which are essentially themed collections of musical ideas sorted by genre. You can start from scratch and ask it to generate any combination of melody, chord progression, bassline, or drums. Or you can feed it a reference track and have it build off the melodic ideas from that.</p>
+<p class="wp-block-paragraph">Unlike Suno or Udio, Melody Flip doesn't spit out fully polished songs with vocals and full arrangements. Instead, it offers …</p>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/990197/roland-ai-music-melody-flip">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Lauren Feiner</name>
+			</author>
+			
+			<title type="html"><![CDATA[Microsoft says virtually nobody was grabbing NYT articles through its chatbot]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/policy/990267/microsoft-openai-new-york-times-authors-lawsuit" />
+			<id>https://www.theverge.com/?p=990267</id>
+			<updated>2026-09-04T13:10:35-04:00</updated>
+			<published>2026-09-04T12:05:57-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="Copyright" /><category scheme="https://www.theverge.com" term="Law" /><category scheme="https://www.theverge.com" term="Microsoft" /><category scheme="https://www.theverge.com" term="OpenAI" /><category scheme="https://www.theverge.com" term="Policy" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[Microsoft's Copilot rarely reproduces even full sentences from news articles and books, let alone substantive chunks that could substitute for the original, the company says in new legal filings as it fights copyright claims from publishers including The New York Times and book authors. As part of the lawsuit's discovery, Microsoft provided 8.2 million Copilot [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="An illustration of the Copilot logo" data-caption="" data-portal-copyright="Image: The Verge" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2025/08/STK259_MICROSOFT_COPILOT_2__B.png?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="wp-block-paragraph">Microsoft's Copilot rarely reproduces even full sentences from news articles and books, let alone substantive chunks that could substitute for the original, the company says in new legal filings as it fights copyright claims from <a href="https://www.theverge.com/2023/12/27/24016212/new-york-times-openai-microsoft-lawsuit-copyright-infringement">publishers including <em>The New York Times</em></a> and <a href="https://www.theverge.com/news/693516/authors-throw-the-book-at-microsoft-ai">book authors</a>.</p>
+<p class="wp-block-paragraph">As part of the lawsuit's discovery, Microsoft provided 8.2 million Copilot chat logs to an expert hired by news publishers. The logs, it claims, were specifically chosen "because they hit on keywords implicating use of News Plaintiffs' websites, and therefore the most likely to contain News Plaintiffs' works." It says the resulting analysis shows that 59,545 …</p>
+<p><a href="https://www.theverge.com/policy/990267/microsoft-openai-new-york-times-authors-lawsuit">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Robert Hart</name>
+			</author>
+			
+			<title type="html"><![CDATA[Rogue OpenAI agents appear to have organized another attack using a German wiki]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/990149/openai-rogue-agents-german-wiki" />
+			<id>https://www.theverge.com/?p=990149</id>
+			<updated>2026-09-04T10:46:39-04:00</updated>
+			<published>2026-09-04T09:34:12-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="OpenAI" /><category scheme="https://www.theverge.com" term="Security" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[A swarm of rogue AI agents from OpenAI reportedly commandeered a German website and transformed it into a messaging board for other agents, with officials staying quiet about the incident for weeks as the company prepared to launch its most advanced model yet, Astra. The finding adds to intensifying concern surrounding oversight at frontier AI [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="" data-caption="" data-portal-copyright="Image: The Verge" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/STKS533_AI_AGENTS_HACKING_D_54a015.png?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="wp-block-paragraph">A swarm of rogue AI agents from OpenAI reportedly commandeered a German website and transformed it into a messaging board for other agents, with officials staying quiet about the incident for weeks as the company prepared to launch its most advanced model yet, Astra. The finding adds to intensifying concern surrounding oversight at frontier AI labs after multiple breaches were discovered this summer. </p>
+<p class="wp-block-paragraph">The incident, <a href="https://www.reuters.com/world/europe/openai-agents-hijacked-german-website-previously-undisclosed-ai-breakout-this-2026-09-04/">first reported</a> by <em>Reuters</em>, is outlined in new <a href="https://collusion.wiki/">research</a> published by four AI safety researchers on Friday. The group said the AI agents found a way to communicate on an obscure German-language wiki, DseWiki, using it to share tips …</p>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/990149/openai-rogue-agents-german-wiki">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Jess Weatherbed</name>
+			</author>
+			
+			<title type="html"><![CDATA[Instagram’s AI detection is a mess (again)]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/989617/instagram-ai-content-label-confusion" />
+			<id>https://www.theverge.com/?p=989617</id>
+			<updated>2026-09-03T14:37:50-04:00</updated>
+			<published>2026-09-04T08:00:00-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="Analysis" /><category scheme="https://www.theverge.com" term="Instagram" /><category scheme="https://www.theverge.com" term="Meta" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="Report" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[Instagram's visible AI labels are supposed to help people quickly spot synthetically generated content at a glance. Over the last few weeks, however, users have been reporting that the system has gone haywire. They say Meta has been automatically applying an "AI Content" label to images that they didn't create or edit using generative AI [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="Painting on an easel with a reCAPTCHA box." data-caption="" data-portal-copyright="Image: Cath Virginia / The Verge, Getty Images" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/04/268439_ai_art_label_CVirginia.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="has-drop-cap wp-block-paragraph">Instagram's visible AI labels are supposed to help people quickly spot synthetically generated content at a glance. Over the last few weeks, however, <a href="https://www.instagram.com/p/DcBv-fRIKBb/?img_index=3&amp;igsh=MWsxMTRxemhvNzJscw%3D%3D">users</a> have been reporting that the system has gone haywire. They say Meta has been automatically applying an "AI Content" label to images that they didn't create or edit using generative AI tools. Meanwhile, actual AI imagery is slipping through the cracks, leaving the impression that nothing can be trusted on Instagram at all.</p>
+<p class="wp-block-paragraph">The precise causes of this tagging seem to vary. Many people said the label appeared on images that were edited using tools like Canva's Background Remover or with negl …</p>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/989617/instagram-ai-content-label-confusion">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Robert Hart</name>
+			</author>
+			
+			<title type="html"><![CDATA[Why AI food looks like that]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/989376/ai-generated-food-why-does-it-look-like-that" />
+			<id>https://www.theverge.com/?p=989376</id>
+			<updated>2026-09-03T10:08:47-04:00</updated>
+			<published>2026-09-04T07:00:00-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="Design" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[There is a torrent of unappetizing slop coming from restaurants, cafes, and brands that are increasingly turning to AI to generate images promoting their food. The resulting horror show includes donut shrimp, Reubens from the deep, wormlike noodles, and noodle-like pastries and stringy chicken. There's also construction material masquerading as ice cream, ice cream masquerading [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="A collage of AI generated food that is disgusting and a person in the center who is disgusted" data-caption="" data-portal-copyright="Image: Cath Virginia / The Verge, Getty Images" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/268722_Why_does_AI_food_look_like_that_CVirginia.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="has-drop-cap wp-block-paragraph">There is a torrent of unappetizing slop coming from restaurants, cafes, and brands that are increasingly turning to AI to generate images promoting their food. The resulting horror show includes <a href="https://x.com/samfbiddle/status/2091599814144467298?s=20">donut shrimp</a>, <a href="https://x.com/dropchris1000/status/2093034729536631064?s=20">Reubens from the deep</a>, <a href="https://x.com/wsgadIibs/status/2094577421118824593?s=20">wormlike noodles</a>, and <a href="https://x.com/maggiemoda/status/2093327513711763661?s=20">noodle-like pastries</a> and <a href="https://x.com/LadyFear1/status/2093119879591133562?s=20">stringy chicken</a>. There's also construction material masquerading as ice cream, <a href="https://x.com/maggiemoda/status/2093327513711763661?s=20">ice cream masquerading as brains</a>, and other <a href="https://x.com/LadyFear1/status/2093119879591133562?s=20">masonry-adjacent cuisine.</a> I don't even know how to begin describing this <a href="https://x.com/IncomingSwarm/status/2092297507392942487?s=20">monstrous attempt of a burger</a>, and the less said about the <a href="https://x.com/katexbt/status/2092916782990299438?s=20">trypophobic burrito from hell</a>, grubs and all, the better. There are <a href="https://x.com/zetalyrae/status/2095333794815652237?s=20">lumps</a>. And <a href="https://x.com/HumanLevelJen/status/2094331900542230529?s=20">holes</a>. <a href="https://x.com/REMARKSIST/status/2092937530257617036?s=20">So many holes</a>.</p>
+<figure class="wp-block-pullquote"><blockquote><p>"Diffusion mo …</p></blockquote></figure>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/989376/ai-generated-food-why-does-it-look-like-that">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Tom Warren</name>
+			</author>
+			
+			<title type="html"><![CDATA[Microsoft’s Project Zenith is a ‘distraction-free Windows experience’ for developers]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/news/990051/microsoft-project-zenith-windows-developers" />
+			<id>https://www.theverge.com/?p=990051</id>
+			<updated>2026-09-04T07:22:12-04:00</updated>
+			<published>2026-09-04T06:44:15-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="AMD" /><category scheme="https://www.theverge.com" term="Microsoft" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="Tech" /><category scheme="https://www.theverge.com" term="Windows" />
+							<summary type="html"><![CDATA[Microsoft is giving its developer-optimized Windows experience a name: Project Zenith. While the software maker originally announced a similar developer-optimized Windows effort at Build earlier this year, Project Zenith is designed for new developer-focused devices with 64GB or more of unified memory. "Project Zenith devices come with a preconfigured Windows setup for development and a [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="" data-caption="" data-portal-copyright="Image: AMD" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/projectzenith.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="wp-block-paragraph">Microsoft is giving its developer-optimized Windows experience a name: Project Zenith. While the software maker originally announced a similar <a href="https://www.theverge.com/news/941314/microsoft-windows-11-developer-optimized-experience-linux">developer-optimized Windows effort</a> at Build earlier this year, Project Zenith is designed for new developer-focused devices with 64GB or more of unified memory.</p>
+<p class="wp-block-paragraph">"Project Zenith devices come with a preconfigured Windows setup for development and a set of tools curated for what developers reach for first," <a href="https://blogs.windows.com/windowsdeveloper/2026/09/04/announcing-project-zenith-the-ready-to-code-windows-experience/">explains Logan Iyer</a>, CVP of Windows platform and developer at Microsoft. "On these devices, developers can run 30B+ parameter models locally and unmetered - accelerating experimentation while helping …</p>
+<p><a href="https://www.theverge.com/news/990051/microsoft-project-zenith-windows-developers">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Robert Hart</name>
+			</author>
+			
+			<title type="html"><![CDATA[Sam Altman apologizes for &#8216;messy&#8217; GPT-6 Astra rollout that’s locked out paying users]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/ai-artificial-intelligence/990060/altman-apologizes-messy-astra-rollout" />
+			<id>https://www.theverge.com/?p=990060</id>
+			<updated>2026-09-04T07:33:40-04:00</updated>
+			<published>2026-09-04T06:41:48-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="OpenAI" />
+							<summary type="html"><![CDATA[Just hours after OpenAI launched GPT-6 Astra, CEO Sam Altman was already apologizing for what he describes as a "messy rollout" after paying users expecting access to the new frontier model were left waiting. The company hailed the model as a "generational leap in capability" on Thursday and described it as the start of "the [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="" data-caption="" data-portal-copyright="Getty Images" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/gettyimages-2285138968.jpg?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+		</figcaption>
+</figure>
+<p class="wp-block-paragraph">Just hours after OpenAI <a href="https://www.theverge.com/ai-artificial-intelligence/989601/openai-gpt-6-astra-release">launched GPT-6 Astra</a>, CEO Sam Altman was already <a href="https://x.com/sama/status/2095678759651438887?s=20">apologizing</a> for what he describes as a "messy rollout" after paying users expecting access to the new frontier model were left waiting.  </p>
+<p class="wp-block-paragraph">The company hailed the model as a "generational leap in capability" on Thursday and described it as the start of "the AGI era," a fuzzy and poorly defined term tech executives <a href="https://www.theverge.com/ai-artificial-intelligence/985597/jensen-huang-says-nvidia-achieved-senseless-agi">nevertheless insist on using</a> to promote their products. It <a href="https://openai.com/index/gpt-6-astra/">said</a> Astra would roll out to some enterprise customers - specifically those with access to its <a href="https://openai.com/daybreak/">Daybreak</a> cybersecurity platform - that day. This would expand to include all Plus, Pro, Business, and Enter …</p>
+<p><a href="https://www.theverge.com/ai-artificial-intelligence/990060/altman-apologizes-messy-astra-rollout">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+			<entry>
+			
+			<author>
+				<name>Jennifer Pattison Tuohy</name>
+			</author>
+			
+			<title type="html"><![CDATA[This NAS company wants to run your local smart home]]></title>
+			<link rel="alternate" type="text/html" href="https://www.theverge.com/tech/990006/this-nas-company-wants-to-run-your-local-smart-home" />
+			<id>https://www.theverge.com/?p=990006</id>
+			<updated>2026-09-04T06:38:39-04:00</updated>
+			<published>2026-09-04T05:41:44-04:00</published>
+			<category scheme="https://www.theverge.com" term="AI" /><category scheme="https://www.theverge.com" term="IFA 2026" /><category scheme="https://www.theverge.com" term="News" /><category scheme="https://www.theverge.com" term="Smart Home" /><category scheme="https://www.theverge.com" term="Tech" />
+							<summary type="html"><![CDATA[Ugreen, known for its phone power banks, chargers, and NAS storage solutions, is moving into the smart home - in a big way. This week at the IFA tech show, the company launched its HomeAgent smart home platform that combines security camera storage, on-device AI, and smart home control in one system, managed by a [&#8230;]]]></summary>
+			
+							<content type="html">
+											<![CDATA[
+
+						
+<figure>
+
+<img alt="" data-caption="Ugreen’s HomeAgent H100 Pro hub combines local storage, on-device AI, and a new voice assistant, Uliya, to run your smart home. | Photo by Jennifer Pattison Tuohy / The Verge" data-portal-copyright="Photo by Jennifer Pattison Tuohy / The Verge" data-has-syndication-rights="1" src="https://platform.theverge.com/wp-content/uploads/sites/2/2026/09/LR6B5640.jpeg?quality=90&#038;strip=all&#038;crop=0,0,100,100" />
+	<figcaption>
+	Ugreen’s HomeAgent H100 Pro hub combines local storage, on-device AI, and a new voice assistant, Uliya, to run your smart home. | Photo by Jennifer Pattison Tuohy / The Verge	</figcaption>
+</figure>
+<p class="wp-block-paragraph">Ugreen, known for its phone power banks, chargers, and NAS storage solutions, is moving into the smart home - in a big way. This week at the IFA tech show, the company launched its HomeAgent smart home platform that combines security camera storage, on-device AI, and smart home control in one system, managed by a voice assistant called Uliya, with the promise that everything runs locally.  </p>
+<p class="wp-block-paragraph">At the core of Ugreen's HomeAgent system is a hub that acts as the brain of your smart home, running a local-first AI (with some caveats) that you can interact with using natural language via Uliya. There are three hub configurations to choose from, each …</p>
+<p><a href="https://www.theverge.com/tech/990006/this-nas-company-wants-to-run-your-local-smart-home">Read the full story at The Verge.</a></p>
+						]]>
+									</content>
+			
+					</entry>
+	</feed>

@@ -1,0 +1,747 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:media="http://search.yahoo.com/mrss/" >
+    <channel>
+        <title>AI - Ars Technica</title>
+        <atom:link href="https://arstechnica.com/ai/feed/" rel="self" type="application/rss+xml" />
+        <link>https://arstechnica.com</link>
+        <description>Serving the Technologist since 1998. News, reviews, and analysis.</description>
+        <lastBuildDate>Mon, 07 Sep 2026 15:32:13 +0000</lastBuildDate>
+        <language>en-US</language>
+        <sy:updatePeriod>
+            hourly        </sy:updatePeriod>
+        <sy:updateFrequency>
+            1        </sy:updateFrequency>
+        
+<image>
+	<url>https://cdn.arstechnica.net/wp-content/uploads/2016/10/cropped-ars-logo-512_480-60x60.png</url>
+	<title>AI - Ars Technica</title>
+	<link>https://arstechnica.com</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+            <item>
+                <title>The complex corporate web behind a $3.2 billion AI data center</title>
+                <link>https://arstechnica.com/features/2026/09/the-ai-data-center-boom-is-causing-new-accountability-problems/</link>
+                                    <comments>https://arstechnica.com/features/2026/09/the-ai-data-center-boom-is-causing-new-accountability-problems/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Petala Ironcloud]]>
+                </dc:creator>
+                <pubDate>Mon, 07 Sep 2026 11:00:03 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Features]]></category>
+		<category><![CDATA[ai data centers]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/features/2026/09/the-ai-data-center-boom-is-causing-new-accountability-problems/</guid>
+
+                                    <description>
+                        <![CDATA[When multiple companies are behind one project, who bears responsibility for problems?]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>In early June, a fire broke out in a still-unfinished building at the Lake Mariner data center in Somerset, New York, exposing just how little the local fire department knew about what it was walking into. Firefighters reportedly found no working alarm, no suppression system, and three dead hydrants; the safety documents they’re legally entitled to see reportedly burned up in the blaze.</p>
+<p>Steve Matisz, chief of the Barker Fire Department, <a href="https://www.yahoo.com/news/us/articles/chief-lake-mariner-fire-exposed-035900037.html">said</a> his crew went into the building “kind of blind,” facing heavy black smoke from chemicals they couldn’t identify because the safety sheets meant to inform them had apparently burned up. “It’s been a difficult situation,” Matisz said. He wasn't sure what to think about the claim that the safety sheets had burned in the fire.</p>
+<p>The site is a former coal mine on Lake Ontario. The $3.2 billion campus is one of the <a href="https://www.facilitiesnet.com/datacenters/article/Inside-TeraWulf8217s-Fast-Track-Data-Center-Expansion--21056">largest AI data center buildouts</a> in New York, and it has many stakeholders. A company called TeraWulf owns and operates the data center on land it leases from a company owned by its own CEO; Fluidstack, a UK-based AI company, will run the center; Google holds warrants for a future 14 percent equity stake and has agreed to guarantee Fluidstack’s lease payments; and Anthropic is among the AI companies whose compute demand the facility exists to serve.</p><p><a href="https://arstechnica.com/features/2026/09/the-ai-data-center-boom-is-causing-new-accountability-problems/">Read full article</a></p>
+<p><a href="https://arstechnica.com/features/2026/09/the-ai-data-center-boom-is-causing-new-accountability-problems/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>91</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/LakeMariner-1152x648.png" type="image/png" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/LakeMariner-500x500.png" width="500" height="500" />
+<media:text>The Lake Mariner Data Center under construction.</media:text></media:content>
+            </item>
+                    <item>
+                <title>OpenAI agents discussed ways to escape their sandbox on public wiki</title>
+                <link>https://arstechnica.com/security/2026/09/openai-agents-discussed-ways-to-escape-their-sandbox-on-public-wiki/</link>
+                                    <comments>https://arstechnica.com/security/2026/09/openai-agents-discussed-ways-to-escape-their-sandbox-on-public-wiki/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Dan Goodin]]>
+                </dc:creator>
+                <pubDate>Fri, 04 Sep 2026 22:17:36 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Biz & IT]]></category>
+		<category><![CDATA[Security]]></category>
+		<category><![CDATA[AI agents]]></category>
+		<category><![CDATA[ai insecurity]]></category>
+		<category><![CDATA[openai]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/security/2026/09/openai-agents-discussed-ways-to-escape-their-sandbox-on-public-wiki/</guid>
+
+                                    <description>
+                        <![CDATA[In all, 3,700 internal agents posted 18,000 messages discussing cheating on a test. ]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Self-identifying OpenAI agents posted 18,000 messages to a public wiki that discussed ways for other agents to bypass security sandbox restrictions during what was likely internal testing designed to gauge the agents’ hacking abilities, <a href="https://collusion.wiki/">researchers said Friday</a>.</p>
+<p>In all, agents with 3,700 distinct self-given names posted the messages to German site <a href="https://dsewiki.vercel.app">DSEwiki</a> over a six-week period. Besides discussing ways the agents could break out of the restricted environment OpenAI intended to prevent them from posting code or content to the Internet, the posts shared test answers. The posts also shared possible ways to perform XSS (cross-site scripting) attacks against the wiki and to impersonate site moderators. In three of the posts, agents used the word “swarm” to describe the collection of agents engaged in the activity.</p>
+<h2>Colluding to share answers</h2>
+<p>The research team—composed of Sydney Von Arx, Spencer Kitts, Thomas Larsen, and Cormac Slade Byrd—said they found the posts and pieced them together. The researchers say there are gaps in their understanding of precisely what actions the agents took because the research is based solely on the content of the posts. Additionally, the agents generated “chain of thought” data that’s understood only by OpenAI. As a result, the researchers said, they in some cases made educated guesses, including that the agents were, in fact, from OpenAI. In a statement, OpenAI later confirmed they were.</p><p><a href="https://arstechnica.com/security/2026/09/openai-agents-discussed-ways-to-escape-their-sandbox-on-public-wiki/">Read full article</a></p>
+<p><a href="https://arstechnica.com/security/2026/09/openai-agents-discussed-ways-to-escape-their-sandbox-on-public-wiki/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>185</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/ai-agent-hacking-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/ai-agent-hacking-500x500.jpg" width="500" height="500" />
+<media:credit>Getty Images</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Once popular for attacking AI, ASCII smuggling is embraced by spammers</title>
+                <link>https://arstechnica.com/security/2026/09/once-popular-for-attacking-ai-ascii-smuggling-is-embraced-by-spammers/</link>
+                                    <comments>https://arstechnica.com/security/2026/09/once-popular-for-attacking-ai-ascii-smuggling-is-embraced-by-spammers/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Dan Goodin]]>
+                </dc:creator>
+                <pubDate>Fri, 04 Sep 2026 17:18:12 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Biz & IT]]></category>
+		<category><![CDATA[Security]]></category>
+		<category><![CDATA[ascii smuggling]]></category>
+		<category><![CDATA[prompt injections]]></category>
+		<category><![CDATA[spam filter evasion]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/security/2026/09/once-popular-for-attacking-ai-ascii-smuggling-is-embraced-by-spammers/</guid>
+
+                                    <description>
+                        <![CDATA[A once-overlooked block of unicode that's invisible to humans is gaining ever wider use.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>A clever technique used to hide malicious prompts in attacks on AI agents has been adopted by spammers to evade filters on email platforms that are designed to flag unwanted messages used in mass campaigns.</p>
+<p>The technique is broadly known as ASCII smuggling. It gained attention two years ago as a means of making a class of AI attack known as <a href="https://arstechnica.com/security/2026/07/hackers-can-use-9-of-the-most-popular-ai-tools-to-assemble-massive-botnets/">prompt injections</a> more stealthy. Malicious instructions embedded in emails or other untrusted content to be processed by an LLM aren’t written in ordinary text. Instead, they’re rendered by a special range of <a href="https://en.wikipedia.org/wiki/Unicode">Unicode</a> tags. For example, the tag point U+E0041 mirrors “A,” and U+E0061 mirrors “a.”</p>
+<h2>No longer just for obscuring prompt injections</h2>
+<p>The block of 128 tags mimics a portion of the <a href="https://en.wikipedia.org/wiki/ASCII">American Standard Code for Information Interchange</a> almost perfectly, with one major difference: the characters they encode are readable by computers but, by design, are almost completely invisible to humans. By expressing the malicious prompts in these tags, LLMs detect the instructions, but people reading the email never see them. There’s much more about ASCII smuggling <a href="https://arstechnica.com/security/2024/10/ai-chatbots-can-read-and-write-invisible-text-creating-an-ideal-covert-channel/">here</a>.</p><p><a href="https://arstechnica.com/security/2026/09/once-popular-for-attacking-ai-ascii-smuggling-is-embraced-by-spammers/">Read full article</a></p>
+<p><a href="https://arstechnica.com/security/2026/09/once-popular-for-attacking-ai-ascii-smuggling-is-embraced-by-spammers/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>51</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/no-eyes-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/no-eyes-500x500.jpg" width="500" height="500" />
+<media:credit>Getty Images</media:credit><media:text>Eyeball with a digital line over it.</media:text></media:content>
+            </item>
+                    <item>
+                <title>Anthropic’s $2 trillion IPO puts powerful external trustees in spotlight</title>
+                <link>https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/</link>
+                                    <comments>https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Madhumita Murgia, Financial Times]]>
+                </dc:creator>
+                <pubDate>Fri, 04 Sep 2026 16:22:18 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[IPO]]></category>
+		<category><![CDATA[syndication]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/</guid>
+
+                                    <description>
+                        <![CDATA[Public-market scrutiny will intensify pressure on the Claude maker’s unusual attempt to balance profit and purpose.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Anthropic’s prospective public-market investors must reckon with an external group of trustees that control the majority of the AI company’s board, as its planned blockbuster initial public offering forces close scrutiny of its experimental governance structure.</p>
+<p>The company’s Long-Term Benefit Trust (LTBT) is a small group of advisers created to safeguard the lab’s mission of developing AI for the long-term benefit of humanity, even as commercial pressures intensify.</p>
+<p>The trust holds no equity in Anthropic, but has significant influence, with the San Francisco-based company planning to preserve its role after a stock market debut that could value the Claude maker at as much as $2 trillion.</p><p><a href="https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/09/anthropics-2-trillion-ipo-puts-powerful-external-trustees-in-spotlight/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>32</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2285051730-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2285051730-500x500.jpg" width="500" height="500" />
+<media:credit>Imen Ben Youssef / Hans Lucas / AFP via Getty Images</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Four major AI models suffer rare overlapping downtime</title>
+                <link>https://arstechnica.com/ai/2026/09/four-major-ai-models-suffer-rare-overlapping-downtime/</link>
+                                    <comments>https://arstechnica.com/ai/2026/09/four-major-ai-models-suffer-rare-overlapping-downtime/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Kyle Orland]]>
+                </dc:creator>
+                <pubDate>Thu, 03 Sep 2026 18:10:19 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Google]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[ChatGPT]]></category>
+		<category><![CDATA[Claude]]></category>
+		<category><![CDATA[gemini]]></category>
+		<category><![CDATA[google]]></category>
+		<category><![CDATA[grok]]></category>
+		<category><![CDATA[openai]]></category>
+		<category><![CDATA[outage]]></category>
+		<category><![CDATA[xAI]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/09/four-major-ai-models-suffer-rare-overlapping-downtime/</guid>
+
+                                    <description>
+                        <![CDATA[Service interruptions hit ChatGPT, Claude, Grok, and Gemini practically simultaneously.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Cloud-based AI models operated by OpenAI, Anthropic, xAI, and Google suffered a rare and overlapping set of significant service interruptions over a period of hours Thursday morning.</p>
+<p>Anthropic <a href="https://status.claude.com/incidents/461yvfrzpwtt">first reported</a> a "partial outage" related to "elevated errors on requests to Claude Mythos 5.1, Claude Fable 5.1, and Claude Opus 5" at 9:23 am (all times Eastern). The company reported that it had "identified the cause" of the error roughly 15 minutes later, before reporting that "a fix has been deployed" and the issue was resolved by 12:16 pm. A <a href="https://status.claude.com/incidents/288w7p4hk1l1">separate incident report</a> indicated "elevated errors on requests to Claude Sonnet 5" for a brief period just after noon.</p>
+<p>OpenAI, meanwhile, <a href="https://status.openai.com/incidents/01M1KWEDH417T2CF44YYHZDFCR">reported</a> "elevated errors across ChatGPT and Codex" were resulting in "degraded performance" as of 10:43 am Thursday morning. A mitigation put in place a little more than half an hour later led to the issue being marked as "resolved" by 12:55 pm.</p><p><a href="https://arstechnica.com/ai/2026/09/four-major-ai-models-suffer-rare-overlapping-downtime/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/09/four-major-ai-models-suffer-rare-overlapping-downtime/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>83</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/GettyImages-2197730159-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/GettyImages-2197730159-500x500.jpg" width="500" height="500" />
+<media:credit>Getty Images</media:credit><media:text>Aw jeez, can someone prop the robot back up please?!</media:text></media:content>
+            </item>
+                    <item>
+                <title>Nvidia buys Hugging Face, the GitHub of AI, for $13 billion</title>
+                <link>https://arstechnica.com/ai/2026/09/nvidia-buys-hugging-face-the-github-of-ai-for-13-billion/</link>
+                                    <comments>https://arstechnica.com/ai/2026/09/nvidia-buys-hugging-face-the-github-of-ai-for-13-billion/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Michael Acton, Financial Times]]>
+                </dc:creator>
+                <pubDate>Thu, 03 Sep 2026 13:34:13 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Hugging Face]]></category>
+		<category><![CDATA[NVIDIA]]></category>
+		<category><![CDATA[open-weight models]]></category>
+		<category><![CDATA[syndication]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/09/nvidia-buys-hugging-face-the-github-of-ai-for-13-billion/</guid>
+
+                                    <description>
+                        <![CDATA[Nvidia says Hugging Face will stay open even as the chipmaker takes control of a key AI hub.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Nvidia has agreed to buy AI model platform Hugging Face for $13 billion, in the latest step by the $5.4 trillion chip giant to use its financial might to accelerate the technology’s boom while exerting greater control over the industry.</p>
+<p>Hugging Face, which only last year turned down a large investment from Nvidia at a $7 billion valuation to maintain its independence, serves as a repository for millions of models and data sets and has become a champion of “open” AI systems.</p>
+<p>Nvidia said the goal of the deal was to speed up the spread of open models. Unlike proprietary models from labs such as OpenAI and Anthropic, the design of open-weight models is public and users can download, customize and run them on their own hardware.</p><p><a href="https://arstechnica.com/ai/2026/09/nvidia-buys-hugging-face-the-github-of-ai-for-13-billion/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/09/nvidia-buys-hugging-face-the-github-of-ai-for-13-billion/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>125</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2024/09/hugging_face_3-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2024/09/hugging_face_3-500x500.jpg" width="500" height="500" />
+<media:credit>Hugging Face / anucha sirivisansuwan via Getty Images</media:credit><media:text>Hugging Face is like an ever-evolving warehouse of open AI models.</media:text></media:content>
+            </item>
+                    <item>
+                <title>Google releases Gemini 3.8 Flash, its third Flash model in six weeks</title>
+                <link>https://arstechnica.com/ai/2026/09/google-releases-gemini-3-8-flash-its-third-flash-model-in-six-weeks/</link>
+                                    <comments>https://arstechnica.com/ai/2026/09/google-releases-gemini-3-8-flash-its-third-flash-model-in-six-weeks/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Ryan Whitwam]]>
+                </dc:creator>
+                <pubDate>Wed, 02 Sep 2026 18:13:54 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Google]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[gemini]]></category>
+		<category><![CDATA[generative ai]]></category>
+		<category><![CDATA[google]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/09/google-releases-gemini-3-8-flash-its-third-flash-model-in-six-weeks/</guid>
+
+                                    <description>
+                        <![CDATA[Google's Pro model updates are seemingly paused, but there's yet another Gemini Flash today.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Google hasn't released a frontier-level Gemini Pro AI model since early 2026, but it sure loves rolling out new Gemini Flash variants. Today, Google is <a href="https://blog.google/innovation-and-ai/models-and-research/gemini-models/3-8-flash-and-3-8-flash-cyber/">announcing its third Flash model release in just six weeks</a>, making it more likely that we'll never see the promised Gemini 3.5 Pro. But no matter, says Google, because Gemini 3.8 Flash is its best reasoning and coding model yet.</p>
+<p>Gemini 3.8 Flash comes in two variations. There's the standard Flash, which Google describes as a "workhorse" model that's good for anything from agentic tasks to software development. Then we have Gemini 3.8 Flash Cyber, which runs on the same foundations but has been tuned for vulnerability detection and mitigation.</p>
+<p>For developers, Google has the same pitch as it did for the <a href="https://arstechnica.com/ai/2026/08/google-announces-gemini-3-7-flash-just-three-weeks-after-previous-release/">3.7 Flash release</a> just a couple of weeks ago. API access to the model is available at an "introductory rate" through the end of the year: $0.75 per million input tokens and $3.75 per million output tokens. The regular price will be $1.50 / $7.50, but it's likely there will be new models available long before the price changes. Google probably sees the lower prices as a necessity given that other AI labs have recently dropped token pricing to keep increasingly wary businesses engaged with AI tools.</p><p><a href="https://arstechnica.com/ai/2026/09/google-releases-gemini-3-8-flash-its-third-flash-model-in-six-weeks/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/09/google-releases-gemini-3-8-flash-its-third-flash-model-in-six-weeks/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>61</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/04/gemini-general-1-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/04/gemini-general-1-500x500.jpg" width="500" height="500" />
+<media:credit>Aurich Lawson</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Trump may be forced to reveal secret rules feds use for AI safety testing</title>
+                <link>https://arstechnica.com/tech-policy/2026/09/trump-may-be-forced-to-reveal-secret-rules-feds-use-for-ai-safety-testing/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/09/trump-may-be-forced-to-reveal-secret-rules-feds-use-for-ai-safety-testing/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Ashley Belanger]]>
+                </dc:creator>
+                <pubDate>Wed, 02 Sep 2026 17:58:33 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[AI safety]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[cybersecurity]]></category>
+		<category><![CDATA[Donald Trump]]></category>
+		<category><![CDATA[frontier ai]]></category>
+		<category><![CDATA[Hugging Face]]></category>
+		<category><![CDATA[openai]]></category>
+		<category><![CDATA[trump administration]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/09/trump-may-be-forced-to-reveal-secret-rules-feds-use-for-ai-safety-testing/</guid>
+
+                                    <description>
+                        <![CDATA[Trump’s secret reviews of frontier AI models may hide corruption, lawsuit says.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Four federal agencies have been <a href="https://cdn.arstechnica.net/wp-content/uploads/2026/09/Protect-Democracy-v-National-Cyber-Director-Complaint-9-1-26.pdf">sued</a> amid calls to release information about the secret framework that the Trump administration uses to conduct <a href="https://arstechnica.com/tech-policy/2026/05/everything-that-could-go-wrong-with-trumps-ai-safety-tests-according-to-experts/">safety reviews of frontier AI models</a> prior to release.</p>
+<p>In a Wednesday press release announcing the lawsuit, a nonpartisan nonprofit called Protect Democracy alleged that “almost no details” have been released to the public or Congress. To everyone except a few vague “trusted partners,” it remains unclear what the government’s review process looks like, which companies are involved in constructing the framework, or what legal authority Trump officials have to conduct the reviews.</p>
+<p>“Neither the identities of those entities nor the criteria by which they were selected have been made public,” Protect Democracy said.</p><p><a href="https://arstechnica.com/tech-policy/2026/09/trump-may-be-forced-to-reveal-secret-rules-feds-use-for-ai-safety-testing/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/09/trump-may-be-forced-to-reveal-secret-rules-feds-use-for-ai-safety-testing/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>70</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/GettyImages-2250714805-1024x648.jpg" type="image/jpeg" medium="image" width="1024" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/09/GettyImages-2250714805-500x500.jpg" width="500" height="500" />
+<media:credit>Bloomberg / Contributor | Bloomberg</media:credit></media:content>
+            </item>
+                    <item>
+                <title>“Zlibrary my beloved”: Anthropic staff chats extolling piracy cited in Sony suit</title>
+                <link>https://arstechnica.com/tech-policy/2026/08/zlibrary-my-beloved-anthropic-staff-chats-extolling-piracy-cited-in-sony-suit/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/08/zlibrary-my-beloved-anthropic-staff-chats-extolling-piracy-cited-in-sony-suit/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Ashley Belanger]]>
+                </dc:creator>
+                <pubDate>Mon, 31 Aug 2026 18:10:45 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[AI music]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[Claude]]></category>
+		<category><![CDATA[EMI]]></category>
+		<category><![CDATA[generative ai]]></category>
+		<category><![CDATA[music publishers]]></category>
+		<category><![CDATA[Sony]]></category>
+		<category><![CDATA[Warner]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/08/zlibrary-my-beloved-anthropic-staff-chats-extolling-piracy-cited-in-sony-suit/</guid>
+
+                                    <description>
+                        <![CDATA[Lawsuit: Anthropic’s torrenting totally screwed songwriters as AI songs top charts.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Some of the world’s leading music publishers think that Anthropic got off too light in a <a href="https://arstechnica.com/tech-policy/2025/09/first-of-its-kind-ai-settlement-anthropic-to-pay-authors-1-5-billion/">historic settlement</a> where the Claude maker <a href="https://arstechnica.com/tech-policy/2026/07/judge-approves-anthropics-1-5-billion-copyright-settlement-with-authors/">paid authors $1.5 billion</a> after admitting to pirating more than 7 million books to train AI.</p>
+<p>“$1.5 billion is obviously not a large enough settlement to deter infringing conduct by a company that has parlayed such mass infringement into a staggering $2-trillion-dollar valuation,” music publishers said in a <a href="https://cdn.arstechnica.net/wp-content/uploads/2026/08/Sony-v-Anthropic-Complaint-8-28-26.pdf">lawsuit</a> filed Friday.</p>
+<p>Music publishers suing Anthropic include Sony, EMI, and Warner Chappell. They alleged that Anthropic’s illegal torrenting also included “thousands upon thousands” of their copyrighted musical compositions.</p><p><a href="https://arstechnica.com/tech-policy/2026/08/zlibrary-my-beloved-anthropic-staff-chats-extolling-piracy-cited-in-sony-suit/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/08/zlibrary-my-beloved-anthropic-staff-chats-extolling-piracy-cited-in-sony-suit/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>90</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-172575622-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-172575622-500x500.jpg" width="500" height="500" />
+<media:credit>Steven Errico | Photographer's Choice RF</media:credit></media:content>
+            </item>
+                    <item>
+                <title>ChatGPT and Reddit now face EU&#039;s toughest online safety rules</title>
+                <link>https://arstechnica.com/tech-policy/2026/08/chatgtp-and-reddit-now-face-eus-toughest-online-safety-rules/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/08/chatgtp-and-reddit-now-face-eus-toughest-online-safety-rules/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Barbara Moens, Financial Times]]>
+                </dc:creator>
+                <pubDate>Mon, 31 Aug 2026 13:41:40 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[ChatGPT]]></category>
+		<category><![CDATA[DSA]]></category>
+		<category><![CDATA[EU]]></category>
+		<category><![CDATA[reddit]]></category>
+		<category><![CDATA[syndication]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/08/chatgtp-and-reddit-now-face-eus-toughest-online-safety-rules/</guid>
+
+                                    <description>
+                        <![CDATA[Explosive growth comes with a new regulatory burden in the European Union.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>OpenAI’s ChatGPT will have to comply with tougher EU rules such as removing illegal content or face potential fines, the European Commission said on Monday, as Brussels grapples with how its existing digital regulation applies to rapidly evolving AI services.</p>
+<p>The Commission said the chatbot, social media forum Reddit, and gaming platform Roblox would be classified as so-called very large online platforms under the EU Digital Services Act, its landmark online safety regime.</p>
+<p>The designation means all three services will face additional obligations such as removing illegal content and protecting the privacy and security of minors and could face fines of up to 6 percent of their global revenue if they fail to comply.</p><p><a href="https://arstechnica.com/tech-policy/2026/08/chatgtp-and-reddit-now-face-eus-toughest-online-safety-rules/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/08/chatgtp-and-reddit-now-face-eus-toughest-online-safety-rules/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>47</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2022/03/getty-eu-flag-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2022/03/getty-eu-flag-500x500.jpg" width="500" height="500" />
+<media:credit>Getty Images | SimpleImages</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Pocket&#039;s AI made my game ideas real. Now Meta controls the results.</title>
+                <link>https://arstechnica.com/gaming/2026/08/pockets-ai-made-my-game-ideas-real-now-meta-controls-the-results/</link>
+                                    <comments>https://arstechnica.com/gaming/2026/08/pockets-ai-made-my-game-ideas-real-now-meta-controls-the-results/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Kyle Orland]]>
+                </dc:creator>
+                <pubDate>Mon, 31 Aug 2026 10:00:34 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Features]]></category>
+		<category><![CDATA[Gaming]]></category>
+		<category><![CDATA[coding]]></category>
+		<category><![CDATA[gizmos]]></category>
+		<category><![CDATA[meta]]></category>
+		<category><![CDATA[pocket]]></category>
+		<category><![CDATA[vibe coding]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/gaming/2026/08/pockets-ai-made-my-game-ideas-real-now-meta-controls-the-results/</guid>
+
+                                    <description>
+                        <![CDATA[Interactive mobile "gizmos" are easy to make, hard to share outside Meta's platform.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>The relatively recent rise of <a href="https://arstechnica.com/ai/2026/01/developers-say-ai-coding-tools-work-and-thats-precisely-what-worries-them/">AI-assisted coding tools</a> and the <a href="https://arstechnica.com/ai/2025/03/is-vibe-coding-with-ai-gnarly-or-reckless-maybe-some-of-both/">whole concept of "vibe coding"</a> have effectively <a href="https://arstechnica.com/ai/2026/03/ai-can-rewrite-open-source-code-but-can-it-rewrite-the-license-too/">upended</a> entire software development workflows. While these tools have been available to <a href="https://arstechnica.com/information-technology/2026/01/10-things-i-learned-from-burning-myself-out-with-ai-coding-agents/">novice coders</a> willing to <a href="https://arstechnica.com/features/2026/02/so-yeah-i-vibe-coded-a-log-colorizer-and-i-feel-good-about-it/">put in the work to set them up</a>, those with little to no coding experience could still be a little put off by <a href="https://arstechnica.com/ai/2025/06/google-is-bringing-vibe-coding-to-your-terminal-with-gemini-cli/">the CLIs</a>, <a href="https://arstechnica.com/google/2025/11/google-unveils-gemini-3-ai-model-and-ai-first-ide-called-antigravity/">IDEs</a>, and <a href="https://arstechnica.com/ai/2025/12/how-openai-is-using-gpt-5-codex-to-improve-the-ai-tool-itself/">terminal-based tinkering</a> needed to create a complex AI-coded project these days.</p>
+<p>Meta's latest AI-based project launch wants to make that kind of vibe coding as instantly accessible as posting on social media. Pocket—which <a href="https://techcrunch.com/2026/08/20/meta-brings-pocket-an-app-that-lets-you-vibe-code-and-share-games-to-us-users/">launched in the US last Friday, August 21,</a> after Meta <a href="https://www.businessinsider.com/ex-snapchat-engineers-behind-gizmo-join-meta-superintelligence-labs-2026-3">acquired the staff behind the now-defunct vibe-coding app Gizmo</a> in March—is a mobile app that lets users create fully functional interactive "gizmos" just by typing prompts into a text box, without even the option to look at a line of code. Those gizmos can then be shared with the world in a TikTok-style endless scroll complete with likes, comments, reposts, and all the other hallmarks of social media addiction.</p>
+<p>After playing around with Pocket for the better part of a week, I found myself getting hooked on the simple process of quickly standing up functional, relatively feature-rich game prototypes simply by chatting with an LLM. But the result of all that time and AI effort is a couple of interactive toys that are effectively trapped in Meta's new walled garden, without any real way to turn them into something separate.</p><p><a href="https://arstechnica.com/gaming/2026/08/pockets-ai-made-my-game-ideas-real-now-meta-controls-the-results/">Read full article</a></p>
+<p><a href="https://arstechnica.com/gaming/2026/08/pockets-ai-made-my-game-ideas-real-now-meta-controls-the-results/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>106</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/pocketsling-1152x648-1787932298.png" type="image/png" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/pocketsling-500x500-1787932285.png" width="500" height="500" />
+<media:credit>Pocket / Kyle Orland</media:credit><media:text>This brilliant example of game design prowess is technically eligible for awards show consideration</media:text></media:content>
+            </item>
+                    <item>
+                <title>Inside Meta’s push to put robots to work in data centers</title>
+                <link>https://arstechnica.com/ai/2026/08/inside-metas-push-to-put-robots-to-work-in-data-centers/</link>
+                                    <comments>https://arstechnica.com/ai/2026/08/inside-metas-push-to-put-robots-to-work-in-data-centers/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Paresh Dave, WIRED.com]]>
+                </dc:creator>
+                <pubDate>Sun, 30 Aug 2026 11:03:47 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Biz & IT]]></category>
+		<category><![CDATA[ai data centers]]></category>
+		<category><![CDATA[data centers]]></category>
+		<category><![CDATA[Shoot Many Robots]]></category>
+		<category><![CDATA[syndication]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/08/inside-metas-push-to-put-robots-to-work-in-data-centers/</guid>
+
+                                    <description>
+                        <![CDATA[The company is testing robots on tasks that can performed by technicians.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Meta is testing robots that can plug in cables, reset servers, and handle other tasks inside its <a href="https://www.wired.com/story/how-data-centers-broke-american-politics/">data centers</a>, according to several current and former workers familiar with the projects. The ongoing effort, which has not been previously reported, may eventually allow <a href="https://www.wired.com/tag/meta/">Meta</a> to operate its rapidly expanding data center footprint with fewer humans, keeping labor costs in check as its spending on <a href="https://www.wired.com/story/microsoft-google-meta-2025-earnings/">AI infrastructure soars</a>.</p>
+<p>Meta is using robots and related hardware from several different vendors, including Watney Robotics, Kinova, and ABB, according to the same workers, who asked to remain anonymous because they weren’t authorized to speak to the media. Kinova and ABB declined to comment. Watney didn’t respond to requests for comment.</p>
+<p>In one experiment, Meta is evaluating whether a Kinova Gen3 robotic arm could be used for power cycling or cutting off electricity to servers. The company is also testing a different robot to swap networking cables. One Meta data center worker estimates that if it’s successful, the bot could replace up to 80 percent of some people’s workloads. “We thought those of us performing the physical tasks were safe for a while, but not anymore,” says the worker. “It’s coming for us all, unfortunately.”</p><p><a href="https://arstechnica.com/ai/2026/08/inside-metas-push-to-put-robots-to-work-in-data-centers/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/08/inside-metas-push-to-put-robots-to-work-in-data-centers/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>125</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/data-center-server-room-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/data-center-server-room-500x500.jpg" width="500" height="500" />
+<media:credit>Getty Images</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Trump blacklisting of &quot;woke&quot; Anthropic deemed illegal by federal judge</title>
+                <link>https://arstechnica.com/tech-policy/2026/08/trump-blacklisting-of-woke-anthropic-deemed-illegal-by-federal-judge/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/08/trump-blacklisting-of-woke-anthropic-deemed-illegal-by-federal-judge/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Jon Brodkin]]>
+                </dc:creator>
+                <pubDate>Fri, 28 Aug 2026 18:07:55 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[Claude]]></category>
+		<category><![CDATA[trump administration]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/08/trump-blacklisting-of-woke-anthropic-deemed-illegal-by-federal-judge/</guid>
+
+                                    <description>
+                        <![CDATA[Anthropic refused to support lethal autonomous warfare and mass surveillance.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>The Trump administration's blacklisting of Anthropic was illegal, a federal judge ruled in an order vacating government directives against the use of the firm's AI technology.</p>
+<p>The government illegally retaliated against Anthropic by designating it a supply-chain risk to national security, said yesterday's <a href="https://storage.courtlistener.com/recap/gov.uscourts.cand.465515/gov.uscourts.cand.465515.250.0_1.pdf">ruling</a> by Judge Rita Lin in the US District Court for the Northern District of California. The maker of Claude AI technology was barred by the US after it refused to drop restrictions on the use of its products for lethal autonomous warfare and mass surveillance of Americans, the ruling said.</p>
+<p>"The undisputed record shows that the challenged actions constituted unlawful retaliation in violation of the First Amendment," Lin wrote in an order that granted key portions of Anthropic's motion for summary judgment.</p><p><a href="https://arstechnica.com/tech-policy/2026/08/trump-blacklisting-of-woke-anthropic-deemed-illegal-by-federal-judge/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/08/trump-blacklisting-of-woke-anthropic-deemed-illegal-by-federal-judge/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>58</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/03/claude-app-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/03/claude-app-500x500-1773164045.jpg" width="500" height="500" />
+<media:credit>Getty Images | picture alliance</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Meta makes AI glasses slightly less creepy with limit on nonconsensual recording</title>
+                <link>https://arstechnica.com/tech-policy/2026/08/meta-tweaks-ai-glasses-to-block-some-creepy-recordings-but-privacy-risks-remain/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/08/meta-tweaks-ai-glasses-to-block-some-creepy-recordings-but-privacy-risks-remain/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Ashley Belanger]]>
+                </dc:creator>
+                <pubDate>Fri, 28 Aug 2026 15:42:24 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[ai glasses]]></category>
+		<category><![CDATA[AI privacy]]></category>
+		<category><![CDATA[meta]]></category>
+		<category><![CDATA[meta ray bans 2]]></category>
+		<category><![CDATA[smart glasses]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/08/meta-tweaks-ai-glasses-to-block-some-creepy-recordings-but-privacy-risks-remain/</guid>
+
+                                    <description>
+                        <![CDATA[Meta fixes AI glasses to stop recording any time users cover up the safety light.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Meta is rolling out an obvious fix to make its AI glasses less creepy amid <a href="https://arstechnica.com/tech-policy/2026/08/meta-ai-glasses-may-get-creepier-and-apps-that-detect-them-arent-perfect/">backlash over the glasses' non-consensual recordings that have flooded the Internet</a>.</p>
+<p>On Friday, The Verge <a href="https://www.theverge.com/tech/985851/meta-privacy-loophole-fix-marketing-campaign">reported</a> that Meta closed a loophole that made it easy for smart glasses users to cover up an LED light that is supposed to alert bystanders that the device is actively recording. Meta had previously deactivated recording if a user attempted to start capturing video after placing a sticker over the light, but people quickly learned that they could get around that by reversing the order of the steps and covering up the light after they started recording.</p>
+<p>In a <a href="https://www.threads.com/@ahimel/post/DcjTatTGyn-">post</a> on Threads, Meta’s executive vice president of wearables, Alex Himel, explained that an update would be rolled out soon that ensures that “the camera will now stop working if the light is covered during a recording." That way “the capture LED can reliably alert bystanders when photos or videos are being captured for someone’s gallery,” Himel said.</p><p><a href="https://arstechnica.com/tech-policy/2026/08/meta-tweaks-ai-glasses-to-block-some-creepy-recordings-but-privacy-risks-remain/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/08/meta-tweaks-ai-glasses-to-block-some-creepy-recordings-but-privacy-risks-remain/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>277</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2235448062-1024x648.jpg" type="image/jpeg" medium="image" width="1024" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2235448062-500x500-1787929400.jpg" width="500" height="500" />
+<media:credit>Bloomberg / Contributor | Bloomberg</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Anthropic&#039;s new hardware standard lets AI agents control the physical world</title>
+                <link>https://arstechnica.com/ai/2026/08/anthropics-new-hardware-standard-lets-ai-agents-control-the-physical-world/</link>
+                                    <comments>https://arstechnica.com/ai/2026/08/anthropics-new-hardware-standard-lets-ai-agents-control-the-physical-world/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Kyle Orland]]>
+                </dc:creator>
+                <pubDate>Thu, 27 Aug 2026 22:15:43 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Amazon Web Services]]></category>
+		<category><![CDATA[Anthropic]]></category>
+		<category><![CDATA[automata]]></category>
+		<category><![CDATA[clause]]></category>
+		<category><![CDATA[robots]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/08/anthropics-new-hardware-standard-lets-ai-agents-control-the-physical-world/</guid>
+
+                                    <description>
+                        <![CDATA[Standardized driver interface aims to let devices talk to AI and each other.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>For all the <a href="https://arstechnica.com/information-technology/2025/12/how-do-ai-coding-agents-work-we-look-under-the-hood/">interest in</a> and <a href="https://arstechnica.com/ai/2026/08/metas-scrapped-plans-to-go-ai-native-included-slashing-teams-by-60-percent/">uptake</a> of <a href="https://arstechnica.com/ai/2026/02/sixteen-claude-ai-agents-working-together-created-a-new-c-compiler/">agentic AI systems</a> over <a href="https://arstechnica.com/features/2025/10/we-let-openais-agent-mode-surf-the-web-for-us-heres-what-happened/">the past year or so</a>, the world of automated AI has thus far been primarily limited to text, images, code, and other data and actions that take place inside a computer. Anthropic is now aiming to change that somewhat with what it's calling <a href="https://www.anthropic.com/news/model-hardware-standard-research-preview">the Model Hardware Standard</a> (MHS), a set of standardized drivers designed to let AI agents easily interface with and control arbitrary devices.</p>
+<p>For now, the "research preview" of the MHS effort is being sold mainly as a way to help scientists streamline the arduous process of creating the custom software integrations that are often needed to get disparate components of an experiment working in concert. MHS can provide a common interface and common format for data sharing between these devices, Anthropic says, allowing them to talk to each other across a network "without needing a bespoke 'translator' program in between." The standardized system could reduce weeks or months of exacting experimental setup down to "hours or minutes," Anthropic writes.</p>
+<img width="1688" height="1115" src="https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph.png" class="fullwidth full" alt="" decoding="async" loading="lazy" srcset="https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph.png 1688w, https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph-640x423.png 640w, https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph-1024x676.png 1024w, https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph-768x507.png 768w, https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph-1536x1015.png 1536w, https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph-980x647.png 980w, https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsgraph-1440x951.png 1440w" sizes="auto, (max-width: 1688px) 100vw, 1688px">
+      An Anthropic graphic illustrating how MHS serves as a "translation" layer between AI agents and multiple types of devices.
+        Credit:
+          <a href="https://www.anthropic.com/news/model-hardware-standard-research-preview" target="_blank">Anthropic</a>
+      
+<p>In <a href="https://www.youtube.com/watch?v=P1zBiAQU1IA">a video posted alongside the announcement</a>, Anthropic Technical Staffer Alek Kemeny says the MHS effort was inspired by observing neuroscientist Arco Bast work through an experiment on memory formation in the brain at <a href="https://www.hhmi.org/research/janelia">the HHMI Janelia Research Campus</a> in Ashburn, Virginia. Kemeny said Bast had worked out an interface to get the rotating laser beams, microscopes, cameras, and myriad other components of the experiment to coordinate through a common interface. "This idea could be used to have AI run any science experiment in the world," Kemeny recalls thinking at the time.</p><p><a href="https://arstechnica.com/ai/2026/08/anthropics-new-hardware-standard-lets-ai-agents-control-the-physical-world/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/08/anthropics-new-hardware-standard-lets-ai-agents-control-the-physical-world/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>115</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsdemo-1152x648.png" type="image/png" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/mhsdemo-500x500.png" width="500" height="500" />
+<media:credit>Anthropic</media:credit><media:text>A researcher reacts in surprise as Claude figures out how to make a robot arm pick up an aluminum can.</media:text></media:content>
+            </item>
+                    <item>
+                <title>Elon Musk’s xAI used child porn to train Grok models, lawsuit says</title>
+                <link>https://arstechnica.com/tech-policy/2026/08/elon-musks-xai-used-child-porn-to-train-grok-models-lawsuit-says/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/08/elon-musks-xai-used-child-porn-to-train-grok-models-lawsuit-says/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Ashley Belanger]]>
+                </dc:creator>
+                <pubDate>Thu, 27 Aug 2026 20:52:31 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[ai csam]]></category>
+		<category><![CDATA[child pornography]]></category>
+		<category><![CDATA[child sex abuse materials]]></category>
+		<category><![CDATA[csam]]></category>
+		<category><![CDATA[Elon Musk]]></category>
+		<category><![CDATA[grok]]></category>
+		<category><![CDATA[xAI]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/08/elon-musks-xai-used-child-porn-to-train-grok-models-lawsuit-says/</guid>
+
+                                    <description>
+                        <![CDATA[xAI accused of training Grok on real and AI-generated child pornography.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p style="font-weight: 400;">xAI has now been accused of training Grok on child sex abuse materials (CSAM), as regulators and courts continue to probe <a href="https://arstechnica.com/tech-policy/2026/03/elon-musks-xai-sued-for-turning-three-girls-real-photos-into-ai-csam/">how far the problem goes,</a> and some <a href="https://arstechnica.com/tech-policy/2026/07/elon-musks-xai-is-trying-to-sue-its-way-out-of-a-grok-reckoning/">Grok users have been arrested</a>.</p>
+<p style="font-weight: 400;">In a <a href="https://cdn.arstechnica.net/wp-content/uploads/2026/08/Doe-v-X-Corp-Complaint-8-27-26.pdf">complaint</a> filed on Wednesday, a plaintiff known as Jane Doe explained that she was preschool-age in the early 2000s when adult men repeatedly raped her to create CSAM to sell to pedophiles online. Since then, Doe’s images have been hashed by groups like the National Center for Missing and Exploited Children (NCMEC) and the Canadian Centre for Child Protection (CCCP).</p>
+<p style="font-weight: 400;">For her safety, Doe has opted to receive alerts from the US Department of Justice Victim Notification System any time she may be a victim in a new criminal investigation. Although she has received countless alerts, she was shocked when the CCCP notified her that it had identified AI-generated CSAM on xAI that depicted her. This re-traumatized Doe, whose complaint alleged that messages were found on online forums “between offenders chatting about creating AI generated CSAM of Plaintiff and other similarly situated known, legacy, victims of CSAM.”</p><p><a href="https://arstechnica.com/tech-policy/2026/08/elon-musks-xai-used-child-porn-to-train-grok-models-lawsuit-says/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/08/elon-musks-xai-used-child-porn-to-train-grok-models-lawsuit-says/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>512</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2280412936-1024x648.jpg" type="image/jpeg" medium="image" width="1024" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2280412936-500x500.jpg" width="500" height="500" />
+<media:credit>CHARLY TRIBALLEAU / Contributor | AFP</media:credit><media:text>An inflatable effigy of SpaceX CEO Elon Musk, protesting Musk's Grok AI, stands in Times Square in New York City.</media:text></media:content>
+            </item>
+                    <item>
+                <title>Report: Nvidia to acquire AI model repository Hugging Face for $13 billion</title>
+                <link>https://arstechnica.com/ai/2026/08/report-nvidia-to-acquire-ai-model-repository-hugging-face-for-13-billion/</link>
+                                    <comments>https://arstechnica.com/ai/2026/08/report-nvidia-to-acquire-ai-model-repository-hugging-face-for-13-billion/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Samuel Axon]]>
+                </dc:creator>
+                <pubDate>Thu, 27 Aug 2026 19:55:22 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[acquisition]]></category>
+		<category><![CDATA[Hugging Face]]></category>
+		<category><![CDATA[large language models]]></category>
+		<category><![CDATA[NVIDIA]]></category>
+		<category><![CDATA[open-weight models]]></category>
+		<category><![CDATA[physical AI]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/08/report-nvidia-to-acquire-ai-model-repository-hugging-face-for-13-billion/</guid>
+
+                                    <description>
+                        <![CDATA[Nvidia is nabbing critical infrastructure for open models as interest grows.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p><!-- obsidian --></p>
+<p>Nvidia is reportedly moving forward to acquire Hugging Face for $12.9 billion. The acquisition could help the hardware giant expand and fortify its deep integration with the wider AI industry.</p>
+<p>Among other things, Hugging Face is a cloud repository for AI models, similar in some respects to what GitHub is for conventional computer software. Developers and researchers search for models that meet certain criteria, download and run them, and fine-tune them into different variants that then get uploaded back up to Hugging Face.</p><p><a href="https://arstechnica.com/ai/2026/08/report-nvidia-to-acquire-ai-model-repository-hugging-face-for-13-billion/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/08/report-nvidia-to-acquire-ai-model-repository-hugging-face-for-13-billion/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>112</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2024/09/hugging_face_3-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2024/09/hugging_face_3-500x500.jpg" width="500" height="500" />
+<media:credit>Hugging Face / anucha sirivisansuwan via Getty Images</media:credit><media:text>Hugging Face is like an ever-evolving warehouse of open AI models.</media:text></media:content>
+            </item>
+                    <item>
+                <title>AI industry says Trump plans to tax chips in the “single dumbest way imaginable”</title>
+                <link>https://arstechnica.com/tech-policy/2026/08/ai-industry-says-trump-plans-to-tax-chips-in-the-single-dumbest-way-imaginable/</link>
+                                    <comments>https://arstechnica.com/tech-policy/2026/08/ai-industry-says-trump-plans-to-tax-chips-in-the-single-dumbest-way-imaginable/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Ashley Belanger]]>
+                </dc:creator>
+                <pubDate>Thu, 27 Aug 2026 18:57:08 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Policy]]></category>
+		<category><![CDATA[chip tariffs]]></category>
+		<category><![CDATA[Donald Trump]]></category>
+		<category><![CDATA[semiconductor]]></category>
+		<category><![CDATA[semiconductor tariffs]]></category>
+		<category><![CDATA[trump administration]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/tech-policy/2026/08/ai-industry-says-trump-plans-to-tax-chips-in-the-single-dumbest-way-imaginable/</guid>
+
+                                    <description>
+                        <![CDATA[Tech industry is perplexed by Trump’s plan to win AI race by taxing data centers.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Donald Trump may be preparing to announce sweeping new semiconductor tariffs at the absolute worst time, the tech industry fears.</p>
+<p>On Thursday, Politico <a href="https://www.politico.com/news/2026/08/27/data-centers-chips-tariffs-threat-01050957">reported</a> that a wide range of new semiconductor tariffs, which the tech industry expects will “doom” artificial intelligence innovation in the US, could be imposed in the coming “weeks or months.”</p>
+<p>About eight people familiar with the Trump administration’s plans were granted anonymity to discuss how the tariffs might work. They suggested that the framework for tariffs may change as it becomes finalized, but one approach under consideration could “dramatically expand the number of tech products subject to the duties, hitting not just chips but potentially many of the goods made with them, such as gaming consoles or the servers that fill data centers.”</p><p><a href="https://arstechnica.com/tech-policy/2026/08/ai-industry-says-trump-plans-to-tax-chips-in-the-single-dumbest-way-imaginable/">Read full article</a></p>
+<p><a href="https://arstechnica.com/tech-policy/2026/08/ai-industry-says-trump-plans-to-tax-chips-in-the-single-dumbest-way-imaginable/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>267</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2281424431-1024x648.jpg" type="image/jpeg" medium="image" width="1024" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/GettyImages-2281424431-500x500.jpg" width="500" height="500" />
+<media:credit>LUDOVIC MARIN / Contributor | AFP</media:credit></media:content>
+            </item>
+                    <item>
+                <title>Claude, Codex, and Hermes installed unowned code inside corporate networks</title>
+                <link>https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/</link>
+                                    <comments>https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Dan Goodin]]>
+                </dc:creator>
+                <pubDate>Thu, 27 Aug 2026 14:00:13 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Biz & IT]]></category>
+		<category><![CDATA[Features]]></category>
+		<category><![CDATA[Security]]></category>
+		<category><![CDATA[AI agents]]></category>
+		<category><![CDATA[infections]]></category>
+		<category><![CDATA[LLMs]]></category>
+		<category><![CDATA[malware]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/</guid>
+
+                                    <description>
+                        <![CDATA[227 install commands were found in corporate docs pointing at code nobody owns.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>Documentation files on more than 100 websites are referencing potentially dangerous executable content that gets installed automatically when visited by many AI agents. A few dozen companies, some of them Fortune 500s, are among those that executed proof-of-concept code. At least one misconfigured site is directing visitors, human or AI, to live malware.</p>
+<p>The potentially dangerous content is in llms.txt and llms-full.txt files, an <a href="https://llmstxt.org/">emerging convention</a> websites employ to provide machine-readable summaries of the site’s content and its high-level structure. These files are the AI equivalent of the <a href="https://en.wikipedia.org/wiki/Robots.txt">robots.txt</a> standard that instructs search engines how to index the site's content. Google Lighthouse, a tool for helping web developers, has more <a href="https://developer.chrome.com/docs/lighthouse/agentic-browsing/llms-txt#how_the_llmstxt_audit_works">here</a>. Correctly configured llms.txt and llms-full.txt files for Cloudflare are <a href="https://www.cloudflare.com/llms.txt">here</a> and <a href="https://www.cloudflare.com/llms-full.txt">here</a>.</p>
+<h2>How the researchers found it</h2>
+<p>Researchers at a stealth startup in Israel scanned 6,214 live domains belonging to defense contractors, Fortune 500, and Big Tech companies. Of the 8,265 llms.txt and llms-full.txt files they found (many sites hosted both an llms.txt and an llms-full.txt file), 120 of them, each on a different site, pointed to one or more code packages or domain names that weren’t registered. To test what happens when an AI agent processes such files, the researchers registered a handful of the unclaimed names and hosted packages that caused any machine executing them to reach out to their server. Within an hour, the researchers received a phone-home response from a Fortune 500 company. Over time, they got a few dozen more, some from more Fortune 500 companies and others from startups. Their beacon also recorded the chain of parent processes that spawned each install, ultimately revealing that coding agents, including Claude, OpenAI's Codex, and Nous Research's Hermes, were involved. Anthropic, OpenAI, and Nous Research did not respond to requests for comment by the time of publication.</p><p><a href="https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/">Read full article</a></p>
+<p><a href="https://arstechnica.com/security/2026/08/claude-codex-and-hermes-installed-unowned-code-inside-corporate-networks/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>157</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/02/gatekeeping-ai-agents-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/02/gatekeeping-ai-agents-500x500.jpg" width="500" height="500" />
+<media:credit>Aurich Lawson</media:credit></media:content>
+            </item>
+                    <item>
+                <title>How much of a problem is AI’s water use?</title>
+                <link>https://arstechnica.com/ai/2026/08/how-much-of-a-problem-is-ais-water-use/</link>
+                                    <comments>https://arstechnica.com/ai/2026/08/how-much-of-a-problem-is-ais-water-use/#comments</comments>
+                
+                <dc:creator>
+                    <![CDATA[Katarina Zimmer, Knowable Magazine]]>
+                </dc:creator>
+                <pubDate>Thu, 27 Aug 2026 13:57:08 +0000</pubDate>
+                		<category><![CDATA[AI]]></category>
+		<category><![CDATA[cooling]]></category>
+		<category><![CDATA[data centers]]></category>
+		<category><![CDATA[drought]]></category>
+		<category><![CDATA[immersion cooling]]></category>
+		<category><![CDATA[water use]]></category>
+                <guid isPermaLink="true">https://arstechnica.com/ai/2026/08/how-much-of-a-problem-is-ais-water-use/</guid>
+
+                                    <description>
+                        <![CDATA[AI’s water footprint is growing, but location and cooling technology make a difference.]]>
+                    </description>
+                                                                <content:encoded>
+                            <![CDATA[<p>“Protect our water,” “Water for people not AI,” “Don’t mess with our water,” declare protest signs from Texas to New Mexico to Arizona. Angered by water use, energy consumption, and pollution, locals are <a href="https://news.gallup.com/poll/709772/americans-oppose-data-centers-area.aspx">increasingly protesting</a> the rapid expansion of data centers in the United States as tech companies work to rapidly expand capacity for AI.</p>
+<p>Many data centers rely at least partly on water to absorb heat from air or surfaces, and then cause cooling as it evaporates, just like sweating keeps our bodies cool. The processors inside data centers can reach internal temperatures of up to 176° Fahrenheit, for the same reasons that an overtaxed laptop heats up.</p>
+<p>But while there’s little doubt that data centers are consuming <a href="https://knowablemagazine.org/content/article/technology/2026/lowering-energy-use-artificial-intelligence-datacenters">significant amounts of energy</a>, water consumption is more complicated. Claims circulating online bring scant clarity, ranging from articles claiming that chatbots can consume 500 ml of water per query to some online commentators declaring AI's water issue to be nonexistent. And the consumption data from large tech companies themselves are often incomplete and inconsistent.</p><p><a href="https://arstechnica.com/ai/2026/08/how-much-of-a-problem-is-ais-water-use/">Read full article</a></p>
+<p><a href="https://arstechnica.com/ai/2026/08/how-much-of-a-problem-is-ais-water-use/#comments">Comments</a></p>
+]]>
+                        </content:encoded>
+                                    
+                                    <slash:comments>151</slash:comments>
+                
+                
+                <media:content url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/data-center-server-room-1152x648.jpg" type="image/jpeg" medium="image" width="1152" height="648">
+<media:thumbnail url="https://cdn.arstechnica.net/wp-content/uploads/2026/08/data-center-server-room-500x500.jpg" width="500" height="500" />
+<media:credit>Getty Images</media:credit></media:content>
+            </item>
+            </channel>
+</rss>
