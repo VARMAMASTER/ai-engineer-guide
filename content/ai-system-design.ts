@@ -2412,6 +2412,308 @@ const multimodalQuestions: AiSdQuestion[] = [
   },
 ]
 
+/**
+ * Pattern 7 — training and fine-tuning infrastructure. The offline half: optimiser-state
+ * arithmetic, sharding, checkpointing against node failure, dataset and model lineage, and
+ * retraining without silent drift or a feedback loop.
+ */
+const trainingQuestions: AiSdQuestion[] = [
+  {
+    id: 'aisdq-finetuning-platform',
+    patternId: 'aisdp-training-infra',
+    title: 'Design a fine-tuning platform',
+    companies: ['amazon', 'microsoft', 'google'],
+    minutes: 60,
+    steps: {
+      define: [
+        'Who is the user — an internal ML team or a customer uploading a CSV — and how much do they know?',
+        'What problems does fine-tuning actually solve here that prompting and retrieval do not?',
+        'What does a successful job produce, and how does the user know it worked?',
+      ],
+      data: [
+        'Work out the memory needed for a full fine-tune versus LoRA on a 7B model.',
+        'What validation must run on an uploaded dataset before a single GPU is allocated?',
+        'How do you handle a customer who uploads 200 examples and expects a better model?',
+      ],
+      architecture: [
+        'Draw the platform from dataset upload to a servable adapter.',
+        'How do you schedule GPU jobs fairly across customers with very different job sizes?',
+        'What is the artefact registry storing, and what lineage does it need to keep?',
+        'How does a trained adapter get to the serving fleet?',
+      ],
+      evaluate: [
+        'How do you tell a customer whether their fine-tune is better than the base model?',
+        'What automatic checks would you run on every finished job?',
+      ],
+      deploy: [
+        'How do you handle a job that fails 80 percent of the way through?',
+        'How do you stop a customer from fine-tuning on data they should not have?',
+      ],
+      wrapup: [
+        'What does a fine-tuning job cost, and how do you price it?',
+        'When would you tell a customer not to fine-tune at all?',
+      ],
+    },
+    solution: {
+      define:
+        'Both users, and the product is different for each: an internal ML team wants a job API with full hyperparameter control, a customer wants to upload examples and get a better model without knowing what a learning rate is. So the platform is one execution engine with two front doors, and the customer front door picks hyperparameters from heuristics on dataset size and task type rather than exposing them. Fine-tuning is worth doing for three things prompting cannot fix: a consistent output format or style, a narrow task where a small model can be lifted to large-model quality at a fraction of the serving cost, and behaviour that is hard to specify but easy to demonstrate. It is not the fix for missing knowledge, which is a retrieval problem, and being clear about that in the product saves an enormous amount of customer disappointment. Success is a comparison the user can read: this adapter beats the base model on your held-out examples by this much, with examples of both.',
+      data:
+        'The memory arithmetic decides the architecture. Full fine-tune of a 7B model in mixed precision: 14GB of BF16 weights, 14GB of gradients, and Adam optimiser state of about 12 bytes per parameter for fp32 momentum, variance and master weights, which is 84GB — roughly 112GB before activations, so it does not fit on one 80GB GPU and needs sharding or offload. LoRA at rank 16 trains around 20 to 40M parameters, so gradients and optimiser state are on the order of half a gigabyte, and the whole job fits on one GPU with room for a healthy batch size. That is a 200-fold difference in trainable state and it is why LoRA is the default and full fine-tuning is the exception a user must justify. Dataset validation before any GPU is allocated: schema and encoding, token-length distribution against the model context, deduplication, a train and validation split with leakage detection, PII scanning, a class-balance report, and a minimum-size warning. Two hundred examples can genuinely work for a narrow format-following task and cannot teach a domain, so the platform says which of those the user appears to be doing, based on task type and label diversity, rather than silently training and delivering a disappointment.',
+      architecture:
+        'Upload lands in object storage and triggers validation, which is cheap and CPU-only and rejects most bad jobs before they cost anything. A validated dataset becomes an immutable versioned artefact. Job submission goes to a queue with per-customer quotas, and the scheduler is gang-scheduling aware — a multi-GPU job needs all its GPUs simultaneously or it deadlocks against other pending jobs, which is the classic failure of naive queueing here. Fairness across very different job sizes uses dominant-resource fair share with backfill: small single-GPU jobs backfill into gaps while a large job waits for its full allocation, which keeps utilisation high without starving the big jobs. Training runs in a container with the dataset mounted read-only, checkpointing to object storage. On completion the adapter, the training config, the dataset version, the base model version, the metrics and the logs are written to a registry as one lineage record — being able to answer which data produced this adapter is both a debugging necessity and, increasingly, a compliance one. Promotion to serving is the multi-LoRA path: the adapter is registered, evaluated, and then a pointer flip makes it live, with no fleet deploy.',
+      evaluate:
+        'Every job automatically produces a comparison against the base model on the held-out split, using task-appropriate metrics — exact match or F1 for extraction, a rubric judge for generation, format validity always — plus a side-by-side sample of 20 outputs the user can read, which is what actually convinces someone. Automatic checks on every finished job: did training loss decrease and did validation loss stop decreasing before the end, which detects both a failed run and overfitting; is the adapter output still valid on a general capability probe, which catches catastrophic forgetting where a model fine-tuned to output JSON becomes unable to hold a conversation; did output length or refusal rate shift dramatically; and is the adapter numerically sane, with no NaN weights. A job that trained successfully and destroyed general capability is a common and confusing outcome, and surfacing it automatically is a large part of the platform value.',
+      deploy:
+        'A job failing at 80 percent is normal at scale and the answer is checkpointing plus automatic resume: checkpoints go to object storage every N steps, and a failed job restarts from the last checkpoint on new hardware rather than from zero, with the retry budget and the reason surfaced to the user. For a single-GPU LoRA job the checkpoint is small and frequent; for a large sharded job the checkpoint interval is a real trade-off against the time lost, which I would set from the observed mean time between failures on that hardware. Data governance is enforced before training, not after: the dataset is scanned for PII and for known copyrighted-content signatures, the customer attests to rights in the API contract, the lineage record ties the adapter to the exact dataset version, and deleting a dataset marks every adapter derived from it, because an adapter trained on data a customer later revokes is a problem you cannot solve if you did not record the link.',
+      wrapup:
+        'Cost: a LoRA fine-tune of a 7B model on 50M tokens is roughly 6 x 7e9 x 5e7 FLOPs for the forward and backward passes, about 2.1e18, which at an assumed 40 percent MFU on one H100 is around 1.5 hours, or 3.75 USD at 2.50 USD per GPU-hour. That is small enough that pricing per token trained with a healthy multiple works, and small enough that free trials are viable. I would tell a customer not to fine-tune when their problem is missing or changing knowledge, which is retrieval; when they have fewer than a few hundred examples and the task is not narrow formatting; when the base model already passes their evaluation, which is more often than people expect; or when they need the flexibility to change behaviour weekly, since a prompt changes in seconds and an adapter is a training run.',
+      numbers: [
+        'Full fine-tune of 7B in mixed precision: 14GB weights + 14GB gradients + about 84GB of Adam state (12 bytes/param) = roughly 112GB before activations, so it does not fit one 80GB GPU.',
+        'LoRA rank 16 on 7B: about 20-40M trainable params, so gradients plus optimiser state are under 1GB — a roughly 200x reduction in trainable state, which is why it is the default.',
+        'Job cost: 6 x 7e9 params x 5e7 tokens = 2.1e18 FLOPs; at an assumed 40 percent MFU on one H100 (about 400 TFLOP/s) that is roughly 1.5 hours, or 3.75 USD at 2.50 USD/GPU-hour.',
+        'Validation gate: schema, dedup, leakage and PII checks are CPU-only and cost cents, and they reject the majority of bad jobs before a GPU is allocated at all.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 9, apiAndData: 10, architecture: 15, deepDive: 13, wrapUp: 5 },
+      opening:
+        'Let me do the optimiser-state arithmetic first, because the 200-fold difference between full fine-tuning and LoRA in trainable state is what makes this a single-GPU product rather than a cluster product for most jobs.',
+      traps: [
+        'Forgetting optimiser state. Adam holds roughly 12 bytes per parameter in fp32, so the memory bill is several times the weights, and an answer that only counts weights is wrong by a factor of eight.',
+        'Allocating a GPU before validating the dataset. Most bad jobs are detectable with a CPU-only pass, and running them anyway is pure waste plus a slower failure for the user.',
+        'Naive FIFO queueing for multi-GPU jobs. Without gang scheduling, a large job accumulates GPUs while never having enough to start, and utilisation collapses.',
+        'Not checking for catastrophic forgetting. A model fine-tuned to emit JSON that has lost general conversation ability trained perfectly by every loss curve.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Should you not just tell everyone to use RAG instead?',
+          answer:
+            'For knowledge, yes, and the product says so. Fine-tuning wins where prompting is unreliable rather than uninformed: consistent output structure, a house style, or lifting a small model on a narrow task so serving costs a twentieth as much. Those are real and retrieval does not address them. The two also compose — a fine-tuned model that follows your format, grounded by retrieval for the facts, is usually the right answer.',
+        },
+        {
+          challenge: 'Customers will fine-tune on data they do not own.',
+          answer:
+            'Some will, so I make it detectable and traceable rather than pretending contract language solves it: scanning at upload, an attestation in the API, and a lineage record tying every adapter to a dataset version so a revocation can be executed. What I cannot do is verify provenance of arbitrary text, and I would say that to a legal reviewer plainly rather than implying the scanner is a guarantee.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  UP["Dataset upload"] --> VAL["CPU validation: schema, token lengths, dedup, leakage, PII, balance"]
+  VAL -->|reject| ERR["Actionable error, no GPU used"]
+  VAL --> DSV[("Immutable dataset version")]
+  DSV --> SUB["Job submission (customer front door picks hyperparameters)"]
+  SUB --> QUEUE["Queue: per-customer quota"]
+  QUEUE --> SCHED["Gang-aware scheduler, DRF + backfill"]
+  SCHED --> LORA["LoRA job: 1 GPU, <1GB trainable state"]
+  SCHED --> FULL["Full fine-tune: sharded across GPUs, ~112GB state for 7B"]
+  LORA --> CKPT[("Checkpoints to object store, auto-resume on failure")]
+  FULL --> CKPT
+  CKPT --> DONE["Adapter"]
+  DONE --> AUTO["Auto checks: loss curves, general-capability probe, format validity, NaN scan"]
+  AUTO --> CMP["Compare vs base on held-out split + 20 side-by-side samples"]
+  CMP --> REG[("Registry: adapter, config, dataset version, base version, metrics, logs")]
+  REG -->|pointer flip, no fleet deploy| SERVE["Multi-LoRA serving fleet"]
+  DSV -.->|revocation marks derived adapters| REG`,
+  },
+  {
+    id: 'aisdq-distributed-training-orchestration',
+    patternId: 'aisdp-training-infra',
+    title: 'Design distributed training orchestration',
+    companies: ['google', 'microsoft'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What scale of job are we orchestrating: 8 GPUs, 512, or thousands?',
+        'What is the expected failure rate at that scale, and what does it imply?',
+        'What does the researcher want from this platform that a raw cluster does not give them?',
+      ],
+      data: [
+        'Work out the memory for a 70B full fine-tune and say which parallelism strategy that forces.',
+        'How large is a checkpoint, and how long does writing it take?',
+        'How do you feed data fast enough to keep the GPUs busy?',
+      ],
+      architecture: [
+        'Draw the job lifecycle from submission to a saved model.',
+        'Choose between data parallel, FSDP and tensor plus pipeline parallel, and say what decides it.',
+        'How do you survive a single node failing 30 hours into a 60-hour job?',
+        'How do you detect a job that is running but making no progress?',
+      ],
+      evaluate: [
+        'What is your utilisation metric, and why is GPU utilisation percentage not it?',
+        'How do you tell a slow job from a badly configured one?',
+      ],
+      deploy: [
+        'How do you upgrade the cluster software without killing week-long jobs?',
+        'How do you handle a job that needs to grow or shrink its allocation?',
+      ],
+      wrapup: [
+        'What is the dominant cost of a large training run, and what is the biggest waste?',
+        'What would you build first for a team of five researchers?',
+      ],
+    },
+    solution: {
+      define:
+        'Design for the 64 to 512 GPU range, which covers fine-tuning frontier-scale models and training mid-size ones from scratch, and is where orchestration stops being optional. At that scale hardware failure is routine rather than exceptional: if a single GPU node has a mean time between failures of a few thousand hours, a 64-node job expects a failure every few tens of hours, so a 60-hour run will almost certainly hit one and the system must treat that as the normal path. What a researcher wants beyond a raw cluster is: submit and forget, automatic recovery, reproducibility, and a way to see whether the run is healthy without reading NCCL logs. Those four are the product.',
+      data:
+        'A 70B full fine-tune in mixed precision needs roughly 2 bytes of weights, 2 of gradients and 12 of Adam state per parameter, about 16 bytes total, which is 1.12TB of model state — before activations. On 80GB GPUs that is 14 GPUs to hold state alone, so realistically 32 or 64 with room for activations, and it forces a sharding strategy: plain data parallelism is impossible because a single replica does not fit. The checkpoint is that same 1.12TB of state, and writing it naively from one rank at an assumed 2GB/s is nearly ten minutes with every other rank idle — which is why sharded checkpointing, where each rank writes its own shard in parallel, is not an optimisation but a requirement. Data loading must sustain the token rate: a 64-GPU job at an assumed 2,500 tokens per GPU-second is 160K tokens/s, and at roughly 4 bytes per pre-tokenised token that is under a gigabyte per second of read, comfortably served by pre-tokenised, pre-shuffled shards on object storage with prefetch — but disastrous if the pipeline is tokenising text on the fly on the training node.',
+      architecture:
+        'Lifecycle: submit a job spec — image, entrypoint, resource shape, dataset version, config — to a queue; the scheduler gang-allocates nodes with topology awareness so ranks land on GPUs sharing high-bandwidth interconnect; a rendezvous service assigns ranks and forms the process group; training runs with sharded checkpointing on an interval; on completion, artefacts and lineage go to the registry. Parallelism choice is mechanical rather than a matter of taste: if a replica fits in one GPU, use data parallelism, because it is simplest and scales near-linearly. If it does not fit but fits in one node, use FSDP within the node and data parallelism across nodes. If it does not fit in a node, add tensor parallelism inside the node where NVLink makes the per-layer all-reduce cheap, and pipeline parallelism across nodes where the interconnect is slower and the communication is only at stage boundaries. That ordering — data, then FSDP, then tensor within a node, then pipeline across nodes — follows directly from the bandwidth hierarchy. Node failure is handled by elastic training: the rendezvous detects the loss, the job restarts from the last sharded checkpoint on a replacement node, and total lost work is bounded by the checkpoint interval. A silently stuck job is the nastier failure — an NCCL collective hanging looks like a busy GPU — so every rank emits a step heartbeat and a watchdog kills and restarts the job when steps stop advancing, which is the difference between losing ten minutes and losing a weekend.',
+      evaluate:
+        'GPU utilisation percentage is close to useless because a GPU spinning on a hung collective reports 100 percent. The real metric is model FLOPs utilisation: achieved FLOPs from tokens per second and the known 6 x params x tokens formula, divided by the hardware peak. That single number tells you whether you are getting value from the fleet, and a run at 15 percent MFU has a fixable problem while one at 45 percent is doing well. Alongside it: tokens per second per GPU, step time and its variance, communication time as a fraction of step time, and data-loader wait time. Those four separate a slow job from a misconfigured one — high communication fraction means the parallelism strategy is wrong for the interconnect, high loader wait means the data pipeline is the bottleneck, high step-time variance usually means a straggler node that should be evicted.',
+      deploy:
+        'Cluster software upgrades cannot preempt week-long jobs, so nodes are drained rather than upgraded in place: a node is cordoned, its jobs are allowed to finish or are checkpoint-migrated, then it is upgraded and returned to the pool. Because jobs already survive node loss by design, a migration is a controlled instance of a failure the system handles routinely, which is a nice property of building elasticity first. Resizing an allocation mid-run is supported by the same elastic mechanism — the job checkpoints, the rendezvous re-forms with a new world size, and training resumes — but it is not free: changing the number of data-parallel replicas changes the effective batch size, which changes the optimisation trajectory, so the platform must either adjust the learning rate schedule accordingly or refuse the resize. Silently changing effective batch size mid-run is a reproducibility disaster that produces a job nobody can explain afterwards.',
+      wrapup:
+        'Dominant cost is straightforwardly GPU-hours, and the biggest waste is not slow kernels, it is idle time: queue waiting, failed runs discovered hours later, checkpoint stalls, and jobs running at 20 percent MFU because nobody measured. In my experience the cheapest large win on any training platform is making MFU and step-time variance visible per job, because researchers fix what they can see. For a team of five researchers I would not build this at all: a managed cluster, a shared job-submission script, sharded checkpointing to object storage, and a dashboard showing MFU and step time gets almost all the value, and building an orchestration platform for five people is a way to spend a year not training models.',
+      numbers: [
+        'Model state for a 70B full fine-tune: 70e9 x (2 weights + 2 gradients + 12 Adam) = about 1.12TB, so 14 x 80GB GPUs hold state alone and 32-64 is the practical job shape.',
+        'Checkpoint time: 1.12TB written from one rank at an assumed 2GB/s is about 9 minutes of full-cluster stall; sharded across 64 ranks in parallel it is under 10 seconds.',
+        'Failure expectation: at an assumed node MTBF of 5,000 hours, a 64-node job sees a failure roughly every 78 hours, so a 60-hour run is more likely than not to hit one — recovery is the normal path, not the exception.',
+        'Data pipeline: 64 GPUs at an assumed 2,500 tokens/GPU-second is 160K tokens/s, under 1GB/s of pre-tokenised reads — trivial from object storage, impossible if tokenising on the training node.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 10, apiAndData: 8, architecture: 16, deepDive: 13, wrapUp: 5 },
+      opening:
+        'I want to price the model state for a 70B fine-tune first, because 16 bytes per parameter is over a terabyte, and that number chooses the parallelism strategy for me rather than my choosing it.',
+      traps: [
+        'Counting only weights. Gradients and Adam state are six times the weights in fp32, and the whole sharding decision follows from the full 16 bytes per parameter.',
+        'Checkpointing from rank zero. A terabyte written serially stalls the entire cluster for minutes every interval; sharded parallel writes are mandatory at this scale.',
+        'Using GPU utilisation as the health metric. A hung NCCL collective reports 100 percent busy, which is exactly the failure you most need to catch.',
+        'Resizing a job without adjusting for the changed effective batch size, producing a run whose optimisation trajectory changed mid-flight and cannot be reproduced.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not just checkpoint every 10 minutes and stop worrying?',
+          answer:
+            'Because a checkpoint stalls every rank while it writes, so the interval is a straight trade between wasted compute on recovery and wasted compute on writing. With sharded and asynchronous checkpointing the write cost drops enough that a short interval becomes affordable, and then I set it from the observed failure rate rather than by feel — roughly the square root of twice the checkpoint cost over the failure rate is the classic starting point.',
+        },
+        {
+          challenge: 'Pipeline parallelism has bubbles. Why use it at all?',
+          answer:
+            'Only when the alternative is worse. Tensor parallelism needs an all-reduce every layer, which is fine over NVLink inside a node and terrible across a slower fabric. Pipeline parallelism communicates only at stage boundaries, so across nodes it wins despite the bubble, and interleaved schedules shrink the bubble. The decision is set by the interconnect bandwidth hierarchy, not by preference.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  SUB["Job spec: image, resources, dataset version, config"] --> Q["Queue"]
+  Q --> SCH["Gang + topology-aware scheduler"]
+  SCH --> RDV["Rendezvous: rank assignment, process group"]
+  RDV --> STRAT{"Does one replica fit?"}
+  STRAT -->|fits one GPU| DP["Data parallel"]
+  STRAT -->|fits one node| FSDP["FSDP in node + DP across nodes"]
+  STRAT -->|larger than a node| TPPP["Tensor parallel over NVLink + pipeline across nodes"]
+  DP --> TRAIN["Training loop"]
+  FSDP --> TRAIN
+  TPPP --> TRAIN
+  DATA[("Pre-tokenised, pre-shuffled shards on object store")] -->|prefetch| TRAIN
+  TRAIN --> CK["Sharded checkpoint: every rank writes its own shard"]
+  CK --> OBJ[("Object store")]
+  TRAIN --> HB["Per-rank step heartbeat"]
+  HB --> WD["Watchdog: steps stalled -> kill and restart"]
+  WD --> RDV
+  NODE["Node failure"] --> RDV
+  TRAIN --> MFU[("MFU, tokens/GPU-s, comm fraction, loader wait, step variance")]
+  TRAIN --> REG[("Registry: model, config, dataset version, metrics")]`,
+  },
+  {
+    id: 'aisdq-continual-retraining',
+    patternId: 'aisdp-training-infra',
+    title: 'Design continual retraining with drift detection',
+    companies: ['amazon', 'google'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What is actually drifting — the inputs, the labels, or the relationship between them?',
+        'How fast does this model go stale, and how do you know rather than assume?',
+        'What is the cost of a stale model versus the cost of a bad retrain?',
+      ],
+      data: [
+        'Where do fresh labels come from, and how delayed are they?',
+        'How do you avoid training on the consequences of your own predictions?',
+        'What do you keep from the old training data, and why not just use the newest window?',
+      ],
+      architecture: [
+        'Draw the loop from production traffic to a promoted model.',
+        'What triggers a retrain: a schedule, a drift signal, or a performance drop?',
+        'What gates a retrained model before it can be promoted?',
+      ],
+      evaluate: [
+        'How do you detect drift before performance degrades?',
+        'How do you evaluate a new model on data the old one has already influenced?',
+      ],
+      deploy: [
+        'How do you roll out a retrained model safely?',
+        'What is your rollback plan, and what does rollback mean when the data has moved on?',
+      ],
+      wrapup: [
+        'What does this pipeline cost to run per month, and is the automation worth it?',
+        'When is manual retraining the better choice?',
+      ],
+    },
+    solution: {
+      define:
+        'Three distinct drifts and they need different responses. Covariate drift, where the input distribution moves but the mapping holds — new user segment, new locale — often needs no retrain at all. Label drift, where the base rate changes, may only need recalibration of a threshold. Concept drift, where the relationship itself changed — fraud patterns adapting, a policy change altering what counts as a violation — is the one that genuinely needs new data. Conflating them leads to expensive retrains that fix nothing. How fast the model goes stale is measured, not assumed, by a backtest: train on data up to time T and evaluate on windows at T plus one, two and three months, which gives a decay curve and therefore a principled retraining cadence. In fraud that curve can be steep, in document classification it can be nearly flat for a year, and the cadence should follow the curve rather than a habit.',
+      data:
+        'Label delay is the constraint that shapes everything: if a chargeback arrives 60 days after the transaction, the freshest fully-labelled data is 60 days old regardless of how fast the pipeline runs, and any claim to retrain weekly on fresh labels is a misunderstanding. So the design uses delayed ground truth for the authoritative training set and fast proxy labels — manual review outcomes, user reports, heuristic signals — for early drift detection only. The feedback loop is the subtle danger: a model that declines a transaction never learns whether it would have been fine, so the training data is censored by the model own decisions and it progressively trains on a narrower world. The counter is a deliberate exploration holdout — a small randomised fraction where the model decision is overridden or logged as counterfactual — which is expensive and is the only way to keep unbiased data flowing. On the training window, using only the newest data is a mistake: it forgets rare patterns that recur seasonally, so I use a weighted window, recent data upweighted with a long tail retained, plus a permanent set of hard historical cases that must not be forgotten.',
+      architecture:
+        'Production traffic writes features and predictions to a store; delayed labels join against them as they arrive; a training dataset is assembled as an immutable version from that join. Retraining is triggered by any of three signals and I would use all three rather than choosing: a schedule derived from the decay curve as a baseline, a drift alert on input distributions as an early warning, and a performance drop on delayed labels as the definitive one. Schedule alone retrains when nothing changed; drift alone fires on harmless covariate shift; performance alone is always late because of label delay. A candidate model must pass a gate before promotion: it beats the incumbent on a held-out recent window, it does not regress on the permanent hard-case set, its calibration is checked rather than assumed, its behaviour is compared across protected segments where relevant, and it passes a stability check that its predictions do not swing wildly on the same inputs the incumbent handled. Only then does it become a candidate for online rollout.',
+      evaluate:
+        'Drift detection before performance degrades relies on input-side signals, since those are available immediately: population stability index or a KS test per feature, embedding-distribution distance for unstructured inputs, and prediction-distribution shift, which is often the most sensitive single indicator because it aggregates everything upstream. Those raise a warning; they do not by themselves justify a retrain, because covariate shift within the model competence is harmless. Evaluating a new model on data the old one influenced is genuinely hard and I would be honest about the limits: on the exploration holdout the data is unbiased and the comparison is valid but the sample is small; on the rest, an offline comparison is biased toward the incumbent because the data reflects its decisions. So the offline gate is a filter and the real comparison is the online test, with importance weighting on the holdout as a middle step where the sample allows.',
+      deploy:
+        'Rollout is shadow first — the candidate scores live traffic without acting, which validates the pipeline and compares prediction distributions with no risk — then a percentage rollout with the guardrails on. Rollback is a model-version pointer flip and is instant, but rollback here means something weaker than usual and I would say so: reverting to the previous model returns to the behaviour that prompted the retrain, so it buys time rather than fixing anything, and if the retrain was triggered by real concept drift the old model is now the worse of two bad options. That is why the gate matters more than the rollback. Every promoted model carries the dataset version, the code version and the evaluation report, so an incident can identify exactly what changed.',
+      wrapup:
+        'Cost per month is mostly the training compute — for a mid-size model that is hours of GPU per retrain, so tens of dollars monthly — plus the feature and label store, which is usually larger, plus the exploration holdout, which is a real business cost measured in the decisions you deliberately got wrong to stay unbiased. That last one is the honest expensive line and it should be sized explicitly rather than hidden. Automation is worth it when the decay curve is steep enough to need retraining monthly or faster; below that, manual retraining with a human reading the evaluation report is better, because the pipeline maintenance exceeds the effort saved and a human notices the strange thing that no gate was written for.',
+      numbers: [
+        'Label delay: with a 60-day chargeback window, the freshest fully-labelled data is 60 days old, so a weekly retrain cadence adds nothing over monthly unless proxy labels are carrying the signal.',
+        'Decay curve: a backtest training at time T and evaluating at T+1, T+2 and T+3 months converts retraining cadence from a habit into a measurement — a 3-point drop per month justifies monthly, a 0.2-point drop justifies annually.',
+        'Exploration cost: a 1 percent randomised holdout on a decision worth an assumed 20 USD each over 1M monthly decisions costs on the order of tens of thousands of USD a year in deliberately suboptimal decisions, and it is the price of unbiased training data.',
+        'Retrain compute: a mid-size model on 50M examples is hours of GPU per run, tens of USD monthly — trivial next to the feature store and the exploration holdout, which is where the real cost sits.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 7, estimates: 6, apiAndData: 8, architecture: 11, deepDive: 9, wrapUp: 4 },
+      opening:
+        'I want to distinguish covariate drift, label drift and concept drift up front, because only the third actually requires new training data and conflating them produces a pipeline that retrains constantly and improves nothing.',
+      traps: [
+        'Ignoring label delay. If ground truth arrives 60 days late, a weekly retraining cadence is theatre, and saying so is what shows you have run one of these.',
+        'Training on your own censored decisions. A model that declines never learns the counterfactual, so without an exploration holdout the data narrows around the model existing beliefs.',
+        'Retraining on a recent window only. It forgets rare and seasonal patterns; keep a weighted long tail and a permanent hard-case set.',
+        'Treating rollback as a fix. Reverting returns to the model that was already failing, which buys time rather than solving concept drift.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Just retrain nightly and stop thinking about triggers.',
+          answer:
+            'It is cheap enough that I understand the appeal, and the reason not to is that every promotion is a chance to ship a regression. Nightly retraining means nightly gate evaluations, nightly rollout decisions, and a model that changes under the product for reasons nobody examined. If the decay curve is flat, retraining nightly adds risk and noise without adding accuracy.',
+        },
+        {
+          challenge: 'The exploration holdout is unacceptable — you are deliberately making bad decisions.',
+          answer:
+            'That is a fair objection and it is a business decision rather than an engineering one, so I would size it and put the number in front of the owner. The alternative is a model whose training data is increasingly a mirror of its own past beliefs, and that failure is slower, larger and much harder to detect. Where the cost is genuinely unacceptable, I would fall back to counterfactual logging on near-threshold cases only, which is cheaper and weaker.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  PROD["Production traffic"] --> FS[("Feature + prediction store")]
+  PROD --> EXPL["Exploration holdout (~1%): unbiased outcomes"]
+  LBL["Delayed ground truth (e.g. 60-day window)"] --> JOIN["Join labels to logged features"]
+  EXPL --> JOIN
+  JOIN --> DSV[("Immutable training dataset version: weighted window + hard-case set")]
+  FS --> DRIFT["Drift monitors: PSI/KS per feature, embedding distance, prediction shift"]
+  DRIFT -->|early warning| TRIG{"Retrain trigger"}
+  DECAY["Backtest decay curve"] -->|schedule| TRIG
+  JOIN -->|performance drop on delayed labels| TRIG
+  TRIG --> TRAIN["Retrain"]
+  DSV --> TRAIN
+  TRAIN --> GATE["Gate: beats incumbent on recent window, no hard-case regression, calibration, segment parity, stability"]
+  GATE -->|fail| STOP["Do not promote"]
+  GATE --> SHADOW["Shadow scoring on live traffic"]
+  SHADOW --> AB["Percentage rollout with guardrails"]
+  AB --> PROM["Promote; record dataset + code version + eval report"]
+  PROM -.->|rollback returns to the model that was failing| PROD`,
+  },
+]
+
 export const aiSdQuestions: AiSdQuestion[] = [
   ...servingQuestions,
   ...gatewayQuestions,
@@ -2419,4 +2721,5 @@ export const aiSdQuestions: AiSdQuestion[] = [
   ...agentQuestions,
   ...evalQuestions,
   ...multimodalQuestions,
+  ...trainingQuestions,
 ]
