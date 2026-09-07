@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { content } from '@/lib/content/index'
 import { slugOf, idFromSlug } from '@/lib/content/ids'
-import Checkbox from '@/components/Checkbox'
+import TopicQuestions from '@/components/TopicQuestions'
 
 export async function generateStaticParams() {
   return content.topics.map((t) => ({ topic: slugOf(t.id) }))
@@ -27,11 +27,7 @@ export default async function TopicPage({ params }: { params: Promise<{ topic: s
         <p className="text-sm text-[var(--text-muted)]">{topic.summary}</p>
       </div>
 
-      <div className="panel flex flex-col gap-0.5 p-2">
-        {questions.map((q) => (
-          <Checkbox key={q.id} itemId={q.id} label={q.text} meta={`${q.minutes}m`} />
-        ))}
-      </div>
+      <TopicQuestions questions={questions} />
     </div>
   )
 }

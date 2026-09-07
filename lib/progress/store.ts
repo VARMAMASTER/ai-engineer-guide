@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { todayIso } from '@/lib/date'
 import { emptyBlob, CURRENT_VERSION } from './types'
-import type { ProgressBlob } from './types'
+import type { ProgressBlob, RevisionRating } from './types'
 import { migrate } from './migrations'
 import { safeGet, safeSet, safeRemove } from './storage'
 
@@ -13,6 +13,8 @@ export const STORAGE_KEY = 'aeg.progress.v1'
 interface ProgressActions {
   setStartDate: (iso: string) => void
   toggle: (itemId: string) => void
+  rate: (cardId: string, rating: RevisionRating) => void
+  clearRevision: (cardIds?: string[]) => void
   setHours: (date: string, hours: number) => void
   reset: () => void
   importBlob: (json: string) => void
@@ -36,6 +38,23 @@ export const useProgress = create<ProgressState>()(
           return { completed: next }
         }),
 
+      /**
+       * Revision confidence. Writes to `revision` and NOTHING else — in
+       * particular it never touches `completed`, because saying an answer well
+       * at 11pm is not the same claim as having worked the problem.
+       */
+      rate: (cardId, rating) =>
+        set((s) => ({ revision: { ...s.revision, [cardId]: rating } })),
+
+      /** Forget ratings for the given cards, or for every card when omitted. */
+      clearRevision: (cardIds) =>
+        set((s) => {
+          if (!cardIds) return { revision: {} }
+          const next = { ...s.revision }
+          for (const id of cardIds) delete next[id]
+          return { revision: next }
+        }),
+
       setHours: (date, hours) =>
         set((s) => ({ hours: { ...s.hours, [date]: hours } })),
 
@@ -55,6 +74,7 @@ export const useProgress = create<ProgressState>()(
           version: CURRENT_VERSION,
           startDate: s.startDate,
           completed: s.completed,
+          revision: s.revision,
           hours: s.hours,
           settings: s.settings,
         }
@@ -70,7 +90,8 @@ export const useProgress = create<ProgressState>()(
       })),
       partialize: (s) => ({
         version: s.version, startDate: s.startDate,
-        completed: s.completed, hours: s.hours, settings: s.settings,
+        completed: s.completed, revision: s.revision,
+        hours: s.hours, settings: s.settings,
       }),
     },
   ),

@@ -13,6 +13,10 @@ const STEPS: Record<number, Step> = {
     completed: b.completed ?? {},
     startDate: b.startDate ?? null,
   }),
+  // v2 adds revision mode's confidence map. It starts empty rather than being
+  // seeded from `completed`: having practised a problem in March says nothing
+  // about whether you can say the answer out loud in September.
+  1: (b) => ({ ...b, version: 2, revision: b.revision ?? {} }),
 }
 
 export function migrate(raw: unknown): ProgressBlob {

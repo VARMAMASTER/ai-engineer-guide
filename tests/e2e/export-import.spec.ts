@@ -37,7 +37,8 @@ test.describe('export, import and reset', () => {
     await download.saveAs(file)
     const blob = JSON.parse(await fs.readFile(file, 'utf8'))
 
-    expect(blob.version).toBe(1)
+    // Blob version 2 added the `revision` map (revision mode's confidence).
+    expect(blob.version).toBe(2)
     expect(blob.startDate).toBe(todayIso())
     expect(Object.keys(blob.completed).sort()).toEqual([DAY_1.firstProblemId, SECOND_ID].sort())
     expect(blob.settings.theme).toBe('dark')

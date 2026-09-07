@@ -57,11 +57,20 @@ export default async function SystemDesignPatternPage({
         </ul>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
-          Questions
-        </h2>
-        <ul className="flex flex-col gap-3">
+      <section className="flex min-w-0 flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+            Questions
+          </h2>
+          {/* Said once per page rather than once per question: the reveal is the
+              rule of the bank, not a per-question affordance to re-explain. */}
+          <p className="text-sm text-[var(--text-muted)]">
+            Expanding a question gives you the pacing budget, the opening sentence and the
+            prompts. Attempt it first — the reference answer, the estimates and the architecture
+            diagram stay hidden until you ask for them.
+          </p>
+        </div>
+        <ul className="flex min-w-0 flex-col gap-3">
           {questions.map((q) => (
             <QuestionFramework key={q.id} question={q} />
           ))}

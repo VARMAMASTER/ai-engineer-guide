@@ -6,6 +6,7 @@ import { content } from '@/lib/content/index'
 import type { Reading } from '@/lib/content/schema'
 import Checkbox from './Checkbox'
 import LiveFeed from './LiveFeed'
+import Mermaid from './Mermaid'
 
 type Tab = 'curated' | 'live'
 
@@ -21,6 +22,11 @@ const KIND_LABEL: Record<Reading['kind'], string> = {
  */
 export default function ReadingTabs() {
   const [tab, setTab] = useState<Tab>('curated')
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+
+  const toggleSummary = (id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
 
   const weekGroups = useMemo(() => {
     const byWeek = new Map<string, Reading[]>()
@@ -69,36 +75,98 @@ export default function ReadingTabs() {
             <section key={week.id} className="panel min-w-0 p-4">
               <h2 className="eyebrow mb-3">Week {week.number}</h2>
               <ul className="flex min-w-0 flex-col">
-                {readings.map((r) => (
-                  <li key={r.id} className="border-b border-[var(--panel-border)] last:border-0">
-                    <Checkbox
-                      itemId={r.id}
-                      meta={`${r.minutes} min`}
-                      labelText={`${KIND_LABEL[r.kind]}: ${r.title}`}
-                      label={
-                        <span className="flex min-w-0 flex-col gap-1">
-                          <span className="flex flex-wrap items-center gap-2">
-                            <span className="eyebrow rounded-full border border-[var(--panel-border)] px-2 py-0.5">
-                              {KIND_LABEL[r.kind]}
+                {readings.map((r) => {
+                  const isOpen = Boolean(expanded[r.id])
+                  const panelId = `reading-summary-${r.id}`
+                  return (
+                    <li key={r.id} className="border-b border-[var(--panel-border)] last:border-0">
+                      <Checkbox
+                        itemId={r.id}
+                        meta={`${r.minutes} min`}
+                        labelText={`${KIND_LABEL[r.kind]}: ${r.title}`}
+                        label={
+                          <span className="flex min-w-0 flex-col gap-1">
+                            <span className="flex flex-wrap items-center gap-2">
+                              <span className="eyebrow rounded-full border border-[var(--panel-border)] px-2 py-0.5">
+                                {KIND_LABEL[r.kind]}
+                              </span>
+                              <a
+                                href={r.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-medium hover:underline"
+                              >
+                                {r.title}
+                              </a>
                             </span>
-                            <a
-                              href={r.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="font-medium hover:underline"
+                            <span className="readout text-[var(--text-muted)]">
+                              {r.source} · {r.year}
+                            </span>
+                            <span className="text-xs text-[var(--text-muted)]">{r.why}</span>
+                            <button
+                              type="button"
+                              aria-expanded={isOpen}
+                              aria-controls={panelId}
+                              onClick={(e) => {
+                                // A button is interactive content inside the Checkbox's
+                                // <label>, so per the HTML label activation algorithm it
+                                // already will not toggle the checkbox — stopPropagation
+                                // just keeps that intent explicit and future-proof.
+                                e.stopPropagation()
+                                toggleSummary(r.id)
+                              }}
+                              className="eyebrow mt-0.5 flex w-fit items-center gap-1 self-start rounded-[var(--radius-sm)] px-1.5 py-1 text-[var(--accent)] hover:bg-[var(--accent-soft)]"
                             >
-                              {r.title}
-                            </a>
+                              <span aria-hidden="true" className={`inline-block transition-transform ${isOpen ? 'rotate-90' : ''}`}>
+                                &rsaquo;
+                              </span>
+                              {isOpen ? 'Hide summary' : 'What does it say?'}
+                            </button>
                           </span>
-                          <span className="readout text-[var(--text-muted)]">
-                            {r.source} · {r.year}
-                          </span>
-                          <span className="text-xs text-[var(--text-muted)]">{r.why}</span>
-                        </span>
-                      }
-                    />
-                  </li>
-                ))}
+                        }
+                      />
+                      {isOpen ? (
+                        <div
+                          id={panelId}
+                          className="surface-solid mb-3 min-w-0 max-w-full rounded-[var(--radius-sm)] p-3"
+                        >
+                          <p className="text-sm font-medium leading-snug">
+                            <span className="eyebrow text-[var(--accent)]">The idea — </span>
+                            {r.summary.idea}
+                          </p>
+
+                          <dl className="mt-3 grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="min-w-0">
+                              <dt className="eyebrow text-[var(--text-muted)]">Problem</dt>
+                              <dd className="mt-0.5 text-sm">{r.summary.problem}</dd>
+                            </div>
+                            <div className="min-w-0">
+                              <dt className="eyebrow text-[var(--text-muted)]">How</dt>
+                              <dd className="mt-0.5 whitespace-pre-line text-sm">{r.summary.how}</dd>
+                            </div>
+                            <div className="min-w-0">
+                              <dt className="eyebrow text-[var(--text-muted)]">Result</dt>
+                              <dd className="mt-0.5 text-sm">{r.summary.result}</dd>
+                            </div>
+                            <div className="min-w-0">
+                              <dt className="eyebrow text-[var(--text-muted)]">Limits</dt>
+                              <dd className="mt-0.5 text-sm">{r.summary.limits}</dd>
+                            </div>
+                          </dl>
+
+                          {r.diagram !== undefined ? (
+                            <Mermaid source={r.diagram} caption={`${r.title} — mechanism`} />
+                          ) : null}
+
+                          <div className="mt-3 min-w-0 rounded-[var(--radius-sm)] border-l-4 border-[var(--accent)] bg-[var(--accent-soft)] px-3 py-2">
+                            <p className="eyebrow text-[var(--accent)]">So what — for your plan</p>
+                            <p className="mt-0.5 text-sm">{r.summary.soWhat}</p>
+                          </div>
+                        </div>
+                      ) : null}
+                    </li>
+                  )
+                })}
               </ul>
             </section>
           ))}
