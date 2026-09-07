@@ -6,7 +6,8 @@ import CompanyIndex, {
   loopMinutes,
   loopRoundCount,
 } from '@/components/CompanyIndex'
-import CompanyDetail, { DrillLine } from '@/components/CompanyDetail'
+import CompanyDetail from '@/components/CompanyDetail'
+import ContentProse from '@/components/ContentProse'
 import CompaniesPage from '@/app/companies/page'
 import CompanyPage, {
   generateStaticParams,
@@ -145,7 +146,7 @@ describe('a company detail page', () => {
 
 describe('drill lines', () => {
   it('links a pattern id to its page and prints the pattern name', () => {
-    render(<DrillLine text="Timed reps on dsap-graphs and dsap-dp-1d under a clock." />)
+    render(<ContentProse text="Timed reps on dsap-graphs and dsap-dp-1d under a clock." />)
     const graphs = screen.getByRole('link', { name: 'Graphs' })
     expect(graphs.getAttribute('href')).toBe('/dsa/graphs')
     expect(graphs.getAttribute('title')).toBe('dsap-graphs')
@@ -156,7 +157,7 @@ describe('drill lines', () => {
 
   it('routes each bank at the segment that actually renders it', () => {
     render(
-      <DrillLine text="sdp-caching, mlp-rag-systems, topic-inference and lldq-rate-limiter." />,
+      <ContentProse text="sdp-caching, mlp-rag-systems, topic-inference and lldq-rate-limiter." />,
     )
     const href = (name: string) => screen.getByRole('link', { name }).getAttribute('href')
     expect(href('Caching')).toBe('/system-design/caching')
@@ -166,13 +167,13 @@ describe('drill lines', () => {
   })
 
   it('leaves prose that is not an id alone, including a wildcard', () => {
-    render(<DrillLine text="reserve mlp-* topics for an ML-titled req" />)
+    render(<ContentProse text="reserve mlp-* topics for an ML-titled req" />)
     expect(screen.queryAllByRole('link')).toHaveLength(0)
     expect(screen.getByText('reserve mlp-* topics for an ML-titled req')).toBeDefined()
   })
 
   it('leaves an id that resolves to nothing exactly as written', () => {
-    render(<DrillLine text="drill dsap-does-not-exist twice" />)
+    render(<ContentProse text="drill dsap-does-not-exist twice" />)
     expect(screen.queryAllByRole('link')).toHaveLength(0)
     expect(screen.getByText('drill dsap-does-not-exist twice')).toBeDefined()
   })

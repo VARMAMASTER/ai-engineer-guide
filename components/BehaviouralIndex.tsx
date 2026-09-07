@@ -22,7 +22,7 @@ const TABS: { id: Tab; label: string; blurb: string }[] = [
   {
     id: 'stories',
     label: 'Stories',
-    blurb: 'Fifteen reusable STAR slots. Write them once, use them everywhere.',
+    blurb: 'The raw material both of the other banks keep asking you for.',
   },
 ]
 

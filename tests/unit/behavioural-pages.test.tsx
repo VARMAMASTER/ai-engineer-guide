@@ -179,6 +179,14 @@ describe('story drafts', () => {
     expect(screen.getAllByRole('textbox')).toHaveLength(4)
   })
 
+  it('links the build project a slot draws on', () => {
+    render(<BehaviouralStories />)
+    const links = screen.getAllByRole('link', { name: 'Production RAG with an eval harness' })
+    expect(links.length).toBeGreaterThan(0)
+    expect(links[0].getAttribute('href')).toBe('/projects/rag')
+    expect(links[0].getAttribute('title')).toBe('proj-rag')
+  })
+
   it('writes a draft to its own storage key, separate from `completed`', async () => {
     const user = userEvent.setup()
     render(<BehaviouralStories />)

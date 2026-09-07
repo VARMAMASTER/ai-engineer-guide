@@ -1,86 +1,6 @@
-import { Fragment } from 'react'
-import Link from 'next/link'
-import { byId } from '@/lib/content/index'
+import ContentProse from './ContentProse'
 import type { CompanyGuide } from '@/lib/content/schema'
 import { formatMinutes, loopMinutes, loopRoundCount } from './CompanyIndex'
-
-/* -------------------------------------------------------------------------
- * Linking `drill` back to the rest of the guide
- * ---------------------------------------------------------------------- */
-
-/**
- * The banks a drill line can name, and where each one is rendered.
- *
- * `sdp-` and `mlp-` share the `/system-design/[pattern]` segment, and `lldp-`
- * and `lldq-` share `/lld/[slug]`, exactly as those routes resolve them.
- */
-const DRILL_ROUTES: Record<string, string> = {
-  dsap: '/dsa',
-  sdp: '/system-design',
-  mlp: '/system-design',
-  lldp: '/lld',
-  lldq: '/lld',
-  topic: '/ai-ml',
-}
-
-// Longest prefixes first so `dsap-` is never matched as `dsa` + `p-`.
-const DRILL_ID = /\b(dsap|lldp|lldq|sdp|mlp|topic)-[a-z0-9]+(?:-[a-z0-9]+)*/g
-
-function hrefFor(id: string): string | undefined {
-  const prefix = id.slice(0, id.indexOf('-'))
-  const base = DRILL_ROUTES[prefix]
-  if (base === undefined) return undefined
-  return `${base}/${id.slice(prefix.length + 1)}`
-}
-
-function nameOf(id: string): string | undefined {
-  const item = byId.get(id)
-  if (item === undefined) return undefined
-  if ('name' in item && typeof item.name === 'string') return item.name
-  return undefined
-}
-
-/**
- * A drill line with its content ids turned into links.
- *
- * The bank writes drill advice as prose containing raw ids — "timed reps on
- * dsap-graphs, dsap-dp-1d" — which is precise and unreadable. Each id that
- * actually resolves is replaced by the item's name and linked to the page that
- * teaches it, so the sentence reads as English and the drill is one tap away.
- * An id that resolves to nothing is left exactly as written rather than
- * silently dropped: that is a content bug, and `pnpm validate` is where it
- * should be caught, not hidden here.
- */
-export function DrillLine({ text }: { text: string }) {
-  const parts: React.ReactNode[] = []
-  let cursor = 0
-
-  for (const match of text.matchAll(DRILL_ID)) {
-    const id = match[0]
-    const start = match.index
-    const href = hrefFor(id)
-    const name = nameOf(id)
-
-    if (href === undefined || name === undefined) continue
-
-    if (start > cursor) parts.push(<Fragment key={`t${cursor}`}>{text.slice(cursor, start)}</Fragment>)
-    parts.push(
-      <Link
-        key={`l${start}`}
-        href={href}
-        title={id}
-        className="text-[var(--accent)] underline decoration-[var(--accent-line)] underline-offset-2 transition-colors hover:decoration-[var(--accent)]"
-      >
-        {name}
-      </Link>,
-    )
-    cursor = start + id.length
-  }
-
-  if (cursor < text.length) parts.push(<Fragment key={`t${cursor}`}>{text.slice(cursor)}</Fragment>)
-
-  return <>{parts}</>
-}
 
 /* -------------------------------------------------------------------------
  * Page
@@ -220,7 +140,7 @@ export default function CompanyDetail({ guide }: { guide: CompanyGuide }) {
         <ul className="flex min-w-0 max-w-[80ch] flex-col gap-2 pl-5 text-sm">
           {guide.drill.map((d) => (
             <li key={d} className="list-disc marker:text-[var(--text-faint)]">
-              <DrillLine text={d} />
+              <ContentProse text={d} />
             </li>
           ))}
         </ul>

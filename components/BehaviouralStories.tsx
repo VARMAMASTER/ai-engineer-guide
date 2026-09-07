@@ -4,6 +4,7 @@ import { useId, useState } from 'react'
 import { content } from '@/lib/content/index'
 import type { BehaviouralPrinciple, StorySlot } from '@/lib/content/schema'
 import Meter from './Meter'
+import ContentProse from './ContentProse'
 import {
   EMPTY_DRAFT,
   STAR_FIELDS,
@@ -193,7 +194,7 @@ function StarBox({
         aria-label={`${FIELD_LABEL[field]} — ${prompt}`}
         rows={4}
         data-field={field}
-        className="surface-solid min-h-[5.5rem] w-full resize-y p-3 text-sm leading-relaxed text-[var(--text)] placeholder:text-[var(--text-faint)]"
+        className="surface-solid min-h-[5.5rem] w-full max-w-[74ch] resize-y p-3 text-sm leading-relaxed text-[var(--text)] placeholder:text-[var(--text-faint)]"
         placeholder="Your words, nobody else's."
       />
     </div>
@@ -232,7 +233,9 @@ function StoryCard({ story }: { story: StorySlot }) {
         <h4 className="min-w-0 font-[family-name:var(--font-display)] text-base font-semibold tracking-tight">
           {story.title}
         </h4>
-        <p className="min-w-0 text-sm text-[var(--text-muted)]">{story.source}</p>
+        <p className="min-w-0 text-sm text-[var(--text-muted)]">
+          <ContentProse text={story.source} />
+        </p>
         <div className="flex min-w-0 flex-wrap gap-1.5">
           {principles.map((p) => (
             <Pill key={p.id} tone={filled > 0 ? 'accent' : 'muted'}>
