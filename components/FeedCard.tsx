@@ -21,7 +21,7 @@ import type { FeedItem } from '@/lib/feed/types'
  *   have been if the feed had shipped no image — a torn card with a broken
  *   glyph or a bare grey rectangle is worse than no picture.
  */
-export default function FeedCard({ item }: { item: FeedItem }) {
+export default function FeedCard({ item, priority }: { item: FeedItem; priority: boolean }) {
   const [imageFailed, setImageFailed] = useState(false)
   const showImage = Boolean(item.image) && !imageFailed
 
@@ -43,6 +43,9 @@ export default function FeedCard({ item }: { item: FeedItem }) {
             // full desktop width, and never a desktop-width file on a phone.
             sizes="(min-width: 768px) 46vw, 100vw"
             className="object-cover"
+            // The first row is above the fold on every viewport and is the LCP
+            // element, so it loads eagerly; everything below it stays lazy.
+            priority={priority}
             onError={() => setImageFailed(true)}
           />
         </div>

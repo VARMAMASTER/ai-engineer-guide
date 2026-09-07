@@ -10,6 +10,14 @@ type Filter = 'all' | FeedSource
 type Status = 'loading' | 'ready' | 'empty'
 
 /**
+ * How many text-only items the combined view shows. arXiv and HN each return
+ * up to 40, and eighty text cards stacked under the picture wall buries the
+ * thing this page exists for. Selecting a single source lifts the cap, so
+ * nothing is unreachable — only deprioritised in the "everything" view.
+ */
+const TEXT_PREVIEW = 24
+
+/**
  * The Feed board: all four sources in one client-side load, split into a
  * picture wall (Ars Technica, The Verge) and a text list (arXiv, Hacker News).
  *
@@ -66,7 +74,8 @@ export default function FeedBoard() {
   )
 
   const withImages = visible.filter((i) => i.image)
-  const textOnly = visible.filter((i) => !i.image)
+  const allTextOnly = visible.filter((i) => !i.image)
+  const textOnly = filter === 'all' ? allTextOnly.slice(0, TEXT_PREVIEW) : allTextOnly
 
   return (
     <div className="flex min-w-0 flex-col gap-6">
@@ -104,8 +113,8 @@ export default function FeedBoard() {
             <section className="flex min-w-0 flex-col gap-3">
               <h2 className="eyebrow">Headlines</h2>
               <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2">
-                {withImages.map((item) => (
-                  <FeedCard key={item.id} item={item} />
+                {withImages.map((item, n) => (
+                  <FeedCard key={item.id} item={item} priority={n < 2} />
                 ))}
               </div>
             </section>
@@ -119,6 +128,11 @@ export default function FeedBoard() {
                   <TextCard key={item.id} item={item} />
                 ))}
               </div>
+              {textOnly.length < allTextOnly.length ? (
+                <p className="readout text-[var(--text-muted)]">
+                  showing {textOnly.length} of {allTextOnly.length} — filter by source for the rest
+                </p>
+              ) : null}
             </section>
           ) : null}
 
