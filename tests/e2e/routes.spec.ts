@@ -90,7 +90,12 @@ test.describe('every route loads', () => {
       expect(title, `${route} has no title`).toContain('AI Engineer Practice Guide')
       seen.add(title)
     }
-    expect(seen.size, 'every route should have a distinct title').toBe(12)
+    // Derived, not hardcoded. This asserted 12 while the sweep walked 28 URLs —
+    // it went stale every time a section was added, the same way the route
+    // counts above did, and a stale equality here silently stops checking that
+    // titles are actually distinct.
+    const walked = ALL_ROUTES.filter((r) => r !== '/')
+    expect(seen.size, 'every route should have a distinct title').toBe(walked.length)
   })
 
   test('the seeded day is the one Today renders', async ({ page }) => {
