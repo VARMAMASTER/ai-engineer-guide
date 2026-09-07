@@ -1757,5 +1757,375 @@ export const scenarios: Scenario[] = [
       'They check whether the evidence survived into the second turn before diagnosing sycophancy, and they define what should happen when the user is right - a model that never reverses is not the goal either.',
     minutes: 14,
   },
+  // ----------------------------------------------------------- Evaluation and drift
+  {
+    id: 'scn-eval-offline-gains-dont-appear-online',
+    area: 'evaluation',
+    symptom:
+      'A retrieval change scored +9 points on the offline evaluation set. Shipped to 50% of traffic, thumbs-up rate is flat and escalation-to-human rate is up 1.4 points. The offline set has 200 items and was assembled by the team eight months ago.',
+    firstQuestions: [
+      'How does the offline set compare with live traffic - query length distribution, intent mix, share of unanswerable questions, share of follow-up turns? Sample 200 real queries and compare side by side. Divergence here explains most cases of this shape.',
+      'Was the offline set used to tune the change? If the same 200 items guided the iterations, +9 is a training score, not a test score, and it means nothing.',
+      'Do the online metrics actually measure what improved? Thumbs-up rate is sparse, biased and slow; a retrieval win may be real and invisible to it.',
+      'Is the online result statistically meaningful, and did the experiment run long enough to cover a full weekly cycle?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Distribution shift: the eight-month-old set no longer resembles current traffic, so the improvement is real on a population you no longer serve.',
+        check:
+          'Score the new system on a freshly sampled and labelled set of 200 current queries. If the gain shrinks toward zero, the old set is the problem.',
+      },
+      {
+        hypothesis:
+          'Overfitting to the evaluation set through repeated iteration against it, with no held-out split.',
+        check:
+          'Check the change history for how many variants were scored against this set. Beyond about a dozen, the set has become training data.',
+      },
+      {
+        hypothesis:
+          'The online metric is too noisy or too indirect to detect the effect, so "flat" means "not measured" rather than "not improved".',
+        check:
+          'Compute the minimum detectable effect for the thumbs-up rate at current volume and rating density. If it is 4 points, a real 2-point gain was never observable.',
+      },
+      {
+        hypothesis:
+          'The change helped retrieval but hurt something downstream - longer contexts raising latency past the point users abandon, which shows up as escalations.',
+        check:
+          'Compare latency and answer length between arms. An escalation rise concentrated in the slowest decile points at latency, not at relevance.',
+      },
+    ],
+    fix:
+      'Rebuild the offline set from live traffic on a schedule - stratified sample by intent, refreshed monthly, with a locked held-out portion that is never used for iteration - so the offline number is predictive rather than historical. Add unanswerable and multi-turn cases in the proportions live traffic actually shows. Choose online metrics that can move: task completion, escalation rate, edit distance on accepted answers, and repeat-query rate are all denser and less biased than thumbs. Before running any experiment, compute the minimum detectable effect and the required duration, and do not ship or reject on an underpowered result. Then diagnose this specific case - the escalation rise is a real signal and deserves its own investigation rather than being averaged away.',
+    tradeoff:
+      'Refreshing the offline set monthly breaks comparability across time, so you lose the longitudinal story unless you keep a frozen legacy set alongside and pay for both. Labelling fresh samples is recurring human cost. Powering experiments properly means longer experiments and slower iteration, which is a genuine tension with shipping speed.',
+    seniorSignal:
+      'They compare the evaluation distribution against live traffic as the first move, and they treat the escalation rise as information rather than as noise around a flat headline metric.',
+    minutes: 16,
+  },
+  {
+    id: 'scn-eval-llm-judge-disagrees-with-humans',
+    area: 'evaluation',
+    symptom:
+      'The GPT-based judge scores answers 4.3 out of 5 on average. Human reviewers score the same answers 3.1. The judge is not uniformly generous - it agrees with humans on obviously good and obviously bad answers, and diverges sharply on the middle, where it rewards long, well-structured, confident answers that reviewers marked as factually wrong.',
+    firstQuestions: [
+      'What is the agreement rate, not the mean gap? Compute Spearman correlation and per-item agreement on a common set. Means can coincide while item-level rankings are uncorrelated, which is the worse failure.',
+      'Do the humans agree with each other? Measure inter-annotator agreement first. If humans agree only 65% of the time, no judge can do better and the rubric is the problem.',
+      'Does the judge see the same information the human sees - the retrieved context, the source documents, the conversation history? A judge scoring an answer without the evidence is scoring style.',
+      'What is the rubric? If it says "rate helpfulness 1-5" with no anchors, the judge and the human are answering different questions.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The rubric is unanchored, so "4" is undefined and the judge falls back on surface fluency, which correlates with the things it was trained to prefer.',
+        check:
+          'Read the judge prompt. Absence of concrete per-score descriptions is the finding, and rewriting them usually moves agreement more than any model change.',
+      },
+      {
+        hypothesis:
+          'The judge cannot verify facts because it lacks the source documents, so factual errors are invisible to it and only presentation remains.',
+        check:
+          'Re-run the judge with the source context included and re-measure agreement on the disputed middle. A large improvement isolates this.',
+      },
+      {
+        hypothesis:
+          'Known judge biases are operating - length, structure, confident tone, and self-preference for text from the same model family.',
+        check:
+          'Regress judge score on answer length and on presence of headings, holding human score fixed. A significant length coefficient quantifies the bias.',
+      },
+      {
+        hypothesis:
+          'The human labels are themselves inconsistent, so the judge is being compared against a moving target.',
+        check:
+          'Give the same 50 items to two reviewers and to the same reviewer twice a week apart. Low agreement invalidates the comparison.',
+      },
+    ],
+    fix:
+      'Fix the rubric before the judge. Replace the 1-5 scale with a small set of binary, checkable criteria - is every factual claim supported by the provided source, does it answer the question asked, does it follow the format - since binary checkable items produce far higher agreement than holistic scales for both humans and models. Give the judge the source documents so grounding is verifiable rather than assumed. Prefer pairwise comparison over absolute scoring where the decision is "is B better than A", and randomise position to cancel order bias. Then calibrate continuously: keep a rolling human-labelled sample, report judge-human agreement as a monitored metric, and treat any judge score as invalid until its agreement is known.',
+    tradeoff:
+      'Binary criteria lose nuance - an answer can pass every check and still be unhelpful - so you trade sensitivity for reliability and need a small qualitative review alongside. Pairwise comparison scales quadratically and cannot give an absolute quality number, which is what leadership wants on a dashboard. Continuous human calibration is an ongoing cost that will be the first thing cut when the team is busy, which is exactly when it matters.',
+    seniorSignal:
+      'They measure human-human agreement before blaming the judge, and they treat the judge as an instrument that must itself be calibrated and monitored - a weak answer swaps to a bigger judge model and reports the new mean.',
+    minutes: 16,
+  },
+  {
+    id: 'scn-eval-quality-decay-over-months',
+    area: 'evaluation',
+    symptom:
+      'No deploy has touched the RAG service in four months. Thumbs-down rate has drifted from 4% to 11% over that period, roughly linearly. The offline evaluation set still scores the same as it did in month one.',
+    firstQuestions: [
+      'What is changing if the code is not - the corpus, the query mix, the user population, the underlying model behind a floating version alias, or the world the documents describe?',
+      'Is the offline set still representative? A frozen set scoring identically while production degrades is the strongest possible evidence that the set no longer resembles reality.',
+      'Are the complaints concentrated? Group thumbs-down by intent, tenant, query topic and document age. Uniform decay and a growing bad segment need completely different responses.',
+      'Is the model version pinned? A floating alias means the model has changed several times underneath you and "no deploy" is not true.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Corpus drift: documents were added, superseded or deleted, so retrieval now surfaces material that did not exist when the system was tuned.',
+        check:
+          'Plot corpus size and document-age distribution over the four months, and check whether failing queries retrieve recently added documents disproportionately.',
+      },
+      {
+        hypothesis:
+          'Query drift: users learned what the system can do and moved on to harder questions, or a new user segment arrived with different needs.',
+        check:
+          'Cluster queries by month and compare cluster proportions. New or growing clusters with high thumbs-down rates are the answer.',
+      },
+      {
+        hypothesis:
+          'The model changed under a floating version alias, so the generation behaviour is not what it was.',
+        check:
+          'Read the model identifier returned in API responses across the period. A change dates precisely.',
+      },
+      {
+        hypothesis:
+          'World drift: the documents are correct but stale - the product changed and the corpus did not - so retrieval works perfectly and the answers are wrong.',
+        check:
+          'Sample failing answers and check whether the retrieved document was accurate at the time it was written. Correct-but-outdated is a content-operations problem, not a retrieval one.',
+      },
+    ],
+    fix:
+      'The immediate action is diagnosis, not repair: the decay is linear and slow, which means whatever is happening is continuous, and the four clusters above are separable within a day of analysis. Structurally, the missing capability is drift detection - monitor the query embedding distribution against a reference window and alert on divergence, track corpus composition, pin model versions so the alias cannot move, and refresh the evaluation set monthly from live traffic so it decays with reality rather than preserving a fossil. Add document freshness as a first-class signal: an owner and a review date per document, retrieval that prefers recent versions, and a report of documents that are frequently retrieved and long unreviewed.',
+    tradeoff:
+      'Drift monitoring produces alerts on changes that are benign - a marketing campaign shifting the query mix for a week is drift and is fine - so it needs a triage owner or it becomes noise that gets muted. A monthly-refreshed evaluation set costs labelling and breaks time-series comparability. Document review dates create real editorial workload that someone outside the engineering team has to absorb, and without that owner the freshness signal decays too.',
+    seniorSignal:
+      'They accept that a system with no deploys can still degrade because everything around it moved, and they instrument the inputs rather than only the outputs - a weak answer looks for a bad deploy that does not exist.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-eval-no-golden-set',
+    area: 'evaluation',
+    symptom:
+      'Asked whether last week\'s prompt change helped, the team\'s answer is "it feels better". There is no evaluation set. Decisions are made by whoever tried three examples most recently, and two engineers are currently arguing about a change with no way to resolve it.',
+    firstQuestions: [
+      'What decision would the set actually inform? Build it to answer a specific question - ship or not, model A or B - rather than as a generic quality artefact, or it will be built and never used.',
+      'What data already exists? Support tickets, chat logs, thumbs-down transcripts and human-corrected outputs are all latent evaluation data and are far better than invented examples.',
+      'Who can say whether an answer is correct, and how much of their time can be obtained? This is the binding constraint on everything and it is better established before promises are made.',
+      'What are the actual failure modes today? Read fifty failures before deciding what to measure, or you will measure what is easy rather than what is wrong.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Nobody owns quality, so the work is nobody\'s job and never gets scheduled.',
+        check:
+          'Ask who is accountable for the quality number. If the answer is a shrug or a committee, that is the root cause and no amount of tooling fixes it.',
+      },
+      {
+        hypothesis:
+          'The team believes a useful evaluation set requires thousands of expert-labelled items, so the project looks too expensive to start.',
+        check:
+          'Ask what they think it would take. The gap between that belief and the reality - 50 to 100 well-chosen items is genuinely useful - is the blocker.',
+      },
+      {
+        hypothesis:
+          'Ground truth is genuinely contested because the task is subjective and there is no agreed definition of a good answer.',
+        check:
+          'Have two experts independently rate ten outputs. If they disagree substantially, the first deliverable is a rubric, not a dataset.',
+      },
+    ],
+    fix:
+      'Start small and immediately. Take 50 real queries stratified across the intents that matter, including ten known-unanswerable ones and ten from recent complaints, and have a domain expert write the acceptance criteria for each - not a model answer, but the checkable facts the answer must contain and the things it must not say. That is a day of work and it settles the argument the two engineers are having today. Automate the checkable parts, keep a small human-reviewed slice, and run it in CI on every prompt or retrieval change with results posted to the pull request. Grow it by rule: every production failure becomes a case, so the set tracks reality without a separate project. Name a single owner.',
+    tradeoff:
+      'Fifty items has a wide confidence interval and cannot detect small improvements, so it will occasionally bless a bad change and reject a good one - it is a floor, not a instrument of precision. Acceptance criteria written by one expert encode one person\'s judgement, which is better than nothing and worse than consensus. And running evaluation in CI adds minutes and API cost to every pull request, which the team will resent until it catches something.',
+    seniorSignal:
+      'They ship 50 items this week instead of designing a comprehensive framework for next quarter, and they write checkable acceptance criteria rather than reference answers, because exact-match against a model answer measures phrasing rather than correctness.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-eval-benchmark-contamination',
+    area: 'evaluation',
+    symptom:
+      'A new model scores 91% on the public benchmark used for model selection, against 78% for the incumbent. Deployed behind a shadow test on real traffic, the two are indistinguishable, and on internal cases the new model is slightly worse.',
+    firstQuestions: [
+      'Is the benchmark public and old enough to be in the training data? A widely mirrored dataset published two years ago should be assumed contaminated until shown otherwise.',
+      'Does the benchmark resemble your task at all? Multiple-choice question answering and open-ended grounded generation share almost nothing operationally.',
+      'What does the model do on perturbed versions of the benchmark items - same problem, renamed entities and changed numbers? A large drop on paraphrase is the contamination signature.',
+      'Why was model selection based on a public benchmark instead of your own task? That is the process question underneath the technical one.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The benchmark is in the training data, so the score measures memorisation rather than capability.',
+        check:
+          'Perturb 50 items - rename entities, change numeric values, reorder options - and re-score. A collapse from 91% to near the incumbent is conclusive.',
+      },
+      {
+        hypothesis:
+          'The benchmark measures a capability your product does not use, so a genuine improvement on it is simply irrelevant to you.',
+        check:
+          'Map benchmark task format against your production task. If yours is grounded generation with citations and the benchmark is multiple choice, the correlation was never expected to exist.',
+      },
+      {
+        hypothesis:
+          'Vendor-reported numbers were produced under conditions you are not reproducing - different prompting, few-shot counts, chain-of-thought, or best-of-n sampling.',
+        check:
+          'Reproduce the benchmark yourself with your own harness and production settings. A gap between your run and the published figure is a methodology gap.',
+      },
+    ],
+    fix:
+      'Demote public benchmarks to a coarse screen and make the selection decision on a private, task-specific set that has never been published - drawn from your own traffic, held offline, and rotated periodically so it cannot leak through vendor logging either. Keep a canary subset that is never sent to any third-party API at all. Run candidate models in shadow against live traffic and compare on production metrics before promotion. Where a public benchmark is used, use a perturbed variant and report the perturbation gap alongside the raw score, because that gap is more informative than either number alone.',
+    tradeoff:
+      'Private evaluation sets cannot be compared against anyone else\'s published results, so you lose external calibration and the ability to answer "how do we compare" - that has to be accepted explicitly. Shadow evaluation costs a second inference on every sampled request. Keeping a subset off third-party APIs means it can only ever evaluate self-hosted models, which limits it to a narrow role.',
+    seniorSignal:
+      'They perturb the benchmark to test for memorisation rather than arguing about it in the abstract, and they treat "we selected a model on a public benchmark" as the process defect to fix.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-eval-metric-goodharted',
+    area: 'evaluation',
+    symptom:
+      'The team optimised citation rate, which rose from 61% to 94% over a quarter and was celebrated. Sampling the cited answers, roughly a fifth cite a document that does not actually support the claim - the citation is decorative. User-reported error rate did not move.',
+    firstQuestions: [
+      'What does the metric actually check - that a citation is present, or that the cited text supports the claim? Read the implementation. Presence-only is the whole bug.',
+      'Did anything else move in the same period? A metric that improves alone, with no movement in outcomes, is usually being gamed rather than achieved.',
+      'What was the prompt change that produced the jump? If it says "always cite a source", the model complied exactly and the metric measured compliance.',
+      'What is the true support rate, measured by a human on a sample? That number is what the metric was meant to proxy.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The metric measures form rather than substance - it regexes for a citation marker and never verifies entailment.',
+        check:
+          'Read the metric code. Then hand-check 50 cited claims against their sources and compare the two numbers.',
+      },
+      {
+        hypothesis:
+          'The instruction to always cite makes citation mandatory even when no source supports the claim, so the model attaches the nearest retrieved document.',
+        check:
+          'Look at whether the cited chunk is the top retrieval result regardless of content. A constant top-1 citation pattern is decoration.',
+      },
+      {
+        hypothesis:
+          'The metric became a team target with no counterbalancing measure, so every change that raised it shipped and nothing tested whether quality followed.',
+        check:
+          'Review the changes made during the quarter and ask which were evaluated against user outcomes at all.',
+      },
+    ],
+    fix:
+      'Replace the proxy with the thing it was proxying: check entailment, not presence - for each claim, verify that the cited chunk actually contains supporting text, using string overlap for numeric and named-entity claims and an entailment check for the rest. Report supported-citation rate and let raw citation rate become a diagnostic rather than a goal. Pair every optimisation metric with a guard metric that must not degrade - here, human-sampled factual accuracy - and make shipping conditional on both. Give the model a legitimate way out: if nothing supports a claim, it should be able to state the claim as uncited or decline it, rather than being forced to attach a citation to satisfy a rule.',
+    tradeoff:
+      'Entailment checking costs a model call per claim, which is meaningful on high-volume traffic and adds latency if done inline rather than on a sample. It has its own error rate, so you are measuring one imperfect judgement with another. And allowing uncited claims reopens a door the citation mandate was closing, so the criteria for when that is acceptable have to be written down and enforced.',
+    seniorSignal:
+      'They notice that the celebrated metric moved alone and treat that as evidence of gaming rather than success, and they pair every target with a guard metric so the next optimisation cannot quietly do the same thing.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-eval-regression-invisible-in-aggregate',
+    area: 'evaluation',
+    symptom:
+      'A retrieval change shipped with the aggregate evaluation score moving from 82.1 to 82.4 - fine, so it went out. Two weeks later the legal team reports that contract questions are badly wrong. Contract queries are 3% of the set; on that slice the score fell from 79 to 41.',
+    firstQuestions: [
+      'Is the evaluation set sliced at all, or only reported as a single number? If there is no slicing, this outcome was inevitable and will recur.',
+      'Which slices matter disproportionately to the business? Volume-weighted aggregates systematically hide low-volume, high-stakes segments - and legal, medical and financial slices are almost always in that category.',
+      'How large is each slice, and does it have enough items to detect a change? A 3% slice of a 200-item set is six items, which can move 40 points on noise.',
+      'Did anyone look at per-slice numbers before shipping, or only the headline?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The aggregate is volume-weighted, so a small slice cannot move it no matter how badly it breaks.',
+        check:
+          'Recompute the aggregate as an unweighted mean of per-slice scores. If the change now looks bad, weighting hid it.',
+      },
+      {
+        hypothesis:
+          'The change helped the common case and hurt a specific one - a chunking or embedding change that suits short prose and destroys long clause-structured documents.',
+        check:
+          'Read the retrieved chunks for failing contract queries before and after. A structural difference in what comes back localises it immediately.',
+      },
+      {
+        hypothesis:
+          'The contract slice is too small to have detected the regression even if someone had looked at it.',
+        check:
+          'Compute the confidence interval on a six-item slice. If it spans 30 points, the slice was decorative and needs to be grown.',
+      },
+    ],
+    fix:
+      'Report per-slice, never aggregate-only, and make the shipping gate a per-slice condition: no defined slice may fall by more than a set threshold regardless of what the headline does. Define slices from business risk rather than from volume - legal, medical, billing, security - and size each one large enough to detect a meaningful change, which usually means over-sampling rare-but-critical categories relative to their traffic share. Add the specific failing contract cases to the set permanently. Where a slice is genuinely too small to measure, say so explicitly rather than reporting a number that cannot support a decision.',
+    tradeoff:
+      'Per-slice gates make shipping harder and will block changes that are net positive because one slice regressed slightly, so the thresholds need to be set with judgement and an override path with a named approver. Over-sampling rare categories means the aggregate no longer reflects traffic, so you now maintain two views and must be careful which one is quoted. More slices means more labelling and a longer evaluation run.',
+    seniorSignal:
+      'They ask what the aggregate is hiding before trusting it, and they weight slices by consequence rather than by frequency - a weak answer adds contract examples to the set and leaves the aggregate gate in place to hide the next one.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-eval-user-feedback-signal-useless',
+    area: 'evaluation',
+    symptom:
+      'Thumbs are collected on every answer. The rate is 0.8% of responses and 94% of those are thumbs-up. Meanwhile the support queue is full of complaints about the assistant. The dashboard says 94% satisfaction and leadership quotes it.',
+    firstQuestions: [
+      'Who actually clicks? Compare the profile of raters against all users - session length, tenant, intent. A 0.8% response rate is a self-selected sample and almost certainly not representative.',
+      'What does a thumb mean to the user - the answer was correct, the assistant was polite, or the button was near the cursor? Nobody has defined it, which is why it cannot be interpreted.',
+      'What implicit signals are already in the logs - did the user rephrase, retry, copy the answer, escalate, or abandon? These are dense and unbiased and nobody is using them.',
+      'Do the support complaints map to identifiable sessions? Joining them to transcripts turns anecdote into a labelled failure set.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Selection bias: dissatisfied users leave rather than rate, so the sample over-represents satisfied and engaged users.',
+        check:
+          'Compare session outcomes between raters and non-raters. If raters have far higher completion rates, the sample is not the population.',
+      },
+      {
+        hypothesis:
+          'The signal is too sparse to support any inference at all - 0.8% of traffic cannot detect anything but the largest changes.',
+        check:
+          'Compute the minimum detectable effect at that volume. It will be embarrassingly large, which is the argument for changing the instrument.',
+      },
+      {
+        hypothesis:
+          'Thumbs-down is socially and mechanically costly - it takes a click and feels like a complaint - so the negative signal is suppressed relative to the positive one.',
+        check:
+          'Compare rating rates on answers that were followed by an immediate rephrase. If those sessions rate no more often, users are simply leaving.',
+      },
+    ],
+    fix:
+      'Stop treating the thumbs number as satisfaction and stop putting it on the leadership dashboard, because a biased sparse metric that is quoted is worse than one that is absent. Instrument implicit signals instead: rephrase-within-session, repeat query within a day, copy of the answer, escalation to human, abandonment before the answer completes - these cover close to 100% of sessions and correlate with real failure. Ask for feedback selectively rather than always, targeting sessions where implicit signals suggest trouble, and ask a specific question - was this factually correct - rather than an ambiguous thumb. Join support tickets to session ids so complaints become labelled cases. Validate the whole thing against a periodic human review of a random sample, which is the only unbiased ground truth here.',
+    tradeoff:
+      'Implicit signals are noisy proxies - a user rephrasing may be refining a question rather than recovering from a bad answer - so they need validation against human review before they can be trusted, and that validation is a recurring cost. Targeted feedback prompts sample non-randomly by construction, which must be corrected for. And removing a metric leadership already quotes is a political act that needs a replacement ready on the same day.',
+    seniorSignal:
+      'They identify the selection bias and refuse to report the number rather than trying to raise the response rate, and they reach for signals that already exist in the logs before designing a new survey.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-eval-embedding-index-silently-stale',
+    area: 'evaluation',
+    symptom:
+      'Answers reference a document that was deleted from the source system six weeks ago, and a policy updated in July still answers with the June text. The ingestion job reports success every night and its dashboard is entirely green.',
+    firstQuestions: [
+      'Does the job report success based on completing, or on having verified the result? Read the job. Most report the former and the distinction is the entire bug.',
+      'What is the actual delta between the source system and the index right now? Count documents on both sides and compare content hashes for a sample. That number is the finding.',
+      'How are deletions handled? Many pipelines upsert and never delete, so removed documents live in the index forever with no error anywhere.',
+      'Is there any freshness metric - index lag, oldest un-refreshed document, count of documents whose hash differs from source?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The pipeline is upsert-only, so deletions and unpublishings in the source never propagate.',
+        check:
+          'Pick a document deleted last month and query the index for it. Its presence is conclusive.',
+      },
+      {
+        hypothesis:
+          'Change detection relies on a modified-date field that some updates do not touch - an in-place edit by a system that does not bump the timestamp - so those documents are never re-indexed.',
+        check:
+          'Compare content hashes rather than timestamps for a sample. Documents whose hash differs while the timestamp matches are the missed class.',
+      },
+      {
+        hypothesis:
+          'The job partially fails and swallows the error, processing 8,000 of 10,000 documents and exiting zero.',
+        check:
+          'Compare documents-processed against documents-expected in the job logs. A persistent gap that nothing alerts on is the answer.',
+      },
+    ],
+    fix:
+      'Make the pipeline verify rather than report. Reconcile daily: compare the source id and content-hash set against the index, and emit counts of missing, extra and stale documents as metrics with alerts on all three - this is a cheap job and it would have caught both symptoms in week one. Handle deletion explicitly with tombstones or a full id-set diff. Detect change by content hash rather than by trusting a modified-date. Stamp each indexed chunk with its source version and index time, expose that in retrieval, and let the answer surface an as-of date so a stale answer is visible to the user rather than silent. Fail the job loudly on a partial run instead of exiting zero.',
+    tradeoff:
+      'Daily full reconciliation costs a scan of both systems, which is expensive at millions of documents and may need to be sampled or partitioned. Hash-based change detection means re-reading source content rather than filtering cheaply on a timestamp. Surfacing an as-of date to users invites questions about freshness that the content team may not be equipped to answer, and it makes staleness a visible product characteristic rather than an invisible one.',
+    seniorSignal:
+      'They distinguish "the job ran" from "the index is correct" and build the reconciliation that proves the latter, rather than adding retries to a job that was already succeeding.',
+    minutes: 13,
+  },
   // CHUNK_MARKER
 ]
