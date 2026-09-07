@@ -434,6 +434,27 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 20,
+    signal: 'The question is only ever "has this value appeared before?" — no order, no index, no count is asked for.',
+    approach: `Brute force compares every pair, which is O(n^2). A set answers "seen before?"
+in O(1) expected time, so one pass over the array is enough: add as you go and
+return the moment an insert finds a value already present. The early return
+matters — you do not have to build the whole set to know the answer.`,
+    solution: `def contains_duplicate(nums: list[int]) -> bool:
+    seen: set[int] = set()
+    for n in nums:
+        if n in seen:
+            return True
+        seen.add(n)
+    return False`,
+    complexity: {
+      time: 'O(n) — one pass, and each set membership test and insert is O(1) expected on hashed integers.',
+      space: 'O(n) — worst case every element is distinct and lands in the set.',
+    },
+    followUps: [
+      'What if the array is sorted? Then adjacent equality is enough and you drop to O(1) extra space.',
+      'What if it does not fit in memory? Hash-partition by value into buckets and check each bucket independently.',
+      'What if you must find the duplicate value, not just whether one exists, in O(1) space?',
+    ],
   },
   {
     id: 'dsa-242-valid-anagram',
@@ -445,6 +466,27 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 20,
+    signal: 'Two strings, and only the multiset of characters matters — order is explicitly irrelevant.',
+    approach: `An anagram is a statement about counts, not order, so compare character counts.
+Sorting both strings also works and is O(n log n); counting is O(n) and reads
+better. Check lengths first: unequal lengths can never be anagrams and the
+early exit saves a pass.`,
+    solution: `from collections import Counter
+
+
+def is_anagram(s: str, t: str) -> bool:
+    if len(s) != len(t):
+        return False
+    return Counter(s) == Counter(t)`,
+    complexity: {
+      time: 'O(n) — one pass to count each string, and the dict comparison touches each distinct key once.',
+      space: 'O(k) — bounded by the alphabet size k, so O(1) for lowercase ASCII.',
+    },
+    followUps: [
+      'What if the inputs are Unicode? Counter still works, but the O(1) space claim dies with a fixed 26-slot array.',
+      'What if you get a stream of words and must group all anagrams together?',
+      'What if you may ignore case and punctuation — where does the normalisation belong?',
+    ],
   },
   {
     id: 'dsa-1-two-sum',
@@ -456,6 +498,28 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 20,
+    signal: 'Find the pair that sums to a target, and the answer wanted is indices — so you must remember where each value lived.',
+    approach: `Instead of asking "which two add to target", ask for each element "have I already
+seen target - x?". A dict from value to index answers that in O(1), turning the
+O(n^2) double loop into one pass. Record the current value only after checking,
+or an element can pair with itself.`,
+    solution: `def two_sum(nums: list[int], target: int) -> list[int]:
+    seen: dict[int, int] = {}
+    for i, x in enumerate(nums):
+        need = target - x
+        if need in seen:
+            return [seen[need], i]
+        seen[x] = i
+    return []`,
+    complexity: {
+      time: 'O(n) — one pass, with an O(1) expected dict lookup and insert per element.',
+      space: 'O(n) — the dict holds up to every prefix element before the match is found.',
+    },
+    followUps: [
+      'What if the array is sorted? Two converging pointers solve it in O(1) extra space.',
+      'What if there are multiple valid pairs and you must return all of them without duplicates?',
+      'What if it is three numbers summing to the target instead of two?',
+    ],
   },
   {
     id: 'dsa-49-group-anagrams',
@@ -467,6 +531,31 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta'],
     minutes: 30,
+    signal: 'You must partition items into buckets, and membership in a bucket is decided by a canonical form of the item.',
+    approach: `Every grouping problem reduces to finding a key that is identical for members of a
+group and different across groups. For anagrams the sorted characters — or the
+26-length count tuple — is that key. One pass builds a dict from key to list;
+comparing every pair instead would be O(n^2) string comparisons.`,
+    solution: `from collections import defaultdict
+
+
+def group_anagrams(strs: list[str]) -> list[list[str]]:
+    groups: dict[tuple[int, ...], list[str]] = defaultdict(list)
+    for word in strs:
+        counts = [0] * 26
+        for ch in word:
+            counts[ord(ch) - ord("a")] += 1
+        groups[tuple(counts)].append(word)
+    return list(groups.values())`,
+    complexity: {
+      time: 'O(n * k) — each of the n words is counted once in a pass over its k characters; no sort needed.',
+      space: 'O(n * k) — the output holds every input string, plus one 26-slot key per distinct group.',
+    },
+    followUps: [
+      'What if the alphabet is Unicode? The fixed 26-slot key breaks; switch to a sorted tuple or a frozen Counter.',
+      'What if the word list does not fit in memory? Shard by the hash of the canonical key so each group lands on one machine.',
+      'What if you only need the largest anagram group, not all of them?',
+    ],
   },
   {
     id: 'dsa-347-top-k-frequent-elements',
@@ -478,6 +567,36 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: '"The k most frequent" — a ranking question where k is much smaller than n, so a full sort is more work than you need.',
+    approach: `Count with a dict, then rank. Sorting the counts is O(n log n); bucket sort is
+O(n) because a frequency can never exceed n, so an array of n+1 buckets indexed
+by count holds every element. Walk the buckets from high to low and stop once
+you have k. A size-k heap is the middle ground at O(n log k).`,
+    solution: `from collections import Counter
+
+
+def top_k_frequent(nums: list[int], k: int) -> list[int]:
+    counts = Counter(nums)
+    buckets: list[list[int]] = [[] for _ in range(len(nums) + 1)]
+    for value, freq in counts.items():
+        buckets[freq].append(value)
+
+    out: list[int] = []
+    for freq in range(len(nums), 0, -1):
+        for value in buckets[freq]:
+            out.append(value)
+            if len(out) == k:
+                return out
+    return out`,
+    complexity: {
+      time: 'O(n) — counting is one pass and the bucket walk visits n+1 buckets holding n values in total, with no comparison sort.',
+      space: 'O(n) — the counter plus n+1 buckets, both linear in the input.',
+    },
+    followUps: [
+      'What if the numbers arrive as an unbounded stream? Buckets need n up front; use a size-k heap or a sketch like count-min instead.',
+      'What if you need the k least frequent? The bucket walk reverses, but ties now matter more.',
+      'What if counts are approximate but memory is fixed — how much error does count-min sketch admit?',
+    ],
   },
   {
     id: 'dsa-271-encode-and-decode-strings',
@@ -489,6 +608,34 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta'],
     minutes: 30,
+    signal: 'You must round-trip a list through a single string with no forbidden characters — so no delimiter is safe and you need length prefixes.',
+    approach: `Any separator character can also appear inside a payload, so delimiting is wrong.
+Instead prefix each string with its length and a marker: "5#hello". The decoder
+reads digits up to the marker, then takes exactly that many characters, so the
+payload is never scanned for structure. This is the same framing every wire
+protocol uses.`,
+    solution: `def encode(strs: list[str]) -> str:
+    return "".join(f"{len(s)}#{s}" for s in strs)
+
+
+def decode(s: str) -> list[str]:
+    out: list[str] = []
+    i = 0
+    while i < len(s):
+        j = s.index("#", i)
+        length = int(s[i:j])
+        out.append(s[j + 1 : j + 1 + length])
+        i = j + 1 + length
+    return out`,
+    complexity: {
+      time: 'O(total) for each direction — every character of every string is written once and read once, with no rescanning.',
+      space: 'O(total) — the encoded string, or the decoded list, is the same size as the input.',
+    },
+    followUps: [
+      'What if strings can be gigabytes? Stream the length header then copy bytes, never materialising the whole joined string.',
+      'What if the transport is binary? Use a fixed-width big-endian length rather than decimal digits and a marker.',
+      'What if the list is nested, so entries are themselves lists? The framing has to become recursive.',
+    ],
   },
   {
     id: 'dsa-238-product-of-array-except-self',
@@ -500,6 +647,35 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'Every output cell needs an aggregate of everything except itself, and division is banned or unsafe because of zeros.',
+    approach: `Everything except i splits cleanly into everything left of i and everything right
+of i. One forward pass writes running prefix products into the output, one
+backward pass multiplies in the running suffix product held in a single
+variable. That is two passes and no extra array beyond the answer.`,
+    solution: `def product_except_self(nums: list[int]) -> list[int]:
+    n = len(nums)
+    out = [1] * n
+
+    prefix = 1
+    for i in range(n):
+        out[i] = prefix
+        prefix *= nums[i]
+
+    suffix = 1
+    for i in range(n - 1, -1, -1):
+        out[i] *= suffix
+        suffix *= nums[i]
+
+    return out`,
+    complexity: {
+      time: 'O(n) — exactly two passes over the array, each doing one multiply per element.',
+      space: 'O(1) extra — the output array is required by the problem; only two scalars are held besides it.',
+    },
+    followUps: [
+      'What if division were allowed? One pass and a total product works, but you must special-case one zero and two-or-more zeros.',
+      'What if the array is updated and re-queried? Precomputed prefix and suffix arrays go stale; a segment tree gives O(log n) updates.',
+      'What if products overflow a 64-bit integer — do you switch to logs, or to modular arithmetic?',
+    ],
   },
   {
     id: 'dsa-36-valid-sudoku',
@@ -511,6 +687,40 @@ export const dsaProblems: DsaProblem[] = [
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'A grid with three overlapping uniqueness constraints — row, column, and box — all checkable in a single pass.',
+    approach: `Do not validate row by row then column by column; make one pass and record each
+filled digit in three sets keyed by row index, column index, and box index. The
+box index is the pair (r // 3, c // 3). If any insert finds a duplicate, the
+board is invalid. Only the given digits are checked; solvability is a different
+problem.`,
+    solution: `from collections import defaultdict
+
+
+def is_valid_sudoku(board: list[list[str]]) -> bool:
+    rows: dict[int, set[str]] = defaultdict(set)
+    cols: dict[int, set[str]] = defaultdict(set)
+    boxes: dict[tuple[int, int], set[str]] = defaultdict(set)
+
+    for r, row in enumerate(board):
+        for c, val in enumerate(row):
+            if val == ".":
+                continue
+            box = (r // 3, c // 3)
+            if val in rows[r] or val in cols[c] or val in boxes[box]:
+                return False
+            rows[r].add(val)
+            cols[c].add(val)
+            boxes[box].add(val)
+    return True`,
+    complexity: {
+      time: 'O(1) for a fixed 9x9 board — 81 cells, each doing three O(1) set operations; O(n^2) for an n x n generalisation.',
+      space: 'O(1) for 9x9 — 27 sets of at most 9 digits each; O(n^2) in general.',
+    },
+    followUps: [
+      'What if you must actually solve the board? Backtracking reuses exactly these three constraint sets for pruning.',
+      'What if the board is n^2 x n^2 for arbitrary n — does the box index formula still hold?',
+      'What if cells stream in one at a time and you must reject the first illegal move?',
+    ],
   },
   {
     id: 'dsa-128-longest-consecutive-sequence',
@@ -522,6 +732,31 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta'],
     minutes: 30,
+    signal: 'Longest run of consecutive integers, but the input is unsorted and the required time forbids sorting.',
+    approach: `Sorting gives the answer in O(n log n); the O(n) trick is to put everything in a
+set and only start counting from a value whose predecessor is absent — that
+value is the head of its run. Each run is then walked once, so across all runs
+the total work is linear, not quadratic.`,
+    solution: `def longest_consecutive(nums: list[int]) -> int:
+    values = set(nums)
+    best = 0
+    for n in values:
+        if n - 1 in values:
+            continue  # not the start of a run
+        length = 1
+        while n + length in values:
+            length += 1
+        best = max(best, length)
+    return best`,
+    complexity: {
+      time: 'O(n) — the inner while only runs from a run\'s head, so every value is visited at most twice overall.',
+      space: 'O(n) — the set of distinct values.',
+    },
+    followUps: [
+      'What if the numbers arrive as a stream and you must report the current best after each insert? Union-find over neighbours does it.',
+      'What if you must return the sequence itself, not its length?',
+      'What if duplicates should count separately — does the set-based approach still apply?',
+    ],
   },
 
   // --- Two Pointers (5) ---
@@ -535,6 +770,33 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta'],
     minutes: 20,
+    signal: 'Compare a sequence against its reverse, with characters to skip — the classic converge-from-both-ends shape.',
+    approach: `Building a cleaned copy then comparing with its reverse is correct but costs O(n)
+extra space. Two pointers walking inward do it in place: advance each past any
+character that is not alphanumeric, then compare case-folded. Mismatch means
+not a palindrome; the pointers crossing means it is.`,
+    solution: `def is_palindrome(s: str) -> bool:
+    lo, hi = 0, len(s) - 1
+    while lo < hi:
+        if not s[lo].isalnum():
+            lo += 1
+        elif not s[hi].isalnum():
+            hi -= 1
+        elif s[lo].lower() != s[hi].lower():
+            return False
+        else:
+            lo += 1
+            hi -= 1
+    return True`,
+    complexity: {
+      time: 'O(n) — each pointer moves only forward or only backward, so together they take at most n steps.',
+      space: 'O(1) — two indices, no cleaned copy of the string.',
+    },
+    followUps: [
+      'What if you may delete one character and still call it a palindrome? The pointers fork into two candidate checks.',
+      'What if the input is a linked list, where you cannot index from the end?',
+      'What if \'alphanumeric\' must follow Unicode rules rather than ASCII?',
+    ],
   },
   {
     id: 'dsa-167-two-sum-ii-input-array-is-sorted',
@@ -546,6 +808,31 @@ export const dsaProblems: DsaProblem[] = [
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: 'Two Sum, except the array is stated to be sorted — that word is the whole hint, and O(1) space is demanded.',
+    approach: `Sortedness makes the sum monotonic in each pointer: moving lo right can only
+increase the sum, moving hi left can only decrease it. So compare the current
+sum to the target and move the one pointer that can help. No hash map is
+needed, which is why the space bound drops to O(1).`,
+    solution: `def two_sum_sorted(numbers: list[int], target: int) -> list[int]:
+    lo, hi = 0, len(numbers) - 1
+    while lo < hi:
+        total = numbers[lo] + numbers[hi]
+        if total == target:
+            return [lo + 1, hi + 1]  # problem uses 1-based indices
+        if total < target:
+            lo += 1
+        else:
+            hi -= 1
+    return []`,
+    complexity: {
+      time: 'O(n) — the two pointers only ever move toward each other, so the window shrinks by one every iteration.',
+      space: 'O(1) — two indices and a sum, no auxiliary structure.',
+    },
+    followUps: [
+      'What if the array were unsorted? You are back to a hash map and O(n) space, or O(n log n) to sort first.',
+      'What if the array is enormous and you may only binary search? For each i, search for target - numbers[i] in O(n log n).',
+      'What if you must count all pairs summing to the target, with duplicates present?',
+    ],
   },
   {
     id: 'dsa-15-3sum',
@@ -557,6 +844,43 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'Find triples summing to a fixed value, and the answer set must contain no duplicate triples.',
+    approach: `Sort, then fix the first element and solve the remaining Two Sum with two
+pointers — O(n^2) instead of the O(n^3) triple loop. Sorting is what makes both
+the pointer walk and the duplicate handling possible: skip a fixed element equal
+to its predecessor, and after recording a hit skip equal values on both sides.`,
+    solution: `def three_sum(nums: list[int]) -> list[list[int]]:
+    nums.sort()
+    out: list[list[int]] = []
+    n = len(nums)
+
+    for i in range(n - 2):
+        if nums[i] > 0:
+            break  # sorted, so no triple from here can reach zero
+        if i > 0 and nums[i] == nums[i - 1]:
+            continue
+        lo, hi = i + 1, n - 1
+        while lo < hi:
+            total = nums[i] + nums[lo] + nums[hi]
+            if total < 0:
+                lo += 1
+            elif total > 0:
+                hi -= 1
+            else:
+                out.append([nums[i], nums[lo], nums[hi]])
+                lo += 1
+                while lo < hi and nums[lo] == nums[lo - 1]:
+                    lo += 1
+    return out`,
+    complexity: {
+      time: 'O(n^2) — an O(n log n) sort, then for each of n fixed elements a linear two-pointer sweep.',
+      space: 'O(1) beyond the output if the sort is in place, since only indices are held.',
+    },
+    followUps: [
+      'What if it is 4Sum? Fix two elements and reuse the same sweep — the pattern generalises to kSum at O(n^(k-1)).',
+      'What if you want the triple closest to a target rather than exactly equal to it?',
+      'What if you only need the count of triples, not the triples themselves — can you avoid deduplicating?',
+    ],
   },
   {
     id: 'dsa-11-container-with-most-water',
@@ -568,6 +892,30 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'Maximise a value formed by a pair of positions where the value depends on their distance and the smaller of the two.',
+    approach: `Start with the widest possible pair. Area is width times the shorter wall, so
+moving the taller wall inward can never help: width strictly shrinks and the
+limiting height cannot rise. Therefore always move the shorter wall, which is
+the only move that can improve the answer, and one linear sweep suffices.`,
+    solution: `def max_area(height: list[int]) -> int:
+    lo, hi = 0, len(height) - 1
+    best = 0
+    while lo < hi:
+        best = max(best, (hi - lo) * min(height[lo], height[hi]))
+        if height[lo] < height[hi]:
+            lo += 1
+        else:
+            hi -= 1
+    return best`,
+    complexity: {
+      time: 'O(n) — one pointer moves inward every iteration, so there are at most n iterations.',
+      space: 'O(1) — two indices and the running best.',
+    },
+    followUps: [
+      'Prove the greedy move is safe: why can discarding the shorter wall never discard the optimal pair?',
+      'What if the container may use three walls, forming a trapped-water problem instead?',
+      'What if heights stream in and you must report the best area so far after every arrival?',
+    ],
   },
   {
     id: 'dsa-42-trapping-rain-water',
@@ -579,6 +927,39 @@ export const dsaProblems: DsaProblem[] = [
     core: false,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'Water above each bar is bounded by the tallest bar on each side — a per-cell answer that depends on a prefix max and a suffix max.',
+    approach: `Water over index i is min(max left, max right) - height[i]. Precomputing both max
+arrays is O(n) time and O(n) space; two pointers get it to O(1) space. Whichever
+side has the smaller running max is the binding constraint, so that side's cell
+can be settled immediately and its pointer advanced.`,
+    solution: `def trap(height: list[int]) -> int:
+    if not height:
+        return 0
+
+    lo, hi = 0, len(height) - 1
+    left_max, right_max = height[lo], height[hi]
+    total = 0
+
+    while lo < hi:
+        if left_max <= right_max:
+            lo += 1
+            left_max = max(left_max, height[lo])
+            total += left_max - height[lo]
+        else:
+            hi -= 1
+            right_max = max(right_max, height[hi])
+            total += right_max - height[hi]
+
+    return total`,
+    complexity: {
+      time: 'O(n) — each index is visited exactly once as one of the two pointers sweeps toward the other.',
+      space: 'O(1) — two running maxima replace the prefix and suffix max arrays.',
+    },
+    followUps: [
+      'What if the terrain is 2D? The greedy fails; you need a min-heap flood fill from the border inward.',
+      'What if bars have width, or the answer must be per-column volumes rather than a total?',
+      'Can you do it with a monotonic decreasing stack instead — what does each pop represent?',
+    ],
   },
 
   // --- Sliding Window (6) ---
@@ -592,6 +973,27 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 20,
+    signal: 'Maximise a difference where the smaller value must come first in the array — order-constrained, single transaction.',
+    approach: `The best sale on day i is that day's price minus the cheapest price seen before
+it. So sweep once, carrying the running minimum, and take the best difference.
+The O(n^2) pairwise scan recomputes that minimum from scratch every day, which
+is the only thing it wastes.`,
+    solution: `def max_profit(prices: list[int]) -> int:
+    cheapest = float("inf")
+    best = 0
+    for price in prices:
+        cheapest = min(cheapest, price)
+        best = max(best, price - cheapest)
+    return best`,
+    complexity: {
+      time: 'O(n) — a single pass keeping a running minimum, no recomputation per day.',
+      space: 'O(1) — two scalars regardless of how long the price series is.',
+    },
+    followUps: [
+      'What if you may transact any number of times? Sum every upward step — a different greedy entirely.',
+      'What if you are limited to at most k transactions? That becomes 2D DP over day and transactions used.',
+      'What if a cooldown day is enforced after every sale?',
+    ],
   },
   {
     id: 'dsa-3-longest-substring-without-repeating-characters',
@@ -603,6 +1005,33 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'Longest contiguous stretch under a constraint that only ever breaks by adding a character — the textbook sliding window.',
+    approach: `Grow the window to the right. When the incoming character is already inside, the
+window is invalid, so shrink from the left until it is not. Every index enters
+and leaves the window at most once, so the sweep is linear where the brute force
+re-scans every substring at O(n^2).`,
+    solution: `def length_of_longest_substring(s: str) -> int:
+    window: set[str] = set()
+    left = 0
+    best = 0
+
+    for right, ch in enumerate(s):
+        while ch in window:
+            window.remove(s[left])
+            left += 1
+        window.add(ch)
+        best = max(best, right - left + 1)
+
+    return best`,
+    complexity: {
+      time: 'O(n) — left and right each advance at most n times in total, so the nested while is amortised O(1).',
+      space: 'O(k) — the window set holds at most one entry per distinct character, so O(1) for a fixed alphabet.',
+    },
+    followUps: [
+      'What if at most k distinct characters are allowed instead of zero repeats? Swap the set for a count map.',
+      'What if you must return the substring itself? Track the left index at the moment the best was set.',
+      'Can you jump the left pointer straight past the previous occurrence instead of shrinking one step at a time?',
+    ],
   },
   {
     id: 'dsa-424-longest-repeating-character-replacement',
@@ -614,6 +1043,38 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta'],
     minutes: 30,
+    signal: 'A window is legal while the number of edits needed to make it uniform stays within a budget k.',
+    approach: `A window can be made uniform with (length - count of its most common character)
+replacements. Keep counts as the window grows; when that cost exceeds k, shrink
+from the left. Because the answer only ever grows, the classic trick is to never
+shrink the window below the best seen, giving a single clean pass.`,
+    solution: `from collections import defaultdict
+
+
+def character_replacement(s: str, k: int) -> int:
+    counts: dict[str, int] = defaultdict(int)
+    left = 0
+    most_common = 0
+    best = 0
+
+    for right, ch in enumerate(s):
+        counts[ch] += 1
+        most_common = max(most_common, counts[ch])
+        while (right - left + 1) - most_common > k:
+            counts[s[left]] -= 1
+            left += 1
+        best = max(best, right - left + 1)
+
+    return best`,
+    complexity: {
+      time: 'O(n) — right advances n times and left never moves backward, so total pointer movement is bounded by 2n.',
+      space: 'O(k) — one counter per distinct character, so O(1) for a fixed alphabet.',
+    },
+    followUps: [
+      'Why is it safe never to decrease most_common when shrinking? What invariant does the answer rely on?',
+      'What if replacements cost different amounts per character, so the budget is weighted?',
+      'What if you must return which characters to replace, not just the length?',
+    ],
   },
   {
     id: 'dsa-567-permutation-in-string',
@@ -625,6 +1086,46 @@ export const dsaProblems: DsaProblem[] = [
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: 'Does any contiguous window match a target multiset? The window length is fixed, which is the tell for a fixed-size window.',
+    approach: `A permutation of s1 is exactly a window of length len(s1) whose character counts
+match s1's. So slide a fixed-width window across s2, adding the entering char
+and removing the leaving one, and compare counts. Keeping a running "how many
+of the 26 counts currently match" makes each step O(1) rather than O(26).`,
+    solution: `def check_inclusion(s1: str, s2: str) -> bool:
+    if len(s1) > len(s2):
+        return False
+
+    need = [0] * 26
+    window = [0] * 26
+    for ch in s1:
+        need[ord(ch) - 97] += 1
+    for ch in s2[: len(s1)]:
+        window[ord(ch) - 97] += 1
+
+    matches = sum(1 for i in range(26) if need[i] == window[i])
+    if matches == 26:
+        return True
+
+    for right in range(len(s1), len(s2)):
+        for idx, delta in ((ord(s2[right]) - 97, 1), (ord(s2[right - len(s1)]) - 97, -1)):
+            if need[idx] == window[idx]:
+                matches -= 1
+            window[idx] += delta
+            if need[idx] == window[idx]:
+                matches += 1
+        if matches == 26:
+            return True
+
+    return False`,
+    complexity: {
+      time: 'O(n + m) — the initial window costs m, then each of the n - m slides does a constant amount of counter fixing.',
+      space: 'O(1) — two fixed 26-slot arrays, independent of input length.',
+    },
+    followUps: [
+      'What if you must return every start index, not just whether one exists? That is Find All Anagrams, same window.',
+      'What if the alphabet is Unicode? The 26-slot arrays become dicts and the O(1) space claim goes.',
+      'What if s2 is a stream you can only read once — does the fixed window still work?',
+    ],
   },
   {
     id: 'dsa-76-minimum-window-substring',
@@ -636,6 +1137,53 @@ export const dsaProblems: DsaProblem[] = [
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 45,
+    signal: 'Smallest window covering a required multiset — a shrinking window where validity is measured by how many required counts are satisfied.',
+    approach: `Expand right until the window covers every required character, then shrink from
+the left as far as validity allows, recording the best. A single "how many
+distinct required characters are currently satisfied" counter turns the validity
+check into O(1), so the whole sweep is linear rather than the O(n^2) scan over
+all substrings.`,
+    solution: `from collections import Counter
+
+
+def min_window(s: str, t: str) -> str:
+    if not t or len(t) > len(s):
+        return ""
+
+    need = Counter(t)
+    window: Counter[str] = Counter()
+    required = len(need)
+    satisfied = 0
+
+    best_len = len(s) + 1
+    best_start = 0
+    left = 0
+
+    for right, ch in enumerate(s):
+        window[ch] += 1
+        if ch in need and window[ch] == need[ch]:
+            satisfied += 1
+
+        while satisfied == required:
+            if right - left + 1 < best_len:
+                best_len = right - left + 1
+                best_start = left
+            out = s[left]
+            window[out] -= 1
+            if out in need and window[out] < need[out]:
+                satisfied -= 1
+            left += 1
+
+    return "" if best_len > len(s) else s[best_start : best_start + best_len]`,
+    complexity: {
+      time: 'O(n + m) — right and left each traverse s once, and the satisfied counter makes each validity check O(1) instead of O(alphabet).',
+      space: 'O(m) — the need and window counters hold at most one entry per distinct character of t.',
+    },
+    followUps: [
+      'What if t may contain duplicates? It already does here — the count comparison, not set membership, is what handles it.',
+      'What if s arrives as a stream and you must emit the best window so far without storing all of s?',
+      'What if you need the k smallest valid windows, or all minimal windows rather than one?',
+    ],
   },
   {
     id: 'dsa-239-sliding-window-maximum',
@@ -647,6 +1195,40 @@ export const dsaProblems: DsaProblem[] = [
     core: false,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'An aggregate over a fixed-size window that is not reversible — you can add on the right but you cannot un-take a maximum on the left.',
+    approach: `A running max cannot be undone when the window slides, so keep a deque of indices
+whose values are strictly decreasing: the front is always the window maximum.
+Push by evicting every smaller value from the back — those can never be the max
+again while the new element is in the window — and pop the front when it exits.`,
+    solution: `from collections import deque
+
+
+def max_sliding_window(nums: list[int], k: int) -> list[int]:
+    if not nums or k <= 0:
+        return []
+
+    dq: deque[int] = deque()  # indices, values strictly decreasing
+    out: list[int] = []
+
+    for i, x in enumerate(nums):
+        while dq and nums[dq[-1]] <= x:
+            dq.pop()
+        dq.append(i)
+        if dq[0] <= i - k:
+            dq.popleft()
+        if i >= k - 1:
+            out.append(nums[dq[0]])
+
+    return out`,
+    complexity: {
+      time: 'O(n) — every index is appended to the deque once and removed at most once, so the inner while is amortised O(1).',
+      space: 'O(k) — the deque never holds more than one window\'s worth of indices.',
+    },
+    followUps: [
+      'What if you need the window median instead of the maximum? Two heaps, or an order-statistic tree.',
+      'What if the window size varies per query? A sparse table gives O(1) range max after O(n log n) preprocessing.',
+      'What if the stream is unbounded and k is huge — what is the memory floor?',
+    ],
   },
 
   // --- Stack (7) ---
