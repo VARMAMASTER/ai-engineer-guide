@@ -1402,8 +1402,420 @@ const ragQuestions: AiSdQuestion[] = [
   },
 ]
 
+/**
+ * Pattern 4 — agent platforms. Multi-step tool-calling loops that run for minutes or hours:
+ * durable state, compounding per-step error, context growth, sandboxed execution and a
+ * defined escalation path.
+ */
+const agentQuestions: AiSdQuestion[] = [
+  {
+    id: 'aisdq-deep-research-agent',
+    patternId: 'aisdp-agent-platform',
+    title: 'Design a deep research agent',
+    companies: ['google', 'microsoft', 'amazon'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What is the deliverable — a cited report, an answer, a decision — and how long is the user willing to wait for it?',
+        'What is the per-task cost ceiling, and what happens when a task approaches it?',
+        'What does success mean here, and can a user tell a good report from a plausible one?',
+      ],
+      data: [
+        'What is the agent state, and what must survive a process crash 20 minutes into a task?',
+        'How does context grow over a 30-step research task, and what does that do to cost?',
+        'Where do intermediate findings live, and in what form?',
+      ],
+      architecture: [
+        'Draw the loop: what decides the next action, and what stops it?',
+        'Do you use a single agent with many tools or a planner with subagents, and why?',
+        'How do you parallelise research without the subagents duplicating each other work?',
+        'How do you bound cost and time without cutting a task off mid-thought?',
+      ],
+      evaluate: [
+        'How do you evaluate a 30-step trajectory when only the final report is visible?',
+        'What is the per-step versus end-to-end quality picture, and why does the arithmetic matter?',
+        'How do you catch an agent that produces a beautiful report from sources that do not say what it claims?',
+      ],
+      deploy: [
+        'How do you roll out a change to the planner prompt when every task is different?',
+        'What happens when a tool the agent depends on starts failing or returning garbage?',
+      ],
+      wrapup: [
+        'What is the cost per completed report, and where does it go?',
+        'What would you cap first if you had to halve that cost?',
+      ],
+    },
+    solution: {
+      define:
+        'The deliverable is a written report with inline citations to sources the agent actually retrieved, and the acceptable wait is minutes, not seconds — 3 to 10 minutes for a substantial question — which is a completely different product shape from chat and should be built as an asynchronous job with progress, not a request. The per-task cost ceiling is a hard budget in tokens and in wall clock, say 500K tokens and 10 minutes, and on approaching it the agent does not get cut off: it is told it has one step remaining and instructed to synthesise what it has. That distinction matters, because an agent killed at the limit produces nothing while an agent warned at the limit produces a shorter report. Success is genuinely hard for a user to judge — a plausible report and a correct report look identical — which is why citations are load-bearing rather than decorative, and why the evaluation section carries more weight in this design than in most.',
+      data:
+        'Agent state is a durable record, not a process: the task spec, the plan, the ordered trajectory of steps with tool calls and results, a findings store, and a budget ledger. It is written to durable storage after every step so a crash 20 minutes in resumes from the last completed step rather than restarting, and the tool results are stored by reference — the retrieved page contents live in object storage, and the trajectory holds ids and summaries. Context growth is the cost driver and it is close to quadratic if handled naively: with 30 steps each adding roughly 2,000 tokens of tool output, replaying the full transcript every step means the total input across the task is the sum of a growing prefix, about 930K tokens rather than the 60K of content actually gathered. So the working context holds the plan, the current sub-question, a compacted findings summary, and only the last few raw tool results; everything else is externalised to the findings store and retrieved deliberately. That is the single decision that keeps a research task affordable.',
+      architecture:
+        'A planner-and-subagent design, not one agent with many tools, and the reason is parallelism rather than specialisation: research decomposes into independent sub-questions that can be pursued simultaneously, and a single-threaded agent doing them serially takes ten times as long for the same tokens. The planner decomposes the question into 3 to 8 sub-questions with explicit scope statements, spawns a subagent per sub-question with its own budget, and each subagent runs a bounded search-read-extract loop writing structured findings — claim, source url, supporting quote — into the shared findings store. Duplication is prevented by the scope statements plus a shared claim index: before recording a finding, a subagent checks whether an equivalent claim exists, and cheap deduplication at the claim level is far more effective than trying to coordinate the agents. The planner then reads the findings store, not the subagent transcripts, and either dispatches a second round for gaps or writes the report. Every citation in the report must resolve to a stored finding with a quote, and a synthesis step that cannot find support for a sentence is required to drop the sentence. Orchestration runs on a durable workflow engine so each step is a checkpointed, retryable unit.',
+      evaluate:
+        'Per-step and end-to-end are different measurements and the arithmetic is the whole story: at 95 percent per-step reliability, a 10-step task succeeds 60 percent of the time and a 30-step task 21 percent. So the design target is not a better model, it is fewer sequential steps and per-step verification, which is why the parallel-subagent shape and the bounded loops exist. I evaluate three layers. Trajectory: did each step do something sensible given the state — scored by a judge on a sampled set with the rubric written against the plan, which catches loops, redundant searches and tool misuse. Findings: is each recorded claim actually supported by its quoted source, checked by a verifier model against the stored page text, which is the layer that catches the beautiful-report-from-nothing failure. Report: rubric-scored for coverage of the sub-questions, calibration, and citation precision, plus a periodic human read of 20 reports a week, because the judge and the writer share failure modes and the human read is what keeps the judge honest.',
+      deploy:
+        'Planner prompt changes are evaluated on a fixed set of 100 research tasks with stored reference reports and pre-recorded tool responses where possible, so the comparison is not swamped by the web changing under it. The gate is the report rubric and the citation-support rate, and any change that improves rubric score while lowering citation support is rejected, because that combination means the model learned to write better and cite worse. Online rollout is a percentage of live tasks with the same metrics computed on a sample. Tool degradation is the most common production failure and it must not be silent: each tool has a health signal derived from its own outputs — empty result rate, error rate, and a content-shape check such as whether a search tool is returning results at all — and a degraded tool is removed from the toolset for new tasks with the agent told it is unavailable, which produces a report with an acknowledged gap rather than a report confidently built on garbage.',
+      wrapup:
+        'Cost per completed report is dominated by input tokens: with compaction, a task using 6 subagents at roughly 60K input tokens each plus a planner at 80K and a 4K-token report is around 440K input and 15K output tokens, which at an assumed 3 and 15 USD per million is about 1.55 USD. Without compaction the same task is three to four times that. To halve it I would cut the number of sequential rounds first — most of the value comes from the first round of subagents and the second round is where the diminishing returns live — then route subagent work to the small model, keeping the frontier model for planning and final synthesis, which is where reasoning quality actually shows.',
+      numbers: [
+        'Compounding error: 0.95 per step over 10 steps is 0.60, over 30 steps 0.21, so the lever is fewer sequential steps and per-step verification rather than a marginally better model.',
+        'Context growth: 30 steps x 2,000 tokens of tool output replayed each step sums to about 930K input tokens for 60K tokens of actual content — a 15x tax that compaction removes.',
+        'Cost per report: 6 subagents x 60K + 80K planner = 440K input at an assumed 3 USD/M = 1.32 USD, plus 15K output at 15 USD/M = 0.23 USD, so about 1.55 USD per report.',
+        'Parallelism: 6 sub-questions run concurrently at roughly 90 seconds each finish in about 2 minutes wall clock against 9 minutes serially, for identical token spend.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 8, apiAndData: 9, architecture: 16, deepDive: 14, wrapUp: 5 },
+      opening:
+        'I want to do the compounding-error arithmetic early, because 95 percent per step is 21 percent over thirty steps, and that number is what forces a parallel bounded-subagent design rather than one long autonomous loop.',
+      traps: [
+        'Replaying the whole transcript every step. Context grows quadratically and the token bill is several times the content actually gathered; compaction with an externalised findings store is the fix.',
+        'Killing a task at the budget limit. You pay for everything and deliver nothing; warn the agent it has one step left and let it synthesise.',
+        'Evaluating only the final report. A well-written report from unsupported claims scores well on any rubric that does not check citations against the stored source text.',
+        'Treating the agent as a process rather than a durable workflow. A 20-minute task on an ephemeral worker loses everything to a routine deploy.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not one agent with a big context window and all the tools?',
+          answer:
+            'Simplicity, and I would start there for a five-step task. It breaks on parallelism and on context: research sub-questions are independent and a single agent does them serially, and a single context accumulating thirty tool results both costs more and degrades attention over the relevant parts. The cost of the multi-agent shape is that each handoff is a lossy serialisation, which is why subagents write structured findings rather than prose.',
+        },
+        {
+          challenge: 'How do you stop the subagents from all searching the same thing?',
+          answer:
+            'Scope statements in the dispatch plus a shared claim index they check before recording a finding. I deliberately do not try to coordinate them at the action level — that is a distributed-consensus problem for a system that tolerates duplicate work cheaply. Deduplicating at the claim level costs one embedding lookup per finding and removes most of the waste.',
+        },
+        {
+          challenge: 'Ten minutes is a long time. Users will leave.',
+          answer:
+            'They will if it looks like a spinner, so the product is a job with visible progress: the plan appears in seconds, sub-questions tick off as findings land, and partial findings are readable before the report exists. That also means an abandoned task can be cancelled and its budget reclaimed, which matters because abandoned agent tasks are far more expensive than abandoned chat turns.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  Q["Research question"] --> PL["Planner: decompose into 3-8 scoped sub-questions"]
+  PL --> WF["Durable workflow engine (checkpoint per step)"]
+  WF --> SA1["Subagent 1 (own token budget)"]
+  WF --> SA2["Subagent 2"]
+  WF --> SA3["Subagent N"]
+  SA1 --> TOOLS["Search / fetch / extract"]
+  SA2 --> TOOLS
+  SA3 --> TOOLS
+  TOOLS -->|page text by reference| OBJ[("Object store")]
+  SA1 --> FIND[("Findings store: claim + url + quote")]
+  SA2 --> FIND
+  SA3 --> FIND
+  FIND --> DEDUP["Claim-level dedup index"]
+  FIND --> PL2["Planner round 2: gaps only"]
+  PL2 --> SYN["Synthesis: every sentence must map to a finding"]
+  SYN --> REP["Report with citations"]
+  REP --> VER["Verifier: claim supported by quoted source?"]
+  WF --> LEDG[("Budget ledger: tokens, wall clock")]
+  LEDG -->|one step remaining| SYN
+  TOOLS -->|empty-result and error rate| HEALTH["Tool health; degraded tools removed"]`,
+  },
+  {
+    id: 'aisdq-support-agent-escalation',
+    patternId: 'aisdp-agent-platform',
+    title: 'Design a customer support agent with human escalation',
+    companies: ['amazon', 'microsoft'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What is the agent allowed to do on its own, and what always needs a human?',
+        'What is the success metric — deflection rate, resolution rate, or customer satisfaction — and how do those conflict?',
+        'What is the cost of a wrong action, and does it differ from the cost of a wrong answer?',
+      ],
+      data: [
+        'What does the agent need to see about a customer, and what should it never see?',
+        'Where does the knowledge come from, and how do you keep the agent from inventing policy?',
+        'What is the conversation and action history you must retain, and for how long?',
+      ],
+      architecture: [
+        'Draw the path from an incoming message to either a resolution or a handoff.',
+        'How do you scope tool permissions so a bad tool call cannot refund ten thousand orders?',
+        'What triggers escalation, and what does the human receive when it happens?',
+        'How do you handle a customer who is trying to manipulate the agent into an unauthorised action?',
+      ],
+      evaluate: [
+        'How do you measure whether the agent resolved the issue rather than just ending the conversation?',
+        'How do you evaluate the escalation decision itself, in both directions?',
+      ],
+      deploy: [
+        'How do you launch this without a bad first week that costs you customer trust?',
+        'How do you roll back a policy or prompt change when the damage is conversations, not errors?',
+      ],
+      wrapup: [
+        'What does this save, honestly, and what does it cost that does not appear on the infrastructure bill?',
+        'What category of issue would you never route to the agent?',
+      ],
+    },
+    solution: {
+      define:
+        'I split actions into three tiers and make that split the centre of the design. Read-only actions — order status, policy lookup, shipment tracking — the agent does freely. Bounded write actions — refund under 50 dollars, reschedule a delivery, resend a receipt — the agent does within a policy envelope with a per-conversation and per-customer cap. Everything else — account closure, refunds above the cap, anything touching payment methods, anything a customer is angry about — goes to a human. The success metric is resolution rate confirmed by the customer not returning within 7 days, not deflection rate, because deflection rewards the agent for ending conversations and that is exactly the wrong incentive: a bot that says sorry, I cannot help and closes the chat maximises deflection. A wrong action is categorically worse than a wrong answer, because it moves money or state and the customer may not notice until later, which is why the action tiers exist rather than a single autonomy setting.',
+      data:
+        'The agent sees the customer order history, entitlements, prior tickets and the current conversation. It does not see payment instrument details, other customers, or internal notes marked private — those are excluded at the tool layer, not by prompt instruction, because a prompt is not an access-control mechanism. Knowledge comes from a retrieval index over the published policy corpus, and the agent is required to cite the policy section for any statement about what the company will or will not do; a policy claim with no retrieved support is a violation caught by the same groundedness check used in RAG. That is what stops invented policy, which is the most damaging hallucination in this domain because it creates a commitment the company then has to honour or refuse. Retention: full conversation and action logs for the dispute window, typically 12 to 24 months, with the action log immutable and separately queryable, because when a customer disputes what the agent promised, that log is the record.',
+      architecture:
+        'Incoming message goes through intent classification and a risk screen first — an inexpensive model deciding category, sentiment, and whether the case is in the never-automate set — and high-risk cases skip the agent entirely and queue to a human with a generated summary. Otherwise the agent loop runs with a scoped toolset: tools are issued per conversation as capability tokens carrying the customer id and the remaining refund allowance, so a tool call is structurally incapable of touching another customer or exceeding the envelope. That is the answer to the refund-ten-thousand-orders question: the bound is in the credential, not in the prompt. Escalation triggers are explicit and multiple: the agent requests it, the risk classifier fires, sentiment crosses a threshold, the customer asks for a human (always honoured, immediately), the conversation exceeds a turn budget, or a required action falls outside the envelope. On handoff the human receives a structured summary — the issue, what was verified, what actions were taken, the policy sections consulted, and the specific blocker — rather than a transcript, because a transcript makes the human redo the work. Manipulation attempts are handled by the same architecture: since authority lives in the capability token, a persuaded agent still cannot exceed the envelope; separately, injection patterns are logged and repeated attempts flag the account.',
+      evaluate:
+        'Resolution is measured by absence of recontact: did this customer come back about the same issue within 7 days, and did the ticket reopen. That is a lagging metric, so it is paired with a leading one — a judge scoring, on a sampled set, whether the final agent message actually addressed the stated problem. The escalation decision is evaluated in both directions and both are expensive: an under-escalation is measured by human review of a sample of agent-resolved conversations flagged by low sentiment or recontact, and an over-escalation by review of a sample of escalated conversations that the human resolved with a single message the agent could have sent. I track both rates and tune the trigger thresholds against them, because a system optimised only against under-escalation escalates everything and saves nothing. Action correctness gets its own audit: every bounded write action is sampled and reviewed against policy, and the acceptable error rate there is much lower than for text.',
+      deploy:
+        'Launch is staged by risk rather than by traffic percentage. Week one: the agent drafts responses that a human approves and sends, which produces a labelled dataset and an accurate estimate of quality with zero customer exposure. Week two: the agent handles read-only categories autonomously with human review after the fact. Week three: bounded write actions with a low cap, raised weekly while the action-audit error rate holds. This is slower than a percentage ramp and it is right, because the failure mode is trust, and customer trust does not recover on the timescale that an error budget assumes. Rollback for a prompt or policy change is a config flip back to the previous version, but the real control is the same staged gate: changes ship first to the draft-and-approve lane for a day, where a regression is visible to reviewers before it is visible to customers.',
+      wrapup:
+        'Honestly: the saving is real but smaller than the deflection number implies, because the conversations the agent resolves are disproportionately the cheap ones a human would have closed in two minutes, while the expensive long-tail cases still escalate. At an assumed 20 dollars fully-loaded cost per human-handled contact and 0.30 dollars per agent conversation, resolving 45 percent of a million annual contacts saves about 8.9 million dollars gross — but the costs that do not appear on the infrastructure bill are the review capacity for audits, the escalation-quality problem where humans now receive only hard cases and burn out faster, and the reputational cost of the wrong actions that do get through. I would never route to the agent: anything involving a vulnerable customer, a legal threat, a safety issue, a data-deletion request, or a payment dispute.',
+      numbers: [
+        'Unit economics: an assumed 20 USD fully-loaded per human contact against roughly 0.30 USD per agent conversation (about 40K tokens across the loop at blended rates), so break-even needs only a few percent deflection and the risk controls are what actually bound the design.',
+        'Escalation budget: at 1M contacts/year and 45 percent agent resolution, 550K still reach humans, so staffing falls by roughly 45 percent rather than disappearing, and the remaining queue is harder per contact.',
+        'Action envelope: a per-conversation cap of 50 USD and a per-customer daily cap of 150 USD bounds worst-case loss from a fully compromised agent to the cap times concurrent conversations, which is a number you can state to a risk committee.',
+        'Audit sampling: reviewing 2 percent of bounded write actions at 5,000 actions/day gives 100 reviews/day, enough to detect a policy-error rate moving from 1 to 3 percent within about a week.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 9, estimates: 7, apiAndData: 10, architecture: 15, deepDive: 14, wrapUp: 5 },
+      opening:
+        'I want to structure this around three action tiers — read-only, bounded write, and human-only — because the interesting risk here is not a wrong sentence, it is a wrong action, and those need different controls.',
+      traps: [
+        'Optimising deflection rate. It rewards the agent for ending conversations, and the cheapest way to deflect is to be unhelpful; measure resolution confirmed by non-recontact.',
+        'Bounding tool authority in the prompt. A prompt is not an access-control mechanism; issue capability tokens scoped to the customer and the remaining allowance.',
+        'Handing a human the raw transcript on escalation. It makes them redo the diagnosis, which destroys the saving and infuriates the customer who now repeats themselves.',
+        'Launching on a traffic percentage. The failure mode is trust, so stage by risk: draft-and-approve, then read-only autonomy, then bounded writes with a rising cap.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'What if a customer talks the agent into a refund it should not give?',
+          answer:
+            'Then they get at most the envelope, because the refund tool is issued with a remaining-allowance credential rather than trusting the model judgement. Beyond that it needs a human regardless of how persuasive the argument was. I also log the attempt: repeated envelope-maxing across conversations is a fraud signal, and it is more valuable as a detection input than as a thing to argue with in the prompt.',
+        },
+        {
+          challenge: 'Your escalation summary could itself be wrong and mislead the human.',
+          answer:
+            'It could, so the summary is structured and links to the evidence: each claim in it points at the tool result or policy section it came from, and the transcript is one click away. The human is asked to verify rather than trust. I would also rather the summary be terse and verifiable than fluent, which is a deliberate quality trade-off in how it is prompted and evaluated.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  MSG["Customer message"] --> RISK["Intent + risk screen (small model)"]
+  RISK -->|never-automate category| HQ["Human queue + generated summary"]
+  RISK -->|ok| AG["Agent loop"]
+  AG --> KB[("Policy retrieval index")]
+  KB --> GRD["Policy claims must cite a section"]
+  AG --> CAP["Capability token: customer id + remaining allowance"]
+  CAP --> T1["Read-only tools: order, shipment, entitlements"]
+  CAP --> T2["Bounded write: refund <= 50 USD, reschedule"]
+  CAP -.->|structurally blocked| T3["Account closure, payment methods"]
+  T3 --> HQ
+  AG -->|agent asks, sentiment drop, turn budget, customer asks| HQ
+  HQ --> HUM["Human agent"]
+  T2 --> ALOG[("Immutable action log")]
+  ALOG -->|2% sample| AUDIT["Policy audit"]
+  AG --> RES["Resolution"]
+  RES -->|recontact within 7 days?| MET[("Resolution rate")]
+  HQ -->|resolved in one message?| OVER["Over-escalation review"]`,
+  },
+  {
+    id: 'aisdq-coding-agent-sandbox',
+    patternId: 'aisdp-agent-platform',
+    title: 'Design a coding agent with sandboxed execution',
+    companies: ['google', 'microsoft', 'amazon'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What does the agent do — answer questions, edit files, or open pull requests — and what is the trust boundary for each?',
+        'What is the acceptable latency for a single edit-and-test cycle?',
+        'What is the threat model: a malicious user, a malicious repository, or a confused model?',
+      ],
+      data: [
+        'How does the agent see a repository that is larger than any context window?',
+        'What does the sandbox need pre-installed, and what does that do to cold start?',
+        'What state persists between the agent turns within one task?',
+      ],
+      architecture: [
+        'Draw the execution environment and say exactly what it can reach.',
+        'How do you give the agent a package manager without giving it the internet?',
+        'How does the agent verify its own work, and what is the loop when tests fail?',
+        'How do you handle a task that needs 40 minutes and 200 tool calls?',
+      ],
+      evaluate: [
+        'How do you evaluate a coding agent beyond whether tests pass?',
+        'How do you detect an agent that makes tests pass by weakening the tests?',
+      ],
+      deploy: [
+        'How do you ship a model upgrade when the agent behaviour on real repositories is what changed?',
+        'What is the blast radius of a bad agent action, and how do you bound it?',
+      ],
+      wrapup: [
+        'What is the cost per completed task, and what dominates it?',
+        'What kinds of task would you not let this agent attempt?',
+      ],
+    },
+    solution: {
+      define:
+        'Three capabilities with three trust boundaries: answering questions about the repository needs read access only; editing files and running tests needs an isolated environment but no write access to anything real; opening a pull request is the only action that touches the outside world, and it is a proposal reviewed by a human, never a merge. Latency target for one edit-and-test cycle is under 30 seconds for a typical test subset, because the agent will do dozens of them and a 3-minute cycle makes a 20-cycle task an hour. The threat model has all three actors and they need different answers: a malicious user trying to use our compute to mine or to exfiltrate, a malicious repository whose build script or dependency runs code the moment we execute anything, and a confused model that rm -rf the wrong directory. The malicious repository is the one people forget, and it is why the sandbox must be hostile-by-default rather than merely careless-by-default.',
+      data:
+        'A large repository never fits in context and dumping the file tree is close to useless, so the agent sees it through tools: ripgrep-style search, symbol and definition lookup from a language server or a pre-built index, file read with line ranges, and a repository map — a compressed outline of files and their top-level symbols, weighted toward files touched recently or related to the task. The agent pulls what it needs rather than being handed everything, which is both cheaper and empirically better than stuffing context. The sandbox image is pre-baked with the language toolchains, the common package caches and the repository dependencies warmed, because installing dependencies per task is the single largest latency cost — an empty environment installing a JavaScript dependency tree is minutes, a pre-warmed one is seconds. Within a task, the sandbox filesystem is the state: it persists across turns for the life of the task and is destroyed after, with the diff extracted as the artefact.',
+      architecture:
+        'Each task gets a microVM — a Firecracker-style VM rather than a container, because the isolation boundary is a hypervisor and the threat model includes hostile code, and a container escape is a plausible event where a VM escape is not. Inside: the repository checked out at a specific commit, no credentials of any kind, no ambient cloud metadata endpoint, and no network by default. Network egress goes through a filtering proxy that allows exactly the package registries on an allowlist and nothing else, which is how the agent gets a package manager without getting the internet — and the proxy logs every fetch, so an attempt to reach an unexpected host is a signal rather than an invisible success. Resource limits are hard: CPU, memory, disk, wall clock, and process count, so a fork bomb or a mining attempt dies rather than degrading the host. The verify loop is the core of the agent quality: after every edit, run the narrowest relevant test selection, feed failures back with the stack trace, and require a green run before proposing. For a 40-minute, 200-call task the orchestration is durable — each tool call is a checkpointed step, the VM can be snapshotted and restored, and the agent is compacted periodically: the trajectory is summarised into a task-state document holding what has been tried, what failed and why, and the current diff, because otherwise the context cost of turn 200 is prohibitive.',
+      evaluate:
+        'Tests passing is necessary and badly insufficient, so I score four things. Correctness on a held-out benchmark of real issues with hidden tests the agent never sees, which is the only measure that resists gaming. Diff quality, judged on minimality and adherence to the repository conventions, because a patch that passes tests and rewrites 40 unrelated files is not a usable contribution. Test integrity, which is the specific gaming failure: I diff the test files separately from the source files and any change that deletes assertions, adds skip markers, or loosens a comparison is flagged and, in the default policy, rejected outright — an agent allowed to edit tests to make tests pass will eventually do so, and this is a mechanical check rather than a judgement call. And regression: run the full suite, not just the selected subset, before proposing.',
+      deploy:
+        'A model upgrade changes agent behaviour in ways that unit tests of the harness cannot see, so it goes through a fixed benchmark of a few hundred real tasks with hidden tests, reporting resolve rate, mean tool calls, mean tokens, and diff size — and I gate on all four, because a model that resolves one point more while using twice the tokens is not obviously an upgrade. Then a shadow phase on real tasks where both models attempt the same task and a human reviews a sample of the pairs. Blast radius is bounded by construction: the agent has no credentials, no network beyond the registry allowlist, and cannot merge. The worst outcome is a bad pull request, which a human declines. I would keep it that way even under pressure to auto-merge, because the review step is the entire safety argument and removing it changes the risk profile completely.',
+      wrapup:
+        'Cost per completed task is dominated by input tokens, not by compute: a task with 60 tool calls, a compacted working context averaging 25K tokens, and 12K output tokens is roughly 1.5M input and 12K output tokens, about 4.7 USD at an assumed 3 and 15 USD per million, against sandbox compute of a few cents for 20 minutes of a small VM. That ratio surprises people and it tells you where to optimise: better tools that return less text, and more aggressive compaction, beat cheaper compute every time. I would not let the agent attempt: changes to authentication, cryptography or payment code; database migrations; infrastructure-as-code that provisions real resources; or anything where the tests do not meaningfully cover the behaviour, because in that last case the verification loop is measuring nothing.',
+      numbers: [
+        'Token dominance: 60 tool calls x roughly 25K tokens of compacted context = 1.5M input tokens at an assumed 3 USD/M = 4.5 USD, against roughly 0.05 USD of microVM compute for 20 minutes — tokens are about 99 percent of the task cost.',
+        'Cold start: a pre-baked image with warmed dependency caches boots and is usable in a few seconds, versus minutes to install a dependency tree from scratch, which over a 60-call task is the difference between 30-second and 3-minute cycles.',
+        'Context compaction: without it, 200 tool calls averaging 3K tokens replayed each turn sums to about 60M input tokens; with a summarised task-state document the same task holds around 25K tokens per turn.',
+        'Isolation cost: a Firecracker microVM adds roughly 100-200ms of boot over a container, which against a 30-second edit-and-test cycle is under 1 percent, and it buys a hypervisor boundary against hostile repository code.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 7, apiAndData: 10, architecture: 16, deepDive: 14, wrapUp: 5 },
+      opening:
+        'Let me name the threat model early and include the repository itself as an adversary, because running a build script is executing untrusted code, and that single framing is what pushes this from a container to a microVM.',
+      traps: [
+        'Letting the agent edit test files freely. It will eventually delete the failing assertion, and a mechanical diff check on test files is the only reliable guard.',
+        'Giving the sandbox open network access so the package manager works. Use a filtering proxy with a registry allowlist and log every fetch; open egress is an exfiltration channel.',
+        'Stuffing the repository into context. Tools that search and read on demand are cheaper and measurably better than a large dump the model must attend over.',
+        'Optimising compute cost. Tokens are roughly 99 percent of the bill for an agent task, so better tools and compaction matter far more than cheaper VMs.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Containers are good enough and much cheaper to operate.',
+          answer:
+            'For our own trusted code, yes. Here the agent executes arbitrary repository build scripts and arbitrary dependencies, which is untrusted-code execution, and container escapes are a real category. The microVM costs about 150ms of boot and some operational complexity against a 30-second cycle, so I take the hypervisor boundary. I would revisit if every repository were first-party and reviewed.',
+        },
+        {
+          challenge: 'Why not auto-merge when all tests pass?',
+          answer:
+            'Because tests passing is the metric the agent optimises, and my whole evaluation section exists because that metric is gameable. Human review is the check that catches the patch which passes tests and is wrong, and it is also what keeps the agent scoped to proposals rather than to production. If the organisation wanted auto-merge, I would want mutation-testing coverage on the touched code first, which is a much higher bar than a green suite.',
+        },
+        {
+          challenge: 'Forty minutes per task is far too slow to be useful.',
+          answer:
+            'It depends what it replaces — for a task a person would spend two hours on, forty minutes running in the background is fine, and the product should be asynchronous with a notification, not a wait. Where I would spend the latency budget is the edit-and-test cycle, because that is multiplied by the number of iterations: test selection, warmed caches and incremental builds cut task time more than a faster model does.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  TASK["Task + repo at commit"] --> ORCH["Durable orchestrator (checkpoint per tool call)"]
+  ORCH --> VM["Firecracker microVM (no credentials, no metadata endpoint)"]
+  VM --> FS[("Ephemeral filesystem: repo checkout")]
+  ORCH --> TOOLS["Tools: search, symbol lookup, read range, edit, run tests"]
+  TOOLS --> MAP["Repo map: files + top-level symbols, task-weighted"]
+  VM -->|egress| PROXY["Filtering proxy: package registries only, all fetches logged"]
+  PROXY -.->|blocked| NET["Everything else"]
+  VM --> LIM["Hard limits: CPU, memory, disk, wall clock, PIDs"]
+  TOOLS --> LOOP{"Tests green?"}
+  LOOP -->|no| FIX["Feed stack trace back, edit again"]
+  FIX --> TOOLS
+  LOOP -->|yes| FULL["Run full suite (regression check)"]
+  FULL --> TDIFF{"Test files weakened?"}
+  TDIFF -->|assertions removed or skipped| REJ["Reject"]
+  TDIFF -->|no| PR["Propose pull request (human reviews, never auto-merge)"]
+  ORCH --> COMP["Periodic compaction to task-state document"]`,
+  },
+  {
+    id: 'aisdq-long-running-agent-state',
+    patternId: 'aisdp-agent-platform',
+    title: 'Design durable state for long-running agents',
+    companies: ['amazon', 'google'],
+    minutes: 45,
+    steps: {
+      define: [
+        'How long does a task run, and what must be true if the process hosting it dies?',
+        'Can a step be safely retried, and what does that require of every tool?',
+        'What does the user see and control while a task is running for an hour?',
+      ],
+      data: [
+        'What exactly is the state: the transcript, a summary, a structured record, or all three?',
+        'How large does that state get, and where does it live?',
+        'How do you version state when the agent code changes mid-task?',
+      ],
+      architecture: [
+        'Draw the durable execution model and say what is checkpointed and when.',
+        'How do you handle a tool call that has side effects and times out with an unknown outcome?',
+        'How do you resume a task whose model version has been deprecated?',
+      ],
+      evaluate: [
+        'How do you test recovery, given the failure is rare and the state is complex?',
+        'What tells you a resumed task behaved differently from an uninterrupted one?',
+      ],
+      deploy: [
+        'How do you deploy the agent service when tasks are mid-flight?',
+        'How do you migrate in-flight tasks to a new version of the agent logic?',
+      ],
+      wrapup: [
+        'What is the storage and operational cost of durability, and is it worth it?',
+        'When would you skip all of this and just let a failed task restart?',
+      ],
+    },
+    solution: {
+      define:
+        'Tasks run from seconds to hours, and the requirement is that a host dying loses at most the step in flight, never the task. That is a durable-execution requirement, and it is the same problem as a workflow engine rather than something agent-specific — which is good news, because the solution is well understood and I would reach for an existing engine rather than building one. Retry safety is the hard constraint it imposes: every tool must be idempotent or must be made idempotent by the platform, because at-least-once execution is what durable engines actually give you. While a task runs the user sees a live activity stream and holds three controls: cancel, which must release the budget and stop billing immediately; steer, which injects a message into the next step; and pause, which is genuinely useful for tasks awaiting a human decision.',
+      data:
+        'Three layers of state, and separating them is what keeps this affordable. The event log is the source of truth: an append-only ordered record of every step — the model request hash, the tool call, the tool result reference, and the timestamp — which is what replay reconstructs from. The working context is derived, not stored authoritatively: it is rebuilt from the event log plus the current compaction summary, so it can be regenerated after a change to compaction logic. And large payloads — page contents, file contents, tool outputs over a few kilobytes — are stored by reference in object storage with the event log holding a pointer and a short summary. That keeps a typical hour-long task event log in the low megabytes rather than hundreds. State is versioned with a schema version on each event and an agent-logic version on the task, so a replay knows which interpretation applies.',
+      architecture:
+        'A durable workflow engine owns the loop: each iteration is a workflow step, and the engine persists the step result before the next begins, so recovery replays completed steps from the log rather than re-executing them. Model calls are treated as non-deterministic activities whose results are recorded, not recomputed, which is essential — replaying a task by re-calling the model would produce a different trajectory and the replay would diverge. The nasty case is a side-effecting tool that times out with an unknown outcome: I require every mutating tool to accept an idempotency key derived from the task and step id, so a retry either returns the original result or is deduplicated server-side, and where a third-party tool has no such support, the platform wraps it with a check-then-act — query for the effect before retrying — and where even that is impossible, the step is marked requires-human-confirmation rather than silently retried. Resuming a task whose model version was deprecated is a real operational event: the task carries a pinned model, deprecation gives a window, and tasks still running at the deadline are either completed on a compatibility endpoint or failed with their partial results returned, which must be a deliberate policy rather than a surprise.',
+      evaluate:
+        'Recovery cannot be tested only by waiting for failures, so it is exercised deliberately: a fault-injection lane kills workers at random points on a fraction of internal traffic every day, and the assertion is that the task completes with the same outcome. Beyond crash-survival, the interesting question is behavioural equivalence — did the resumed task do the same thing? I measure that by comparing, for injected-fault tasks, the number of steps, the total tokens, and a judge score on the final output against a control run of the same task without a fault. A resumed task that quietly restarts its plan or repeats a tool call shows up as a step-count anomaly long before anyone notices a quality difference. Duplicate side effects get their own detector: mutating tool calls are counted per task and per idempotency key, and a key executing twice is an alert, not a metric.',
+      deploy:
+        'Workers are stateless because the state is in the engine, so deploying is a rolling restart: workers stop claiming new steps, finish or abandon the step in flight, and the engine re-dispatches abandoned steps to new workers. That means a deploy costs at most one step of duplicated work per in-flight task, which is exactly why idempotency is non-negotiable. Migrating agent logic mid-task is the harder question, and my default is not to: a task pins its agent version at creation and runs to completion on it, with old versions kept available for the maximum task lifetime plus a margin. Forcing an in-flight task onto new logic means the first half of the trajectory was produced by different rules, and the failure is subtle. The exception is a safety fix, which is applied to in-flight tasks immediately and accepts the inconsistency.',
+      wrapup:
+        'Storage cost is small — a few megabytes of event log per hour-long task plus the referenced payloads — and the real cost is operational: idempotency discipline on every tool, a workflow engine to run, and replay semantics that engineers must understand. It is worth it when a task is long enough or expensive enough that restarting is painful, roughly when a task costs more than a dollar or takes more than a couple of minutes. Below that I would skip all of it: for a 20-second three-step agent, restarting on failure is cheaper in every dimension than durable execution, and building a workflow engine around it is the classic over-engineering of this pattern.',
+      numbers: [
+        'Event log size: an hour-long task at 200 steps, with payloads by reference and roughly 1KB of metadata per event, is about 200KB of log plus a few megabytes of referenced payloads.',
+        'Recovery cost: with per-step checkpointing, a worker crash loses at most one step — roughly 5 to 20 seconds and a few thousand tokens — against restarting a 200-step task at about 1.5M input tokens and 4.50 USD.',
+        'Deploy exposure: a rolling restart of 100 workers with 500 in-flight tasks duplicates at most 500 steps, which is why an idempotency key per (task, step) is required rather than advisory.',
+        'Break-even: durable execution pays for itself above roughly 1 USD or 2 minutes per task; below that, restart-on-failure is cheaper than the engine, the idempotency discipline and the replay semantics combined.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 6, estimates: 6, apiAndData: 8, architecture: 11, deepDive: 10, wrapUp: 4 },
+      opening:
+        'I would frame this as durable execution rather than as an agent problem, because the requirements — at-least-once steps, idempotent side effects, replay without re-deciding — are a workflow engine, and the agent-specific twist is that the model call must be recorded rather than recomputed.',
+      traps: [
+        'Replaying by re-calling the model. Model calls are non-deterministic, so a replay that re-decides diverges from the trajectory it is supposed to be recovering; record results as activity outputs.',
+        'Assuming tools are idempotent. Durable engines give at-least-once, so a mutating tool without an idempotency key will eventually send the same email twice.',
+        'Storing the full transcript as the authoritative state. Keep an append-only event log with payloads by reference and derive the working context, so compaction changes do not invalidate history.',
+        'Migrating in-flight tasks onto new agent logic. Half a trajectory under old rules and half under new produces failures that are almost impossible to debug; pin the version per task.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'This is a lot of machinery for an agent that usually finishes in 30 seconds.',
+          answer:
+            'Then I would not build it. My break-even is roughly a dollar or two minutes per task; below that, restarting on failure costs less than the engine plus the idempotency discipline. I would build the event log early anyway, because it is also the observability and evaluation substrate, and retrofit durable execution when task length justifies it.',
+        },
+        {
+          challenge: 'How do you handle a task that is waiting on a human for three days?',
+          answer:
+            'As a durable timer rather than a held process, which is the main reason to use an engine at all: the task suspends with zero resources consumed, a signal from the approval system resumes it, and a timeout policy decides what happens if nobody responds. The subtlety is that the world has moved on after three days, so on resume the agent re-validates its key assumptions rather than trusting stale tool results.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  START["Task created: pins agent version + model version"] --> ENG["Durable workflow engine"]
+  ENG --> STEP["Step: decide next action"]
+  STEP --> MC["Model call (recorded as activity output, never recomputed)"]
+  MC --> LOG[("Append-only event log: step, hash, tool, result ref")]
+  STEP --> TOOL["Tool call + idempotency key (task, step)"]
+  TOOL --> IDEM{"Mutating tool?"}
+  IDEM -->|yes, no native key| CTA["Check-then-act wrapper"]
+  IDEM -->|no support at all| HUMAN["Mark requires-human-confirmation"]
+  TOOL --> BIG[("Object store: large payloads by reference")]
+  LOG --> CTX["Working context derived: log + compaction summary"]
+  CTX --> STEP
+  ENG -->|worker dies| REPLAY["Replay completed steps from log, resume at last"]
+  ENG -->|await human| TIMER["Durable timer, zero resources held"]
+  TIMER -->|signal| REVAL["Re-validate stale assumptions"]
+  FAULT["Daily fault injection on internal traffic"] --> REPLAY
+  REPLAY -->|step count, tokens, judge score vs control| EQ[("Behavioural equivalence check")]`,
+  },
+]
+
 export const aiSdQuestions: AiSdQuestion[] = [
   ...servingQuestions,
   ...gatewayQuestions,
   ...ragQuestions,
+  ...agentQuestions,
 ]
