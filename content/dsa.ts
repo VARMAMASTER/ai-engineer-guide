@@ -1242,6 +1242,32 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 20,
+    signal: 'Nested, matched pairs where the most recently opened must close first — last in, first out, which is a stack by definition.',
+    approach: `Counting brackets is not enough because "([)]" balances numerically but nests
+wrongly. Push every opener, and on a closer check that the top of the stack is
+its partner. The string is valid exactly when nothing mismatches and the stack
+ends empty.`,
+    solution: `def is_valid(s: str) -> bool:
+    partner = {")": "(", "]": "[", "}": "{"}
+    stack: list[str] = []
+
+    for ch in s:
+        if ch in partner:
+            if not stack or stack.pop() != partner[ch]:
+                return False
+        else:
+            stack.append(ch)
+
+    return not stack`,
+    complexity: {
+      time: 'O(n) — each character is pushed at most once and popped at most once.',
+      space: 'O(n) — a string of all openers puts every character on the stack.',
+    },
+    followUps: [
+      'What if the string is a stream you cannot buffer? The stack depth is the memory floor, so unbounded nesting is unbounded memory.',
+      'What if you must return the length of the longest valid substring instead of a yes or no?',
+      'What if a wildcard \'*\' may stand for \'(\' or \')\' or empty — does the stack still decide it?',
+    ],
   },
   {
     id: 'dsa-155-min-stack',
@@ -1253,6 +1279,36 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'A stack that must also answer an aggregate query in O(1) — the aggregate has to be carried along, not recomputed.',
+    approach: `Scanning for the minimum on every call is O(n). Instead store, alongside each
+value, the minimum of the stack up to and including that value. Popping then
+restores the previous minimum for free, because it was never overwritten. The
+cost is one extra integer per entry.`,
+    solution: `class MinStack:
+    def __init__(self) -> None:
+        self._stack: list[tuple[int, int]] = []  # (value, min so far)
+
+    def push(self, val: int) -> None:
+        current_min = val if not self._stack else min(val, self._stack[-1][1])
+        self._stack.append((val, current_min))
+
+    def pop(self) -> None:
+        self._stack.pop()
+
+    def top(self) -> int:
+        return self._stack[-1][0]
+
+    def get_min(self) -> int:
+        return self._stack[-1][1]`,
+    complexity: {
+      time: 'O(1) per operation — push, pop, top and get_min each touch only the end of the list.',
+      space: 'O(n) — two integers per element instead of one, which is still linear.',
+    },
+    followUps: [
+      'Can you do it with O(1) extra space per element? Store the encoded difference from the current minimum.',
+      'What if you need get_max too, or a get_median in O(1)?',
+      'What if it must be a queue with a min query rather than a stack — how do two stacks help?',
+    ],
   },
   {
     id: 'dsa-150-evaluate-reverse-polish-notation',
@@ -1264,6 +1320,39 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Postfix notation — an operator always applies to the two most recent results, which is exactly stack order.',
+    approach: `RPN needs no parsing or precedence rules: push numbers, and on an operator pop
+two operands, apply, push the result. The only trap is order — the first pop is
+the right operand — and integer division must truncate toward zero, which is not
+what Python's // does for negatives.`,
+    solution: `def eval_rpn(tokens: list[str]) -> int:
+    stack: list[int] = []
+
+    for token in tokens:
+        if token in {"+", "-", "*", "/"}:
+            right = stack.pop()
+            left = stack.pop()
+            if token == "+":
+                stack.append(left + right)
+            elif token == "-":
+                stack.append(left - right)
+            elif token == "*":
+                stack.append(left * right)
+            else:
+                stack.append(int(left / right))  # truncate toward zero
+        else:
+            stack.append(int(token))
+
+    return stack[-1] if stack else 0`,
+    complexity: {
+      time: 'O(n) — one pass, and each token causes a constant number of stack operations.',
+      space: 'O(n) — the stack holds the operands not yet consumed, up to half the tokens.',
+    },
+    followUps: [
+      'What if the input is infix with parentheses? You need the shunting-yard algorithm to convert first.',
+      'What if division by zero, or an ill-formed expression, must be rejected rather than crash?',
+      'What if operands can be arbitrary precision or floating point — where does truncation stop being right?',
+    ],
   },
   {
     id: 'dsa-22-generate-parentheses',
@@ -1275,6 +1364,39 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: 'Enumerate every well-formed arrangement — you need all answers, not one, so it is a search tree with a validity invariant.',
+    approach: `Build the string one character at a time and never let it become invalid: you may
+open while opens < n, and close only while closes < opens. That invariant prunes
+the whole subtree of malformed strings, so you generate only the Catalan-many
+valid results instead of filtering 2^(2n) candidates.`,
+    solution: `def generate_parenthesis(n: int) -> list[str]:
+    out: list[str] = []
+    current: list[str] = []
+
+    def backtrack(opened: int, closed: int) -> None:
+        if len(current) == 2 * n:
+            out.append("".join(current))
+            return
+        if opened < n:
+            current.append("(")
+            backtrack(opened + 1, closed)
+            current.pop()
+        if closed < opened:
+            current.append(")")
+            backtrack(opened, closed + 1)
+            current.pop()
+
+    backtrack(0, 0)
+    return out`,
+    complexity: {
+      time: 'O(4^n / sqrt(n)) — the number of valid strings is the nth Catalan number and each costs O(n) to emit.',
+      space: 'O(n) for the recursion depth and the working buffer, excluding the output list.',
+    },
+    followUps: [
+      'What if there are three bracket types? The invariant needs a stack, not two counters.',
+      'What if you only need the k-th string in lexicographic order — can you avoid generating the rest?',
+      'What if n is large and you only need the count? That is a closed-form Catalan number, no search at all.',
+    ],
   },
   {
     id: 'dsa-739-daily-temperatures',
@@ -1286,6 +1408,31 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'For every element, find the next element to its right that is greater — "next greater" is the monotonic stack signature.',
+    approach: `The naive scan is O(n^2). Keep a stack of indices whose temperatures are
+decreasing: they are all still waiting for a warmer day. When today beats the
+top, today is that day's answer, so pop and record. Each index is pushed and
+popped once, so the whole sweep is linear.`,
+    solution: `def daily_temperatures(temperatures: list[int]) -> list[int]:
+    out = [0] * len(temperatures)
+    stack: list[int] = []  # indices, temperatures decreasing
+
+    for i, t in enumerate(temperatures):
+        while stack and temperatures[stack[-1]] < t:
+            j = stack.pop()
+            out[j] = i - j
+        stack.append(i)
+
+    return out`,
+    complexity: {
+      time: 'O(n) — every index is pushed exactly once and popped at most once, so the inner while is amortised O(1).',
+      space: 'O(n) — a strictly decreasing input leaves every index on the stack.',
+    },
+    followUps: [
+      'What if the array is circular, so day n wraps to day 0? Sweep twice without pushing on the second pass.',
+      'What if temperatures stream in and you must answer for past days as soon as possible?',
+      'What if you need the next smaller instead — what single character changes?',
+    ],
   },
   {
     id: 'dsa-853-car-fleet',
@@ -1297,6 +1444,32 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Items on a line that can catch up but never overtake — the one in front dictates the group, so process from the destination backward.',
+    approach: `A car only matters relative to the car ahead of it. Sort by position descending
+and compute each car's unobstructed time to the target. Walking from the front,
+a car whose time is at most the current leader's is absorbed into that fleet;
+otherwise it becomes a new, slower leader. The count of leaders is the answer.`,
+    solution: `def car_fleet(target: int, position: list[int], speed: list[int]) -> int:
+    cars = sorted(zip(position, speed), reverse=True)  # closest to target first
+    fleets = 0
+    slowest = 0.0
+
+    for pos, spd in cars:
+        time = (target - pos) / spd
+        if time > slowest:  # cannot catch the fleet ahead
+            fleets += 1
+            slowest = time
+
+    return fleets`,
+    complexity: {
+      time: 'O(n log n) — dominated by the sort; the sweep afterwards touches each car once.',
+      space: 'O(n) — the sorted list of (position, speed) pairs.',
+    },
+    followUps: [
+      'What if cars may overtake? The whole ordering argument collapses and it becomes a simulation.',
+      'What if you must report the arrival time of each fleet, not just how many there are?',
+      'What if positions are added dynamically — can a balanced BST keep the fleet count online?',
+    ],
   },
   {
     id: 'dsa-84-largest-rectangle-in-histogram',
@@ -1308,6 +1481,36 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'The best rectangle is limited by its shortest bar, so each bar asks: how far left and right can I extend before something shorter stops me?',
+    approach: `For every bar, the widest rectangle of that height runs until a strictly shorter
+bar on either side. A stack of increasing heights finds both boundaries in one
+pass: when a shorter bar arrives, every taller bar on the stack is popped and
+settled, its left boundary being whatever sits below it on the stack.`,
+    solution: `def largest_rectangle_area(heights: list[int]) -> int:
+    stack: list[tuple[int, int]] = []  # (start index, height), heights increasing
+    best = 0
+
+    for i, h in enumerate(heights):
+        start = i
+        while stack and stack[-1][1] > h:
+            index, height = stack.pop()
+            best = max(best, height * (i - index))
+            start = index  # this bar can extend back to where the taller one began
+        stack.append((start, h))
+
+    for index, height in stack:
+        best = max(best, height * (len(heights) - index))
+
+    return best`,
+    complexity: {
+      time: 'O(n) — each bar is pushed once and popped once, and the final drain visits what remains.',
+      space: 'O(n) — a non-decreasing histogram never pops until the end.',
+    },
+    followUps: [
+      'What if the input is a binary matrix and you want the largest all-ones rectangle? Run this per row over accumulated heights.',
+      'What if bars have varying widths rather than unit width?',
+      'What if you need the rectangle\'s coordinates, not just its area?',
+    ],
   },
 
   // --- Binary Search (7) ---
@@ -1321,6 +1524,33 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['google'],
     minutes: 20,
+    signal: 'A sorted array and a required O(log n) — the search space halves on every comparison.',
+    approach: `Maintain a closed interval [lo, hi] that provably contains the target if it is
+present. Compare the midpoint and discard the half that cannot hold it. Compute
+the midpoint as lo + (hi - lo) // 2 to avoid overflow in languages with fixed
+integers, and use hi = mid - 1 so the interval always shrinks.`,
+    solution: `def search(nums: list[int], target: int) -> int:
+    lo, hi = 0, len(nums) - 1
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        if nums[mid] == target:
+            return mid
+        if nums[mid] < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+
+    return -1`,
+    complexity: {
+      time: 'O(log n) — the candidate interval halves every iteration, so it is exhausted after log2(n) steps.',
+      space: 'O(1) — three indices; the loop form uses no recursion stack.',
+    },
+    followUps: [
+      'What if duplicates exist and you need the first or last occurrence? The loop must not return on the first hit.',
+      'What if the array is rotated? The sorted-half test replaces the plain comparison.',
+      'What if it is an infinite or unsized stream — how do you find the bounds before searching?',
+    ],
   },
   {
     id: 'dsa-74-search-a-2d-matrix',
@@ -1332,6 +1562,38 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Rows are sorted and each row starts after the previous one ends — the matrix is one sorted array wearing a disguise.',
+    approach: `Because the rows concatenate into a single ascending sequence, index k of the
+virtual flat array is matrix[k // cols][k % cols]. Run one ordinary binary
+search over 0..rows*cols-1 and translate. Searching for the row first and then
+within it also works and is the same O(log(m*n)).`,
+    solution: `def search_matrix(matrix: list[list[int]], target: int) -> bool:
+    if not matrix or not matrix[0]:
+        return False
+
+    rows, cols = len(matrix), len(matrix[0])
+    lo, hi = 0, rows * cols - 1
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        value = matrix[mid // cols][mid % cols]
+        if value == target:
+            return True
+        if value < target:
+            lo = mid + 1
+        else:
+            hi = mid - 1
+
+    return False`,
+    complexity: {
+      time: 'O(log(m * n)) — one binary search over the flattened index space of m * n cells.',
+      space: 'O(1) — only indices; the flattening is arithmetic, not an allocated copy.',
+    },
+    followUps: [
+      'What if rows are sorted but do not chain, so row starts can be anything? The staircase walk from the top-right is O(m + n).',
+      'What if the matrix is stored column-major — does the index arithmetic still work?',
+      'What if you must return the position rather than a boolean?',
+    ],
   },
   {
     id: 'dsa-875-koko-eating-bananas',
@@ -1343,6 +1605,36 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Find the smallest rate/size/capacity that still satisfies a condition — the answer itself is monotonic, so binary search the answer, not the array.',
+    approach: `Feasibility is monotone: if speed k finishes in time, so does every larger speed.
+That makes the answer space 1..max(piles) a sorted boolean array of False then
+True, and binary search finds the boundary. Each feasibility test is one O(n)
+pass summing ceil(pile / k).`,
+    solution: `def min_eating_speed(piles: list[int], h: int) -> int:
+    if not piles:
+        return 0
+
+    def hours(speed: int) -> int:
+        return sum(-(-pile // speed) for pile in piles)  # ceiling division
+
+    lo, hi = 1, max(piles)
+    while lo < hi:
+        mid = lo + (hi - lo) // 2
+        if hours(mid) <= h:
+            hi = mid  # feasible, but maybe slower still works
+        else:
+            lo = mid + 1
+
+    return lo`,
+    complexity: {
+      time: 'O(n log m) — log m binary search steps over speeds 1..max(pile), each costing one O(n) feasibility pass.',
+      space: 'O(1) — the feasibility check sums in place and only indices are kept.',
+    },
+    followUps: [
+      'What if piles can be split across hours? The monotonicity survives but the ceiling disappears.',
+      'What if there are multiple eaters working in parallel — is the answer still monotone in k?',
+      'What if the piles arrive as a stream so max(piles) is unknown? Double the upper bound until feasible.',
+    ],
   },
   {
     id: 'dsa-153-find-minimum-in-rotated-sorted-array',
@@ -1354,6 +1646,31 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Sorted then rotated — the array is two sorted runs, and the minimum is the single point where the order breaks.',
+    approach: `Compare the midpoint to the last element. If nums[mid] > nums[hi] the break lies
+strictly to the right, so lo = mid + 1; otherwise mid could itself be the
+minimum, so hi = mid. Comparing against nums[hi] rather than nums[lo] is what
+keeps the already-sorted case correct without a special branch.`,
+    solution: `def find_min(nums: list[int]) -> int:
+    lo, hi = 0, len(nums) - 1
+
+    while lo < hi:
+        mid = lo + (hi - lo) // 2
+        if nums[mid] > nums[hi]:
+            lo = mid + 1  # break point is to the right
+        else:
+            hi = mid  # mid may itself be the minimum
+
+    return nums[lo]`,
+    complexity: {
+      time: 'O(log n) — each comparison discards half the remaining candidates for the break point.',
+      space: 'O(1) — two indices, no recursion.',
+    },
+    followUps: [
+      'What if duplicates are allowed? nums[mid] == nums[hi] tells you nothing, and the worst case degrades to O(n).',
+      'What if you also need the rotation count? It is exactly the index of the minimum.',
+      'What if the array is rotated the other way, or rotated zero times — does this still hold?',
+    ],
   },
   {
     id: 'dsa-33-search-in-rotated-sorted-array',
@@ -1365,6 +1682,40 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['google', 'meta'],
     minutes: 30,
+    signal: 'Search in O(log n) but the array is rotated — at every midpoint exactly one half is still properly sorted.',
+    approach: `Split at the midpoint. One side is guaranteed sorted, and you can tell which by
+comparing nums[lo] to nums[mid]. Check whether the target falls inside that
+sorted side's range: if it does, search there, otherwise search the other side.
+That decision is what preserves the halving.`,
+    solution: `def search_rotated(nums: list[int], target: int) -> int:
+    lo, hi = 0, len(nums) - 1
+
+    while lo <= hi:
+        mid = lo + (hi - lo) // 2
+        if nums[mid] == target:
+            return mid
+
+        if nums[lo] <= nums[mid]:  # left half is sorted
+            if nums[lo] <= target < nums[mid]:
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        else:  # right half is sorted
+            if nums[mid] < target <= nums[hi]:
+                lo = mid + 1
+            else:
+                hi = mid - 1
+
+    return -1`,
+    complexity: {
+      time: 'O(log n) — one of the two halves is discarded on every iteration, exactly as in plain binary search.',
+      space: 'O(1) — three indices and no auxiliary structure.',
+    },
+    followUps: [
+      'What if duplicates are allowed? nums[lo] == nums[mid] hides which half is sorted, forcing an O(n) worst case.',
+      'What if you must find the rotation point first and then search — is two passes ever better?',
+      'What if the array is rotated more than once, or rotated by an unknown amount each query?',
+    ],
   },
   {
     id: 'dsa-981-time-based-key-value-store',
@@ -1376,6 +1727,39 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Values are versioned by a monotonically increasing timestamp and a read asks for the newest version at or before a time.',
+    approach: `Because sets arrive with non-decreasing timestamps, each key's history is already
+a sorted list — no sorting needed on write. A get is then a binary search for
+the rightmost entry with timestamp <= the query, which bisect gives directly.
+A linear scan per get would make heavy read workloads quadratic.`,
+    solution: `from bisect import bisect_right
+from collections import defaultdict
+
+
+class TimeMap:
+    def __init__(self) -> None:
+        self._times: dict[str, list[int]] = defaultdict(list)
+        self._values: dict[str, list[str]] = defaultdict(list)
+
+    def set(self, key: str, value: str, timestamp: int) -> None:
+        self._times[key].append(timestamp)
+        self._values[key].append(value)
+
+    def get(self, key: str, timestamp: int) -> str:
+        times = self._times.get(key)
+        if not times:
+            return ""
+        i = bisect_right(times, timestamp)
+        return self._values[key][i - 1] if i else ""`,
+    complexity: {
+      time: 'O(1) amortised per set (append to the end), O(log n) per get where n is that key\'s version count.',
+      space: 'O(total sets) — every version is retained because any of them may still be the answer to some query.',
+    },
+    followUps: [
+      'What if timestamps can arrive out of order? Appending no longer keeps the list sorted; you need insort or a tree.',
+      'What if old versions should expire after a retention window? A deque plus eviction, and gets below the window fail.',
+      'What if the store must survive a restart — how does the binary search translate to an on-disk layout?',
+    ],
   },
   {
     id: 'dsa-4-median-of-two-sorted-arrays',
@@ -1387,6 +1771,47 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'Two sorted inputs and a required O(log(m+n)) — merging is O(m+n), so you must binary search a partition instead.',
+    approach: `The median is defined by a partition that puts exactly half the combined elements
+on the left. Binary search how many elements to take from the shorter array;
+the count from the other array follows. The partition is correct when every
+element left of the cut is <= every element right of it, checked with the four
+boundary values.`,
+    solution: `def find_median_sorted_arrays(nums1: list[int], nums2: list[int]) -> float:
+    if not nums1 and not nums2:
+        raise ValueError("median of an empty collection is undefined")
+
+    a, b = (nums1, nums2) if len(nums1) <= len(nums2) else (nums2, nums1)
+    total = len(a) + len(b)
+    half = total // 2
+
+    lo, hi = 0, len(a)
+    while True:
+        i = (lo + hi) // 2  # elements taken from a
+        j = half - i  # elements taken from b
+
+        a_left = a[i - 1] if i > 0 else float("-inf")
+        a_right = a[i] if i < len(a) else float("inf")
+        b_left = b[j - 1] if j > 0 else float("-inf")
+        b_right = b[j] if j < len(b) else float("inf")
+
+        if a_left <= b_right and b_left <= a_right:
+            if total % 2:
+                return float(min(a_right, b_right))
+            return (max(a_left, b_left) + min(a_right, b_right)) / 2
+        if a_left > b_right:
+            hi = i - 1
+        else:
+            lo = i + 1`,
+    complexity: {
+      time: 'O(log(min(m, n))) — the binary search runs over the cut position in the shorter array only.',
+      space: 'O(1) — four boundary values and two indices; nothing is merged or copied.',
+    },
+    followUps: [
+      'What if there are k sorted arrays instead of two? The partition argument does not generalise; binary search the value instead.',
+      'What if you need the k-th smallest rather than the median? Same partition idea with half replaced by k.',
+      'What if the arrays are on disk and you may only read sequentially — is O(m + n) actually the better answer?',
+    ],
   },
 
   // --- Linked List (11) ---
@@ -1400,6 +1825,34 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['amazon'],
     minutes: 20,
+    signal: 'Change the direction of the links themselves — nothing about the values matters, only the pointers.',
+    approach: `Walk the list carrying the node you have already reversed into. At each step
+stash the next pointer before overwriting it, point the current node backward,
+then step forward. Losing the stash is the classic bug: once you overwrite
+node.next the rest of the list is unreachable.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def reverse_list(head: ListNode | None) -> ListNode | None:
+    prev: ListNode | None = None
+    while head is not None:
+        nxt = head.next  # stash before overwriting
+        head.next = prev
+        prev = head
+        head = nxt
+    return prev`,
+    complexity: {
+      time: 'O(n) — each node\'s next pointer is rewritten exactly once.',
+      space: 'O(1) — three pointers; the recursive version would cost O(n) stack instead.',
+    },
+    followUps: [
+      'What if you must reverse only nodes between positions m and n? You need the node before m held aside.',
+      'What if it is a doubly linked list — how many pointers change per node?',
+      'Write it recursively: what is the base case, and why does the stack cost O(n)?',
+    ],
   },
   {
     id: 'dsa-21-merge-two-sorted-lists',
@@ -1411,6 +1864,38 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['amazon'],
     minutes: 20,
+    signal: 'Two sorted sequences into one sorted sequence — repeatedly take the smaller head, which is the merge step of merge sort.',
+    approach: `Because both lists are sorted, the smallest remaining element is always one of the
+two heads. Splice whichever is smaller onto the result and advance that list.
+A dummy head node removes the special case for the very first append, and the
+tail of whichever list survives can be attached wholesale.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def merge_two_lists(a: ListNode | None, b: ListNode | None) -> ListNode | None:
+    dummy = tail = ListNode()
+
+    while a is not None and b is not None:
+        if a.val <= b.val:
+            tail.next, a = a, a.next
+        else:
+            tail.next, b = b, b.next
+        tail = tail.next
+
+    tail.next = a if a is not None else b
+    return dummy.next`,
+    complexity: {
+      time: 'O(m + n) — every node from both lists is visited and spliced exactly once.',
+      space: 'O(1) — nodes are relinked in place; only the dummy and a tail pointer are allocated.',
+    },
+    followUps: [
+      'What if there are k lists? Pairwise merging or a k-sized heap gets you O(n log k).',
+      'What if the lists are arrays instead — does merging in place change the space bound?',
+      'What if duplicates must be dropped during the merge rather than after?',
+    ],
   },
   {
     id: 'dsa-143-reorder-list',
@@ -1422,6 +1907,48 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'You need the last node, then the first, then the second-to-last — a singly linked list cannot walk backward, so half of it must be reversed.',
+    approach: `Three known moves composed: find the middle with slow and fast pointers, reverse
+the second half so it can be consumed front-to-back, then interleave the two
+halves. Copying values into an array and rewriting is O(n) space; this is O(1)
+and is what the question is really testing.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def reorder_list(head: ListNode | None) -> None:
+    if head is None or head.next is None:
+        return
+
+    slow, fast = head, head.next
+    while fast is not None and fast.next is not None:
+        slow, fast = slow.next, fast.next.next
+
+    second = slow.next
+    slow.next = None  # cut the list in two
+
+    prev = None
+    while second is not None:
+        second.next, prev, second = prev, second, second.next
+    second = prev
+
+    first = head
+    while second is not None:
+        after_first, after_second = first.next, second.next  # stash before rewiring
+        first.next = second
+        second.next = after_first
+        first, second = after_first, after_second`,
+    complexity: {
+      time: 'O(n) — three linear passes: find the middle, reverse the tail, interleave.',
+      space: 'O(1) — all rewiring is done in place with a constant number of pointers.',
+    },
+    followUps: [
+      'What if it is a doubly linked list? You can walk inward from both ends with no reversal.',
+      'What if you must undo the reorder afterwards — is the operation invertible in place?',
+      'What if the list is huge and stored on disk, so random access is expensive?',
+    ],
   },
   {
     id: 'dsa-19-remove-nth-node-from-end-of-list',
@@ -1433,6 +1960,40 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Position counted from the end of a singly linked list, ideally in one pass — that is a fixed gap between two pointers.',
+    approach: `Counting the length first and walking again is two passes. Instead advance a lead
+pointer n steps, then move both until the lead falls off the end: the trailing
+pointer now sits exactly n from the end. Starting the trailer at a dummy node
+makes removing the head need no special case.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def remove_nth_from_end(head: ListNode | None, n: int) -> ListNode | None:
+    dummy = ListNode(0, head)
+    lead: ListNode | None = head
+    for _ in range(n):
+        if lead is None:
+            return head  # n is longer than the list
+        lead = lead.next
+
+    trail = dummy
+    while lead is not None:
+        lead, trail = lead.next, trail.next
+
+    trail.next = trail.next.next
+    return dummy.next`,
+    complexity: {
+      time: 'O(n) — a single traversal, since the two pointers together cover the list once.',
+      space: 'O(1) — one dummy node and two pointers regardless of list length.',
+    },
+    followUps: [
+      'What if n exceeds the list length? Decide whether that is a no-op or an error before you write the loop.',
+      'What if you must remove every n-th node from the end, not just one?',
+      'What if the list is doubly linked with a tail pointer — does the gap trick still buy anything?',
+    ],
   },
   {
     id: 'dsa-138-copy-list-with-random-pointer',
@@ -1444,6 +2005,42 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: 'Deep copy a structure whose pointers can target any node, including ones not yet created — you need identity mapping, not traversal order.',
+    approach: `The random pointer may point forward, so you cannot resolve it on a single pass.
+Pass one clones every node and records original to clone in a dict; pass two
+uses that dict to translate both next and random. The O(1) space variant weaves
+clones into the original list instead of using a map.`,
+    solution: `class Node:
+    def __init__(self, val: int) -> None:
+        self.val = val
+        self.next: "Node | None" = None
+        self.random: "Node | None" = None
+
+
+def copy_random_list(head: Node | None) -> Node | None:
+    clones: dict[Node | None, Node | None] = {None: None}
+
+    node = head
+    while node is not None:
+        clones[node] = Node(node.val)
+        node = node.next
+
+    node = head
+    while node is not None:
+        clones[node].next = clones[node.next]
+        clones[node].random = clones[node.random]
+        node = node.next
+
+    return clones[head]`,
+    complexity: {
+      time: 'O(n) — two passes, with an O(1) expected dict lookup per pointer translated.',
+      space: 'O(n) — the map from original nodes to clones, on top of the copied list itself.',
+    },
+    followUps: [
+      'Can you do it in O(1) extra space? Interleave each clone after its original, fix randoms, then unzip.',
+      'What if the structure is a general graph rather than a list? That is Clone Graph, same map, DFS instead of a walk.',
+      'What if node values are large objects — should the copy be deep there too?',
+    ],
   },
   {
     id: 'dsa-2-add-two-numbers',
@@ -1455,6 +2052,43 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Digits stored least-significant-first — the list order is already the order schoolbook addition wants.',
+    approach: `Walk both lists together adding digit plus digit plus carry, emitting the ones
+place and carrying the tens. Reverse storage is what makes this work in one
+pass with no length alignment. The loop must keep running while either list has
+digits or a carry remains, or you drop the final 1.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def add_two_numbers(l1: ListNode | None, l2: ListNode | None) -> ListNode | None:
+    dummy = tail = ListNode()
+    carry = 0
+
+    while l1 is not None or l2 is not None or carry:
+        total = carry
+        if l1 is not None:
+            total += l1.val
+            l1 = l1.next
+        if l2 is not None:
+            total += l2.val
+            l2 = l2.next
+        carry, digit = divmod(total, 10)
+        tail.next = ListNode(digit)
+        tail = tail.next
+
+    return dummy.next`,
+    complexity: {
+      time: 'O(max(m, n)) — one pass ending when both lists and the carry are exhausted.',
+      space: 'O(max(m, n)) — the result list, which is at most one digit longer than the longer input.',
+    },
+    followUps: [
+      'What if the digits are stored most-significant-first? Reverse both, or use two stacks, because carries flow the other way.',
+      'What if the numbers are in base 2^32 rather than base 10 — does anything but the divmod change?',
+      'What if you must subtract instead, and the result can be negative?',
+    ],
   },
   {
     id: 'dsa-141-linked-list-cycle',
@@ -1466,6 +2100,34 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['amazon'],
     minutes: 20,
+    signal: 'Detect a loop with O(1) memory — you cannot record visited nodes, so two pointers at different speeds must collide.',
+    approach: `A hash set of visited nodes works but costs O(n). Instead run a slow pointer one
+step and a fast pointer two steps: inside a cycle the gap closes by one each
+iteration, so they must meet. With no cycle the fast pointer simply reaches the
+end. This is Floyd's tortoise and hare.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def has_cycle(head: ListNode | None) -> bool:
+    slow = fast = head
+    while fast is not None and fast.next is not None:
+        slow = slow.next
+        fast = fast.next.next
+        if slow is fast:
+            return True
+    return False`,
+    complexity: {
+      time: 'O(n) — the fast pointer covers the tail in n/2 steps, then closes a gap of at most the cycle length.',
+      space: 'O(1) — two pointers, versus O(n) for the visited-set approach.',
+    },
+    followUps: [
+      'What if you must return the node where the cycle begins? Reset one pointer to the head and step both by one.',
+      'What if you need the cycle\'s length? Keep walking from the meeting point until you return to it.',
+      'What if the structure is a graph rather than a list — does Floyd still apply?',
+    ],
   },
   {
     id: 'dsa-287-find-the-duplicate-number',
@@ -1477,6 +2139,34 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Values are in 1..n inside an array of size n+1, and you may not modify the array or use extra space — the array is secretly a linked list.',
+    approach: `Read index i as a node pointing to index nums[i]. Since every value is a valid
+index and one value repeats, that functional graph must contain a cycle, and the
+cycle's entrance is the duplicate. Floyd's algorithm finds the meeting point,
+then a second walk from the start finds the entrance.`,
+    solution: `def find_duplicate(nums: list[int]) -> int:
+    slow = fast = nums[0]
+    while True:
+        slow = nums[slow]
+        fast = nums[nums[fast]]
+        if slow == fast:
+            break
+
+    finder = nums[0]
+    while finder != slow:
+        finder = nums[finder]
+        slow = nums[slow]
+
+    return finder`,
+    complexity: {
+      time: 'O(n) — two linear walks: one to meet inside the cycle, one to locate its entrance.',
+      space: 'O(1) — three integer indices; the array itself is never modified.',
+    },
+    followUps: [
+      'What if the array may be modified? Marking visited indices negative is simpler and still O(1) extra space.',
+      'What if there can be several duplicates and you must report all of them?',
+      'Can you binary search on the value range instead — counting how many entries are <= mid?',
+    ],
   },
   {
     id: 'dsa-146-lru-cache',
@@ -1488,6 +2178,64 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'O(1) lookup and O(1) eviction of the least recently used entry — one structure cannot give both, so you compose two.',
+    approach: `A dict gives O(1) lookup but no ordering; a doubly linked list gives O(1) reorder
+but no lookup. Combine them: the dict maps key to its node, and the list keeps
+nodes in recency order with the least recent at the head. Every get and put
+unlinks and re-appends in constant time.`,
+    solution: `class _Node:
+    def __init__(self, key: int = 0, value: int = 0) -> None:
+        self.key, self.value = key, value
+        self.prev: "_Node | None" = None
+        self.next: "_Node | None" = None
+
+
+class LRUCache:
+    def __init__(self, capacity: int) -> None:
+        self.capacity = capacity
+        self._map: dict[int, _Node] = {}
+        self._head, self._tail = _Node(), _Node()  # head = LRU end, tail = MRU end
+        self._head.next, self._tail.prev = self._tail, self._head
+
+    def _unlink(self, node: _Node) -> None:
+        node.prev.next, node.next.prev = node.next, node.prev
+
+    def _append(self, node: _Node) -> None:
+        node.prev, node.next = self._tail.prev, self._tail
+        self._tail.prev.next = node
+        self._tail.prev = node
+
+    def get(self, key: int) -> int:
+        node = self._map.get(key)
+        if node is None:
+            return -1
+        self._unlink(node)
+        self._append(node)
+        return node.value
+
+    def put(self, key: int, value: int) -> None:
+        if key in self._map:
+            node = self._map[key]
+            node.value = value
+            self._unlink(node)
+            self._append(node)
+            return
+        if len(self._map) >= self.capacity:
+            lru = self._head.next
+            self._unlink(lru)
+            del self._map[lru.key]
+        node = _Node(key, value)
+        self._map[key] = node
+        self._append(node)`,
+    complexity: {
+      time: 'O(1) per get and put — a dict lookup plus a constant number of pointer rewrites, with no scan for the victim.',
+      space: 'O(capacity) — one node and one dict entry per cached key, and nothing beyond the capacity.',
+    },
+    followUps: [
+      'What if it must be thread safe? A single lock serialises everything; sharding by key hash restores concurrency.',
+      'What if eviction should be by frequency rather than recency? LFU needs a second index by count.',
+      'What if entries also expire by time — how do you evict without scanning?',
+    ],
   },
   {
     id: 'dsa-23-merge-k-sorted-lists',
@@ -1499,6 +2247,47 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: true,
     companies: ['google'],
     minutes: 45,
+    signal: 'k sorted sequences, one sorted output — merging them one at a time is quadratic, so pair them up or use a heap.',
+    approach: `Merging list 2 into list 1, then list 3, and so on rescans the growing result and
+costs O(n * k). Merging in pairs halves the number of lists each round, so every
+element is copied only log k times. A k-sized min-heap over the heads reaches
+the same O(n log k) bound.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def _merge(a: ListNode | None, b: ListNode | None) -> ListNode | None:
+    dummy = tail = ListNode()
+    while a is not None and b is not None:
+        if a.val <= b.val:
+            tail.next, a = a, a.next
+        else:
+            tail.next, b = b, b.next
+        tail = tail.next
+    tail.next = a if a is not None else b
+    return dummy.next
+
+
+def merge_k_lists(lists: list[ListNode | None]) -> ListNode | None:
+    if not lists:
+        return None
+    while len(lists) > 1:
+        lists = [
+            _merge(lists[i], lists[i + 1] if i + 1 < len(lists) else None)
+            for i in range(0, len(lists), 2)
+        ]
+    return lists[0]`,
+    complexity: {
+      time: 'O(n log k) — there are log k merge rounds and each round touches all n nodes exactly once.',
+      space: 'O(log k) for the round bookkeeping — nodes are relinked in place, nothing is copied.',
+    },
+    followUps: [
+      'What if the lists are streams from k machines? A heap merges online where pairwise merging needs them all up front.',
+      'What if k is enormous compared to n — which of the two O(n log k) strategies wins in practice?',
+      'What if you only need the first m elements of the merged result?',
+    ],
   },
   {
     id: 'dsa-25-reverse-nodes-in-k-group',
@@ -1510,6 +2299,48 @@ def max_sliding_window(nums: list[int], k: int) -> list[int]:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'Reverse in fixed-size chunks, leaving a short trailing chunk untouched — you must look ahead k nodes before committing.',
+    approach: `Before reversing anything, walk k nodes to confirm a full group exists; a short
+tail is left as is. Reverse that group with the standard three-pointer loop,
+then stitch it between the node before the group and the node after. A dummy
+head makes the first group need no special case.`,
+    solution: `class ListNode:
+    def __init__(self, val: int = 0, nxt: "ListNode | None" = None) -> None:
+        self.val = val
+        self.next = nxt
+
+
+def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
+    if k <= 1:
+        return head
+
+    dummy = ListNode(0, head)
+    group_prev = dummy
+
+    while True:
+        kth = group_prev
+        for _ in range(k):
+            kth = kth.next
+            if kth is None:
+                return dummy.next  # fewer than k nodes left
+
+        group_next = kth.next
+        prev, node = group_next, group_prev.next
+        while node is not group_next:
+            node.next, prev, node = prev, node, node.next
+
+        new_tail = group_prev.next  # the old head is now the group's tail
+        group_prev.next = kth
+        group_prev = new_tail`,
+    complexity: {
+      time: 'O(n) — each node is visited once to count its group and once to be reversed.',
+      space: 'O(1) — the reversal is in place; only a dummy node and a few pointers are used.',
+    },
+    followUps: [
+      'What if the trailing partial group should also be reversed? The look-ahead check becomes optional, not fatal.',
+      'What if k is larger than the list? The first look-ahead fails and the list is returned unchanged.',
+      'What if groups must alternate between reversed and left alone?',
+    ],
   },
 
   // --- Trees (15) ---
