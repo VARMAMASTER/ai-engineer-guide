@@ -1,5 +1,6 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
 import { ALL_ROUTES, DYNAMIC_ROUTES, STATIC_ROUTES, seedDayOne, todayIso } from './helpers'
+import { NAV_ITEMS } from '../../lib/nav'
 
 /**
  * Coverage sweep: every URL the app serves, walked as a real document load.
@@ -51,10 +52,18 @@ test.describe('every route loads', () => {
     await expect(page).toHaveURL(/\/today$/)
   })
 
-  test('the 13 walked URLs are the 9 static routes plus one of each dynamic segment', () => {
-    expect(STATIC_ROUTES).toHaveLength(9)
-    expect(DYNAMIC_ROUTES).toHaveLength(4)
-    expect(ALL_ROUTES).toHaveLength(13)
+  test('the walked URLs are every static route plus one of each dynamic segment', () => {
+    // Deliberately derived, not hardcoded. An earlier version asserted 9 / 4 / 13
+    // and went stale the moment /lld, /revise, /behavioural, /companies and /mock
+    // were added — the counts drifted to 15 / 8 while this test still claimed 13,
+    // so the sweep silently under-reported what it was covering.
+    expect(ALL_ROUTES).toHaveLength(STATIC_ROUTES.length + DYNAMIC_ROUTES.length)
+    expect(new Set(ALL_ROUTES).size).toBe(ALL_ROUTES.length)
+    // Every section in the nav model must appear in the sweep, so a new page
+    // cannot ship without route coverage.
+    for (const item of NAV_ITEMS) {
+      expect(ALL_ROUTES, `${item.href} is in the nav but not in the route sweep`).toContain(item.href)
+    }
   })
 
   test('no route scrolls horizontally at the desktop width either', async ({ page }, testInfo) => {
