@@ -957,5 +957,408 @@ export const scenarios: Scenario[] = [
       'They put the goal in durable state instead of trusting the context window to hold it, and they add a completion check so an unfinished sub-goal fails loudly rather than being quietly omitted from a confident summary.',
     minutes: 15,
   },
+  // ----------------------------------------------------------- Inference and cost
+  {
+    id: 'scn-inference-latency-spike-at-peak',
+    area: 'inference',
+    symptom:
+      'p99 time-to-first-token is 340ms off-peak and 4.2s between 09:00 and 11:00 local. Time-per-output-token barely moves. The provider dashboard shows no errors and our own CPU and memory graphs are flat.',
+    firstQuestions: [
+      'Split the latency into queue wait, prefill and decode. TTFT ballooning while inter-token time holds steady says the request is waiting to start, not generating slowly - that is queueing or prefill, never decode.',
+      'Is input length correlated with the spike? Plot prompt tokens against TTFT by hour. If morning traffic carries longer prompts - overnight-accumulated conversations, bigger RAG contexts - prefill cost explains it without any capacity change.',
+      'Are we rate-limited or capacity-limited? Check for 429s and for provider queue-depth headers. Self-hosted: check batch size and the number of pending requests per replica.',
+      'Is the spike ours or the provider\'s? Fire a fixed synthetic request every 30 seconds and compare its latency curve to production traffic.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Queueing: arrival rate exceeds what the current replica count can serve, so requests wait before prefill starts and TTFT absorbs the whole wait.',
+        check:
+          'Instrument the time between request accepted and first token requested. If that gap is 3.5 of the 4.2 seconds, the model is not slow - your queue is deep.',
+      },
+      {
+        hypothesis:
+          'Prefill is the bottleneck because morning prompts are much longer, and prefill cost scales with input length while decode does not.',
+        check:
+          'Bucket requests by prompt length and compare TTFT within a bucket across hours. Flat within-bucket TTFT means the mix changed, not the system.',
+      },
+      {
+        hypothesis:
+          'Autoscaling is reactive and lags the ramp, so the system spends the ramp under-provisioned and catches up just as traffic falls.',
+        check:
+          'Overlay replica count on the request-rate curve. A replica line that rises 10 minutes after the traffic line is the whole story.',
+      },
+      {
+        hypothesis:
+          'Noisy-neighbour effect on shared provider capacity, entirely outside your control.',
+        check:
+          'Compare your synthetic probe latency against the provider status page and, if available, a second region or a second account. Correlated degradation across independent accounts is theirs.',
+      },
+    ],
+    fix:
+      'Assume queueing, since flat inter-token time points there. Pre-scale on a schedule rather than reacting - morning ramp is predictable, so provision for it before it arrives and let reactive scaling handle only the surprises. Separate the queues by latency class so an interactive chat request is never behind a batch summarisation job, and give the batch class its own capacity with a much looser SLO. Shrink prefill where it is free: cache the stable system-prompt prefix so morning\'s long prompts pay for only their tail, and trim RAG context to what the reranker justifies. If capacity is genuinely the limit, admission-control the low-priority class rather than letting everything degrade together.',
+    tradeoff:
+      'Scheduled pre-scaling pays for idle capacity every day, including days the ramp does not come - you are buying p99 with money. Priority queues mean the deprioritised class visibly gets worse, and someone owns that class. Trimming context to cut prefill trades latency for recall, which is an accuracy decision being made on a latency dashboard, and it should be made explicitly.',
+    seniorSignal:
+      'They decompose TTFT before proposing anything, and they know that flat time-per-output-token rules out the decode path entirely - a weak answer offers a smaller model, which does nothing about queue depth.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-inference-cost-blowout',
+    area: 'inference',
+    symptom:
+      'The monthly LLM bill went from $18k to $67k with request volume up only 20%. Nobody deployed a model change. Cost per request nearly tripled and the finance team wants an answer by Friday.',
+    firstQuestions: [
+      'Is the growth in input tokens or output tokens? Pull the token counts from the API responses and split them. Input growth points at context assembly, output growth at generation behaviour or a changed max_tokens.',
+      'Which endpoint, feature or tenant grew? Break cost down by every dimension you have. Cost problems are almost always concentrated, not diffuse.',
+      'What changed in the window - not just model deploys, but retrieval k, prompt edits, a new feature that calls the model in a loop, a customer who onboarded with 50x the documents?',
+      'How many model calls per user request? A silent rise from 1.2 to 3.4 is a retry or fan-out bug wearing a cost disguise.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Context inflation: retrieval k was raised, or chunk size grew, or conversation history is no longer being truncated, so every request carries more input tokens.',
+        check:
+          'Plot mean input tokens per request over the period. A step change dates the cause to a specific deploy; a steady climb points at accumulating history.',
+      },
+      {
+        hypothesis:
+          'A retry or fan-out path is multiplying calls invisibly - failed structured-output parses, a tool loop, or a per-item call where a batch call would do.',
+        check:
+          'Ratio of provider API calls to user requests, plotted over time. Anything above one needs an explanation.',
+      },
+      {
+        hypothesis:
+          'Prompt caching stopped working because something dynamic moved above the static prefix, so a large system prompt is now billed at full rate on every call.',
+        check:
+          'Read the cache-read versus cache-creation token fields in the responses. A collapse in cache reads dates precisely to the deploy that broke the prefix.',
+      },
+      {
+        hypothesis:
+          'Traffic mix shifted toward an expensive route - one tenant doing bulk work, or a feature that routes to the frontier model on a path meant to use the cheap one.',
+        check:
+          'Cost by tenant and by route, sorted. If two tenants are 60% of the increase, the conversation is about those two, not about the architecture.',
+      },
+    ],
+    fix:
+      'Fix whichever term the data names, not all four. If it is cache breakage, restore prefix stability - static instructions and tool schemas above, user and retrieval content below - which is usually a one-line reordering with a large payoff. If it is context inflation, cap retrieval context by token budget rather than by k and truncate conversation history to a rolling window with a summary. If it is fan-out, cap it. Independently, put in the thing whose absence let this run for a month: per-request cost attribution emitted as a metric with tenant, route and model, an alert on cost per request rather than on total spend, and a per-tenant budget. Route by difficulty so the frontier model is earned rather than default.',
+    tradeoff:
+      'Routing cheap-first means some requests get a worse answer and you need a measurable escalation rule or quality silently degrades where nobody is looking. Truncating history breaks long conversations in ways users notice and cannot articulate. Per-tenant budgets create a support burden and an awkward conversation with whoever hits the cap first, who is usually your largest customer.',
+    seniorSignal:
+      'They decompose the bill before proposing anything and find the one term that moved - and they treat "we had no cost-per-request alert" as the real incident, since the tripling was detectable on day two.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-inference-provider-rate-limits',
+    area: 'inference',
+    symptom:
+      'During the daily 14:00 batch, 8% of requests come back 429. The naive retry makes it worse - error rate climbs to 22% during the retry storm - and a handful of user-facing requests fail entirely because they were queued behind batch traffic sharing the same API key.',
+    firstQuestions: [
+      'Which limit is being hit - requests per minute, tokens per minute, or concurrent requests? The response headers usually say, and the three have different fixes.',
+      'Are batch and interactive traffic sharing a key and therefore a quota? If yes, that is the user-facing failure explained, independent of the batch problem.',
+      'What is the retry policy right now? Fixed-delay retry with no jitter converts a small overage into a synchronised storm, and the 8%-to-22% jump is its signature.',
+      'Does the batch need to run at 14:00 at all, or is that just when someone set the cron?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Tokens-per-minute is the binding limit, not requests-per-minute, so reducing request count by batching more per call does nothing.',
+        check:
+          'Read the rate-limit headers on a 429. Compute your actual TPM and RPM against the documented quota and see which one you are pinned against.',
+      },
+      {
+        hypothesis:
+          'Retry amplification: immediate fixed-delay retries from many workers re-arrive simultaneously and multiply the offered load exactly when capacity is scarcest.',
+        check:
+          'Plot request rate during the incident. A sawtooth that grows with each cycle is retry amplification, not demand.',
+      },
+      {
+        hypothesis:
+          'Quota is shared across workloads with no reservation, so a burst in one starves the other.',
+        check:
+          'Group 429s by workload. If interactive failures only occur inside the batch window, the shared quota is the cause.',
+      },
+    ],
+    fix:
+      'Stop the amplification first: exponential backoff with full jitter, a bounded retry count, and a circuit breaker that sheds rather than retries once the 429 rate crosses a threshold. Then separate the workloads - distinct API keys or projects so batch cannot consume interactive quota, and interactive gets a reserved share. Put the batch behind a client-side token-bucket limiter sized to the remaining TPM, so it self-paces to just under the limit instead of discovering it by failing, and spread it across the hour rather than firing at once. Where the provider offers an asynchronous batch endpoint with a separate quota and a lower price, the daily job belongs there. Ask for a quota increase in parallel, but do not let that be the plan.',
+    tradeoff:
+      'Client-side pacing makes the batch take longer by design, so someone must accept a later completion time. Reserved interactive quota sits unused most of the day. Backoff with jitter increases the latency of requests that would have succeeded on an immediate retry, and the circuit breaker will occasionally shed traffic during a blip that would have recovered on its own.',
+    seniorSignal:
+      'They identify which limit is binding before optimising, and they recognise the retry storm as self-inflicted - a weak answer asks the provider for a bigger quota and leaves the amplification in place to hit the new ceiling.',
+    minutes: 13,
+  },
+  {
+    id: 'scn-inference-single-provider-dependency',
+    area: 'inference',
+    symptom:
+      'The provider had a 90-minute elevated-error-rate incident. Our product was hard down for the whole window - no degraded mode, no fallback, a spinner and then a generic error. Post-incident review asks why a single vendor outage is a total outage.',
+    firstQuestions: [
+      'Which user journeys actually require a model, and which merely use one? A search box that falls back to keyword search is degraded; a chat-only product is down. That map decides how much resilience is worth buying.',
+      'What is the real cost of 90 minutes down, and how often do we expect it? Multi-provider work is expensive and needs a number to justify it.',
+      'How coupled are we to this provider - just an API call, or provider-specific tool-calling formats, structured-output modes, and prompts tuned to one model\'s quirks?',
+      'Is there a cached or precomputed answer for the most common requests that could have served most of the window?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'No fallback path exists at all - the client raises and the request fails, because the failure mode was never designed.',
+        check:
+          'Read the error handling in the inference client. If the catch block only logs and rethrows, that is the finding.',
+      },
+      {
+        hypothesis:
+          'A fallback exists on paper but is untested and would not have worked - stale credentials, unmapped request format, or a prompt that the secondary model handles badly.',
+        check:
+          'Force the secondary path in staging with a golden set and measure quality and error rate. Most untested fallbacks fail on the first real attempt.',
+      },
+      {
+        hypothesis:
+          'The application is coupled to provider-specific features, so switching is not a config change but a rewrite of tool-calling and output parsing.',
+        check:
+          'Grep for provider-specific request fields and response shapes outside the client module. Count the call sites that would need changing.',
+      },
+    ],
+    fix:
+      'Put every model call behind an internal interface that speaks your own request and response shape, with per-provider adapters handling tool-calling and structured-output differences. Keep a secondary provider warm with real traffic - a small percentage shadowed or served continuously - because a fallback that only runs during an incident is a fallback that fails during an incident. Add a circuit breaker that trips on error rate and latency, not only on hard failures, and drains to the secondary automatically. Below that, define an explicit degraded mode per journey: cached answers for repeat questions, retrieval-only results with no generation for search, and honest messaging elsewhere. Rehearse it with a scheduled game day where the primary is disabled deliberately.',
+    tradeoff:
+      'Maintaining two providers doubles prompt-tuning and evaluation work, and the two models will disagree on outputs your users have learned to expect, so the fallback is measurably worse and you should publish that expectation. The abstraction layer denies you the newest provider-specific features until you have wrapped them. Continuous secondary traffic costs money every day to insure against an event that may happen twice a year.',
+    seniorSignal:
+      'They ask what each journey degrades to before designing failover, and they insist the secondary carries live traffic - an untested standby is a comforting fiction, and they will say so.',
+    minutes: 16,
+  },
+  {
+    id: 'scn-inference-quantisation-accuracy-loss',
+    area: 'inference',
+    symptom:
+      'Moving a self-hosted model from fp16 to 4-bit cut GPU cost 60% and general benchmark scores dropped only 1.2 points, which looked acceptable. But structured extraction, the feature that actually matters, went from 94% valid JSON to 71%, and long numeric answers are subtly wrong.',
+    firstQuestions: [
+      'Which capability degraded, measured on your own task rather than on a public benchmark? Aggregate benchmarks hide exactly this - the loss is concentrated in formatting and arithmetic, which most benchmarks barely test.',
+      'Which quantisation scheme and calibration set were used? Post-training 4-bit with a calibration set drawn from generic web text will not preserve behaviour on your domain distribution.',
+      'Are the failures format failures or content failures? A missing closing brace and a wrong number are different problems - the first may be fixable at decode time.',
+      'What is the actual cost saving in money per month, so the quality loss can be priced against it?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Quantisation error concentrates in outlier activation channels, which disproportionately affect precise token-level behaviour such as delimiters and digits.',
+        check:
+          'Compare fp16 and 4-bit logits on the same failing prompts at the divergence point. Large divergence on structural tokens confirms it.',
+      },
+      {
+        hypothesis:
+          'The calibration data does not match production distribution, so the quantisation ranges are tuned for the wrong inputs.',
+        check:
+          'Re-quantise using a calibration sample drawn from real production prompts and re-measure. A large recovery names the calibration set as the cause.',
+      },
+      {
+        hypothesis:
+          'The regression is not in the weights but in the serving change that shipped alongside - a different kernel, sampling defaults, or a template change made in the same deploy.',
+        check:
+          'Run the 4-bit model on the old serving stack and the fp16 model on the new one. Two runs isolate weights from serving.',
+      },
+    ],
+    fix:
+      'Re-quantise with production-representative calibration data first, since it is cheap and often recovers most of the gap. If structured output is still weak, stop asking the model to be reliable at it and constrain decoding to the grammar or JSON schema, which makes format failure structurally impossible regardless of precision. Consider a mixed precision profile - keeping sensitive layers, typically attention projections and the output head, at higher precision - which usually costs a fraction of the memory saving and recovers most of the accuracy. If the extraction path is still short of the bar, route only that path to the fp16 model and keep 4-bit for the tolerant paths; the cost win is mostly preserved because extraction is a minority of traffic.',
+    tradeoff:
+      'Constrained decoding guarantees valid JSON but not correct JSON, and it can push the model into filling required fields with plausible nonsense rather than admitting it does not know - that failure is harder to spot than a parse error. Mixed precision gives back part of the memory saving and complicates the serving setup. Running two precisions means two deployments, two evaluation runs and a routing rule that can be wrong.',
+    seniorSignal:
+      'They evaluate on the task that pays the bills rather than on an aggregate benchmark, and they know quantisation damage is uneven - a weak answer reports the 1.2-point benchmark drop and calls the migration a success.',
+    minutes: 16,
+  },
+  {
+    id: 'scn-inference-kv-cache-memory-growth',
+    area: 'inference',
+    symptom:
+      'Self-hosted serving OOMs after 40 to 90 minutes under load. Restarting fixes it for another hour. Model weights are 26GB on an 80GB card, so weights are not the problem, and the crash time varies with traffic mix rather than with uptime.',
+    firstQuestions: [
+      'Is the growth in KV cache or elsewhere? Read the server\'s own memory accounting - most inference servers report cache utilisation - and watch it climb toward the ceiling.',
+      'What is the concurrency and the sequence-length distribution? KV cache scales with concurrent sequences times their length, so a few very long sessions can consume more than many short ones.',
+      'Are finished sequences having their cache freed? Compare active sequence count with allocated cache blocks. A gap that only grows is a leak.',
+      'Does crash time correlate with the arrival of long-context requests rather than with elapsed time?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'KV cache is sized to allow more concurrent long sequences than the remaining memory can hold, so the server admits work it cannot finish and dies at the worst combination of arrivals.',
+        check:
+          'Compute worst-case cache demand: max concurrency times max sequence length times per-token cache bytes. If that exceeds free memory, the crash was scheduled, not random.',
+      },
+      {
+        hypothesis:
+          'Cache blocks for aborted or disconnected requests are never released, so a slow leak accumulates in proportion to client disconnects.',
+        check:
+          'Track allocated blocks against live sequences over an hour and correlate with client-cancellation counts.',
+      },
+      {
+        hypothesis:
+          'Fragmentation: variable-length sequences leave the allocator unable to satisfy a large contiguous request even though total free memory looks sufficient.',
+        check:
+          'Compare largest allocatable block against total free memory at crash time. A large gap is fragmentation, and paged-attention style allocation is the answer.',
+      },
+    ],
+    fix:
+      'Bound the worst case instead of hoping for the average. Cap maximum sequence length and maximum concurrent sequences so peak cache demand provably fits, and preallocate the cache pool at startup so the server queues rather than crashes when full - a request waiting 400ms is enormously better than an OOM that kills every in-flight request. Use a paged KV cache so fragmentation stops being a failure mode, and enable eviction or offload for idle sessions. Fix the release path on client disconnect. Add an admission controller that rejects a request whose projected cache footprint does not fit, with a clear retry signal, and alert on cache utilisation well before the ceiling.',
+    tradeoff:
+      'Capping concurrency caps throughput, so the same hardware now serves fewer simultaneous users and you may need another replica - you are trading peak capacity for the guarantee of not falling over. A hard max sequence length breaks the long-document use case that someone will have built a workflow around. Offloading idle-session cache to host memory makes resumption slower, which users experience as an unpredictable stall.',
+    seniorSignal:
+      'They compute the worst-case footprint and discover the crash was inevitable rather than mysterious, and they prefer queueing to OOM because one degrades and the other destroys concurrent work.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-inference-cold-starts',
+    area: 'inference',
+    symptom:
+      'A self-hosted endpoint that scales to zero overnight takes 95 seconds to serve its first request. Weekday mornings, the first dozen users get a timeout. Warm requests are 300ms. Autoscale-up during the day shows the same stall whenever a new replica joins.',
+    firstQuestions: [
+      'Break the 95 seconds down: node provisioning, image pull, weight download, load into GPU memory, framework warm-up, first-request compile. Only one or two of these dominate and they have completely different fixes.',
+      'How large is the container image and where do the weights come from - baked in, object storage, or a network volume?',
+      'Is the first request slow even after the server reports ready? That points at lazy kernel compilation or graph capture rather than at loading.',
+      'What is the traffic shape - genuinely zero overnight, or a trickle that scale-to-zero is thrashing against?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Weight download over the network dominates: tens of gigabytes pulled from object storage on every cold start.',
+        check:
+          'Time the download step alone from the pod logs. If it is 70 of the 95 seconds, everything else is noise.',
+      },
+      {
+        hypothesis:
+          'Container image pull dominates because the image bundles CUDA, the framework and assorted tooling into something enormous that is not cached on a fresh node.',
+        check:
+          'Compare cold start on a node that already has the image cached against a genuinely fresh node. The delta is the pull.',
+      },
+      {
+        hypothesis:
+          'Post-load warm-up: kernel autotuning, CUDA graph capture or torch.compile runs on the first real request, so ready does not mean fast.',
+        check:
+          'Send a synthetic request immediately after ready and compare its latency with the tenth. A big gap that decays over a handful of requests is compilation.',
+      },
+    ],
+    fix:
+      'Keep a warm floor. Scale-to-zero saves money that a 95-second first request will cost you back in abandoned sessions, so hold one replica overnight, or accept scale-to-zero only for a non-interactive path. Then attack the dominant term: cache weights on a fast local volume or a node-local disk so replicas read locally rather than downloading; slim the image and pre-pull it to nodes so the pull is warm; and run a warm-up request as part of the readiness probe so a replica is only marked ready after compilation has happened - this alone removes the autoscale-up stall. Pre-scale ahead of the known morning ramp rather than reacting to it.',
+    tradeoff:
+      'A warm floor is a fixed nightly GPU bill for zero traffic, which is exactly the cost scale-to-zero was adopted to avoid, so the decision is a straight arithmetic comparison between idle cost and lost sessions. Warm-up in the readiness probe makes scale-up slower to take effect, which hurts during a sudden surge. Node-local weight caching pins you to warmed node pools and complicates rolling out a new model version.',
+    seniorSignal:
+      'They break the cold start into its stages before optimising, and they treat scale-to-zero as a cost decision with a latency price rather than as a default best practice.',
+    minutes: 13,
+  },
+  {
+    id: 'scn-inference-streaming-p99-tail',
+    area: 'inference',
+    symptom:
+      'Streaming responses stall mid-sentence for 6 to 10 seconds, then resume and finish normally. It affects about 2% of responses. Server-side metrics say time-to-first-token and total generation time are both fine, and inter-token latency looks healthy in aggregate.',
+    firstQuestions: [
+      'Are we measuring inter-token latency at all, or only TTFT and total? A stall is invisible to both endpoints - total time can look fine if generation was fast either side of the gap.',
+      'Where is the gap - server-side token emission, or somewhere between the server and the browser? Log emission timestamps per token server-side and compare with client receipt timestamps.',
+      'Do the stalls correlate with anything: response length, a proxy in the path, specific clients, specific regions, or the point at which a tool call is executed mid-stream?',
+      'Is anything buffering? A reverse proxy or CDN that buffers a response defeats streaming entirely and produces exactly this shape.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'An intermediary - nginx, a CDN, a service mesh sidecar - is buffering the event stream and flushing in chunks rather than passing tokens through.',
+        check:
+          'Compare timestamps at the application and at the client for the same response. If the server emitted smoothly and the client received in bursts, the buffer is between them.',
+      },
+      {
+        hypothesis:
+          'Server-side scheduler preemption: under batch pressure the serving engine pauses some sequences to admit or continue others, and a preempted sequence resumes seconds later.',
+        check:
+          'Correlate stalls with server batch size and preemption counters. Stalls clustering at high concurrency confirms scheduling, not networking.',
+      },
+      {
+        hypothesis:
+          'Something synchronous is happening mid-stream in the application - a tool call, a moderation check, a database write - blocking the emission loop.',
+        check:
+          'Trace the application handler and look for an await inside the token loop whose duration matches the stall.',
+      },
+    ],
+    fix:
+      'Instrument first: emit per-token timestamps and alert on the maximum inter-token gap, not just on TTFT and total, because the metric that would have caught this does not currently exist. Then fix what the comparison names - disable proxy buffering for the streaming route and set the headers that tell intermediaries to pass through; move any mid-stream synchronous work off the emission path by running moderation concurrently on a sliding window rather than blocking; and if it is scheduler preemption, lower the maximum batch size so admitted sequences are not starved, trading a little throughput for a smooth stream. Send a heartbeat comment on the stream so idle connections are not silently dropped.',
+    tradeoff:
+      'Lowering batch size reduces tokens per second per GPU and therefore raises cost per token - you are buying smoothness with throughput. Concurrent moderation means a small window of unmoderated text can reach the user before it is retracted, which is a real product and safety decision, not a technical detail. Per-token instrumentation is a high-cardinality metric that costs money to store, so it usually has to be sampled.',
+    seniorSignal:
+      'They notice that the existing metrics could not have detected the symptom and add the missing one before theorising, and they check the network path rather than assuming the model is at fault.',
+    minutes: 13,
+  },
+  {
+    id: 'scn-inference-batch-vs-interactive-contention',
+    area: 'inference',
+    symptom:
+      'A nightly job that re-embeds and summarises the document corpus shares the same GPU fleet as the live chat product. On nights the corpus is large, chat p95 goes from 800ms to 6s. The batch job finishes early and everyone congratulates it.',
+    firstQuestions: [
+      'Do the two workloads genuinely share capacity, or do they share only a rate limit or a queue? The remedy differs - one is scheduling, the other is quota.',
+      'What is the batch job\'s actual deadline? If it must finish by 06:00 and it currently finishes at 01:00, there is slack to give back for free.',
+      'Is there a priority mechanism in the serving layer at all, or does it serve strictly first-come-first-served?',
+      'What does chat p95 look like as a function of batch concurrency? That curve tells you where the knee is and how much batch throughput a good SLO costs.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Continuous batching mixes both workloads into the same batches, so long batch sequences occupy slots and cache that interactive requests then queue for.',
+        check:
+          'Instrument batch composition. If interactive requests sit in queues whose occupancy is dominated by batch sequences, this is it.',
+      },
+      {
+        hypothesis:
+          'KV cache pressure from long batch documents forces preemption of interactive sequences.',
+        check:
+          'Watch cache utilisation and preemption counters during the job. Chat latency tracking cache utilisation is the signature.',
+      },
+      {
+        hypothesis:
+          'The batch job runs at maximum parallelism because nothing constrains it, having been tuned for "finish as fast as possible" with no notion of a co-tenant.',
+        check:
+          'Read the job config for its concurrency setting and compare against what the fleet can absorb while holding the chat SLO.',
+      },
+    ],
+    fix:
+      'Stop co-scheduling latency-critical and throughput-critical work on the same capacity as equals. Cheapest version: give the batch job a concurrency limit derived from the measured knee, and schedule it to use its full deadline rather than racing - a job that must finish by 06:00 should be paced to finish at 05:30, not at 01:00. Better version: physically separate the fleets, with batch on cheaper preemptible capacity and interactive on reserved, so contention is impossible by construction. If they must share, put a priority scheduler in front with strict preemption favouring interactive, and admission-control batch on live chat p95 so it backs off automatically when the SLO is at risk.',
+    tradeoff:
+      'Separate fleets cost more in aggregate because neither can absorb the other\'s troughs, and preemptible capacity means the batch job must be checkpointable and restartable, which is engineering work. Pacing the batch removes the safety margin before its deadline, so a slow night now risks missing it. Priority preemption adds complexity to the serving layer and can starve batch entirely during a sustained interactive surge.',
+    seniorSignal:
+      'They measure the chat-latency curve against batch concurrency to find the knee rather than guessing a limit, and they notice that "the batch finished early" is not a virtue when it was paid for out of the interactive SLO.',
+    minutes: 14,
+  },
+  {
+    id: 'scn-inference-context-window-truncation',
+    area: 'inference',
+    symptom:
+      'Long conversations start producing answers that ignore constraints set earlier - a user says "reply in Spanish, and never mention pricing" at turn 2, and by turn 30 the model is answering in English about pricing. No errors are logged; the requests succeed normally.',
+    firstQuestions: [
+      'What does the truncation code actually do when the context limit is approached? Read it. Dropping the oldest messages first is the common default and it deletes exactly the system-level constraints users set early.',
+      'At which turn does the behaviour break, and does that turn coincide with the token count crossing the window?',
+      'Are the constraints in the system prompt or only in a user message? A constraint that lives in turn 2 of the transcript is as droppable as any other message.',
+      'Is there any test covering conversation length? Most suites test single turns, which is why this survived to production.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Naive oldest-first truncation removes early turns wholesale, and the early turns are where users set durable preferences.',
+        check:
+          'Log the message list actually sent at turn 30 and look for the Spanish instruction. Its absence is the whole diagnosis.',
+      },
+      {
+        hypothesis:
+          'A summarisation-based compactor is preserving the topic but discarding the constraints, because it was prompted to summarise content rather than to preserve directives.',
+        check:
+          'Read the generated summary. If it says "the user asked about billing" and drops "in Spanish, no pricing", the summariser prompt is the bug.',
+      },
+      {
+        hypothesis:
+          'The constraints are present but buried in the middle of a long context where they are least attended to, so this is a salience problem rather than a truncation one.',
+        check:
+          'Re-send the failing turn with the constraint appended at the end. If it complies, nothing was lost and the fix is position, not retention.',
+      },
+    ],
+    fix:
+      'Separate durable state from conversational history. Extract user-stated constraints - language, tone, prohibited topics, named entities - into a structured preferences object as they are stated, and render that object into the system prompt on every turn where truncation can never reach it. Truncate history in the middle, keeping the earliest turns and the most recent ones, rather than dropping from the front. Where summarisation is used, prompt it explicitly to preserve instructions and commitments verbatim and to summarise only content. Then add the test that was missing: a 40-turn conversation fixture asserting an early constraint still holds at the end, run in CI.',
+    tradeoff:
+      'Constraint extraction is another model call per turn with its own error rate - it will occasionally record a constraint the user did not mean permanently, and users find a preference they cannot shake more annoying than one that was forgotten, so it needs a visible way to clear it. Keeping both ends of the history spends tokens on turns that are mostly irrelevant, and it can produce a confusing gap the model comments on.',
+    seniorSignal:
+      'They read the truncation code before theorising about the model, and they promote user-stated constraints to durable state rather than trusting a transcript that the system is designed to delete.',
+    minutes: 14,
+  },
   // CHUNK_MARKER
 ]
