@@ -2354,6 +2354,30 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 20,
+    signal: 'A structural transformation that is identical at every node — the definition of the answer is recursive, so the code is too.',
+    approach: `Mirroring a tree means swapping each node's children and mirroring both subtrees.
+There is no cleverness to find: the recursion is the algorithm. An explicit
+stack or queue does the same work iteratively if the tree is deep enough to
+threaten the call stack.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def invert_tree(root: TreeNode | None) -> TreeNode | None:
+    if root is None:
+        return None
+    root.left, root.right = invert_tree(root.right), invert_tree(root.left)
+    return root`,
+    complexity: {
+      time: 'O(n) — every node is visited exactly once and does O(1) work.',
+      space: 'O(h) — the recursion stack is as deep as the tree, which is O(log n) balanced and O(n) degenerate.',
+    },
+    followUps: [
+      'What if the tree is a million nodes deep? Python\'s recursion limit bites; convert to an explicit stack.',
+      'What if you must not mutate the input and have to return a mirrored copy instead?',
+      'How would you check whether a tree is its own mirror — is that the same traversal?',
+    ],
   },
   {
     id: 'dsa-104-maximum-depth-of-binary-tree',
@@ -2365,6 +2389,29 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 20,
+    signal: 'An aggregate over root-to-leaf paths where each node\'s answer is a simple function of its children\'s answers.',
+    approach: `Depth of a node is one more than the deeper of its two subtrees, with an empty
+tree at zero. That single recurrence is the whole solution. A BFS counting
+levels gives the same number and is the version you want when the tree is deep
+or when you need the level structure anyway.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def max_depth(root: TreeNode | None) -> int:
+    if root is None:
+        return 0
+    return 1 + max(max_depth(root.left), max_depth(root.right))`,
+    complexity: {
+      time: 'O(n) — each node contributes one comparison and one addition, visited once.',
+      space: 'O(h) — recursion depth equals tree height; a BFS would instead cost O(width).',
+    },
+    followUps: [
+      'What if you need the minimum depth? Watch the trap: a node with one child is not a leaf.',
+      'What if the tree is n-ary rather than binary — what replaces the max of two?',
+      'What if the tree does not fit in memory and children are fetched over the network?',
+    ],
   },
   {
     id: 'dsa-543-diameter-of-binary-tree',
@@ -2376,6 +2423,38 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: ['meta'],
     minutes: 20,
+    signal: 'The best path need not pass through the root — so every node is a candidate turning point and must be scored as one.',
+    approach: `At each node the longest path bending there is left height plus right height.
+Compute heights bottom-up in one traversal and record the best bend seen. The
+naive version recomputes height for every node, making it O(n^2) on a skewed
+tree; returning the height as you go collapses that to one pass.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def diameter_of_binary_tree(root: TreeNode | None) -> int:
+    best = 0
+
+    def height(node: TreeNode | None) -> int:
+        nonlocal best
+        if node is None:
+            return 0
+        left, right = height(node.left), height(node.right)
+        best = max(best, left + right)  # path bending at this node
+        return 1 + max(left, right)
+
+    height(root)
+    return best`,
+    complexity: {
+      time: 'O(n) — one post-order pass; each node\'s height is computed once and reused by its parent.',
+      space: 'O(h) — the recursion stack, O(n) for a degenerate chain.',
+    },
+    followUps: [
+      'What if edges have weights? The bend value becomes a sum of weights, not a count of edges.',
+      'What if you must return the path itself, not its length?',
+      'What if the input is a general tree or a graph — does the bottom-up trick survive cycles?',
+    ],
   },
   {
     id: 'dsa-110-balanced-binary-tree',
@@ -2387,6 +2466,38 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: [],
     minutes: 20,
+    signal: 'A property that must hold at every node and depends on subtree heights — compute the height and the verdict in the same return value.',
+    approach: `Checking balance by calling a separate height function at every node recomputes
+the same heights over and over, which is O(n^2). Instead let one post-order
+function return the height, or a sentinel -1 meaning "already unbalanced", so
+the failure short-circuits all the way up in a single pass.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def is_balanced(root: TreeNode | None) -> bool:
+    def height(node: TreeNode | None) -> int:
+        if node is None:
+            return 0
+        left = height(node.left)
+        if left == -1:
+            return -1
+        right = height(node.right)
+        if right == -1 or abs(left - right) > 1:
+            return -1
+        return 1 + max(left, right)
+
+    return height(root) != -1`,
+    complexity: {
+      time: 'O(n) — each node\'s height is computed exactly once, versus O(n^2) if height is recomputed per node.',
+      space: 'O(h) — recursion depth only; the sentinel carries the verdict, so no extra structure is needed.',
+    },
+    followUps: [
+      'What if the allowed height difference is k rather than 1 — does anything but the comparison change?',
+      'What if you must return the first unbalanced node, not just a boolean?',
+      'How would you rebalance it? That is where AVL rotations or a rebuild from a sorted traversal come in.',
+    ],
   },
   {
     id: 'dsa-100-same-tree',
@@ -2398,6 +2509,33 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['meta'],
     minutes: 20,
+    signal: 'Compare two structures node for node — equality is defined recursively, so both trees must be walked in lockstep.',
+    approach: `Two trees are the same when both are empty, or both are non-empty with equal
+values and matching subtrees. Walking them together is what makes it correct:
+comparing serialised traversals can conflate different shapes unless the nulls
+are serialised too.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def is_same_tree(p: TreeNode | None, q: TreeNode | None) -> bool:
+    if p is None or q is None:
+        return p is q
+    return (
+        p.val == q.val
+        and is_same_tree(p.left, q.left)
+        and is_same_tree(p.right, q.right)
+    )`,
+    complexity: {
+      time: 'O(min(m, n)) — the walk stops at the first mismatch, so it never exceeds the smaller tree.',
+      space: 'O(h) — the recursion stack, bounded by the height of the shallower tree.',
+    },
+    followUps: [
+      'What if the trees may be mirror images and that still counts as equal? Swap the child comparison.',
+      'What if you must report where they first diverge, not just that they do?',
+      'What if the trees are huge and remote — can a Merkle hash per subtree cut the comparison short?',
+    ],
   },
   {
     id: 'dsa-572-subtree-of-another-tree',
@@ -2409,6 +2547,39 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['meta'],
     minutes: 20,
+    signal: '"Contains an identical subtree" — an exact-match check anchored at every possible node, so it is a search wrapped around an equality test.',
+    approach: `Try to match the pattern at the root; if that fails, recurse into each child and
+try again. The equality test is Same Tree, and the outer walk is what makes it
+O(m * n) in the worst case. Serialising both trees with null markers turns it
+into substring search and gets you to O(m + n).`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def _same(p: TreeNode | None, q: TreeNode | None) -> bool:
+    if p is None or q is None:
+        return p is q
+    return p.val == q.val and _same(p.left, q.left) and _same(p.right, q.right)
+
+
+def is_subtree(root: TreeNode | None, sub: TreeNode | None) -> bool:
+    if sub is None:
+        return True
+    if root is None:
+        return False
+    if _same(root, sub):
+        return True
+    return is_subtree(root.left, sub) or is_subtree(root.right, sub)`,
+    complexity: {
+      time: 'O(m * n) — each of the m nodes of root may start an O(n) equality check against the pattern.',
+      space: 'O(h) — recursion depth of the outer walk plus the nested equality walk.',
+    },
+    followUps: [
+      'Can you get O(m + n)? Serialise with explicit nulls and run KMP for the pattern inside the text.',
+      'What if you want the count of matching subtrees rather than a boolean?',
+      'What if a match only needs the same shape, not the same values?',
+    ],
   },
   {
     id: 'dsa-235-lowest-common-ancestor-of-a-binary-search-tree',
@@ -2420,6 +2591,36 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Lowest common ancestor, and the tree is a BST — the ordering tells you which way to walk without any searching.',
+    approach: `In a BST the LCA is the first node whose value sits between the two targets. If
+both targets are smaller, the answer is in the left subtree; if both are larger,
+the right. The moment they split — or one equals the current node — you have
+found it. No parent pointers and no path recording needed.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def lowest_common_ancestor(root: TreeNode | None, p: int, q: int) -> TreeNode | None:
+    lo, hi = min(p, q), max(p, q)
+    node = root
+    while node is not None:
+        if hi < node.val:
+            node = node.left
+        elif lo > node.val:
+            node = node.right
+        else:
+            return node  # the split point, or one of the targets itself
+    return None`,
+    complexity: {
+      time: 'O(h) — one root-to-node descent, so O(log n) on a balanced BST and O(n) on a degenerate one.',
+      space: 'O(1) — the loop carries a single pointer, no recursion and no stored paths.',
+    },
+    followUps: [
+      'What if it is an ordinary binary tree with no ordering? You must recurse both sides and combine.',
+      'What if either target might be absent from the tree — does this still return a sensible answer?',
+      'What if there are many LCA queries on a static tree? Binary lifting answers each in O(log n) after preprocessing.',
+    ],
   },
   {
     id: 'dsa-102-binary-tree-level-order-traversal',
@@ -2431,6 +2632,47 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'The output is grouped by depth — that grouping is a queue processed one full level at a time.',
+    approach: `A plain BFS visits nodes in level order but loses the boundaries. Capture the
+queue's length before draining it: that count is exactly the current level's
+width, so popping that many nodes yields one level. Everything enqueued during
+the drain belongs to the next level.`,
+    solution: `from collections import deque
+
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def level_order_traversal(root: TreeNode | None) -> list[list[int]]:
+    if root is None:
+        return []
+
+    out: list[list[int]] = []
+    queue = deque([root])
+
+    while queue:
+        level = []
+        for _ in range(len(queue)):  # snapshot the width before draining
+            node = queue.popleft()
+            level.append(node.val)
+            if node.left is not None:
+                queue.append(node.left)
+            if node.right is not None:
+                queue.append(node.right)
+        out.append(level)
+
+    return out`,
+    complexity: {
+      time: 'O(n) — every node is enqueued once and dequeued once.',
+      space: 'O(w) — the queue holds at most one level, and the widest level can be n/2 nodes.',
+    },
+    followUps: [
+      'What if levels must alternate direction? Zigzag needs only a reverse on odd levels.',
+      'What if the tree is extremely wide — is BFS still the right memory trade against DFS with a depth index?',
+      'What if you need the bottom-up order? Build normally and reverse, or prepend.',
+    ],
   },
   {
     id: 'dsa-199-binary-tree-right-side-view',
@@ -2442,6 +2684,47 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: '"What you see from one side" — that is the last node of every level, so the problem is level-order in disguise.',
+    approach: `Run a level-order traversal and keep only the final node of each level. The trap
+is thinking it is just the right spine: when a right subtree is missing, a node
+from the left subtree becomes visible. A DFS that visits right first and records
+the first node seen at each new depth works equally well.`,
+    solution: `from collections import deque
+
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def right_side_view(root: TreeNode | None) -> list[int]:
+    if root is None:
+        return []
+
+    out: list[int] = []
+    queue = deque([root])
+
+    while queue:
+        width = len(queue)
+        for i in range(width):
+            node = queue.popleft()
+            if i == width - 1:  # last node of this level
+                out.append(node.val)
+            if node.left is not None:
+                queue.append(node.left)
+            if node.right is not None:
+                queue.append(node.right)
+
+    return out`,
+    complexity: {
+      time: 'O(n) — a full BFS; every node is enqueued and dequeued once even though most are not emitted.',
+      space: 'O(w) — the queue holds one level at a time, up to n/2 nodes at the widest.',
+    },
+    followUps: [
+      'What about the left side view — does the same code work with i == 0?',
+      'What if you need the vertical order view, grouping by horizontal offset instead of depth?',
+      'Can you avoid BFS entirely with a right-first DFS keyed on depth, and what does that do to the space bound?',
+    ],
   },
   {
     id: 'dsa-1448-count-good-nodes-in-binary-tree',
@@ -2453,6 +2736,34 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'A node\'s verdict depends on everything on the path from the root to it — so carry that path summary down as a parameter.',
+    approach: `A node is good when nothing on its root path is larger. Rather than re-scanning
+the path at each node, pass the running maximum down the recursion: it is the
+only fact about the path that matters. Each node compares against it once and
+passes the updated maximum to its children.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def good_nodes(root: TreeNode | None) -> int:
+    def walk(node: TreeNode | None, best: float) -> int:
+        if node is None:
+            return 0
+        good = 1 if node.val >= best else 0
+        best = max(best, node.val)
+        return good + walk(node.left, best) + walk(node.right, best)
+
+    return walk(root, float("-inf"))`,
+    complexity: {
+      time: 'O(n) — one pass; carrying the running maximum avoids re-walking each root path.',
+      space: 'O(h) — recursion depth only, since the path summary is a single number.',
+    },
+    followUps: [
+      'What if \'good\' meant strictly greater than everything before it — which comparison flips?',
+      'What if you need the minimum on the path too, or both bounds at once?',
+      'What if nodes are inserted dynamically and the count must stay current?',
+    ],
   },
   {
     id: 'dsa-98-validate-binary-search-tree',
@@ -2464,6 +2775,35 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 30,
+    signal: 'A BST constraint is about whole subtrees, not parent-child pairs — so each node needs an allowed range, not a single comparison.',
+    approach: `Checking only node against its two children is the classic wrong answer: a value
+can be greater than its parent yet still violate an ancestor's bound. Push an
+open interval down instead — going left tightens the upper bound, going right
+tightens the lower one. An in-order traversal that must be strictly increasing
+is the equivalent check.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def is_valid_bst(root: TreeNode | None) -> bool:
+    def valid(node: TreeNode | None, low: float, high: float) -> bool:
+        if node is None:
+            return True
+        if not low < node.val < high:
+            return False
+        return valid(node.left, low, node.val) and valid(node.right, node.val, high)
+
+    return valid(root, float("-inf"), float("inf"))`,
+    complexity: {
+      time: 'O(n) — every node is checked once against a range that is passed down, not recomputed.',
+      space: 'O(h) — the recursion stack; the bounds themselves are two numbers per frame.',
+    },
+    followUps: [
+      'What if duplicates are allowed on one side? One of the strict inequalities has to relax.',
+      'What if exactly two nodes were swapped and you must recover the BST in place?',
+      'Why is checking only parent versus child wrong — construct the smallest counterexample.',
+    ],
   },
   {
     id: 'dsa-230-kth-smallest-element-in-a-bst',
@@ -2475,6 +2815,40 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'k-th smallest in a BST — in-order traversal already emits values in sorted order, so you just need to stop early.',
+    approach: `In-order visits a BST in ascending order, so the k-th value it emits is the
+answer. Collecting the whole traversal wastes time and memory; an explicit
+stack lets you stop the moment the count reaches k. That early exit is the
+difference between O(n) and O(h + k).`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def kth_smallest(root: TreeNode | None, k: int) -> int:
+    stack: list[TreeNode] = []
+    node = root
+
+    while node is not None or stack:
+        while node is not None:
+            stack.append(node)
+            node = node.left
+        node = stack.pop()
+        k -= 1
+        if k == 0:
+            return node.val
+        node = node.right
+
+    raise ValueError("k is larger than the number of nodes")`,
+    complexity: {
+      time: 'O(h + k) — the initial descent costs the height, then k pops each do O(1) amortised work.',
+      space: 'O(h) — the stack never holds more than one root-to-node path.',
+    },
+    followUps: [
+      'What if the BST is modified often and k-th queries are frequent? Store a subtree size in each node for O(h) lookups.',
+      'What if you need the k-th largest? Mirror the traversal to right, node, left.',
+      'What if the tree is not a BST — does anything below a full sort survive?',
+    ],
   },
   {
     id: 'dsa-105-construct-binary-tree-from-preorder-and-inorder-traversal',
@@ -2486,6 +2860,41 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Two traversals given: preorder names the root, inorder tells you how the rest splits around it.',
+    approach: `The first preorder value is the root. Find it in inorder: everything left of it
+is the left subtree, everything right is the right, and their sizes tell you how
+to slice preorder. Scanning inorder for the root each time is O(n^2); a
+value-to-index dict built once makes each split O(1).`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def build_tree_from(preorder: list[int], inorder: list[int]) -> TreeNode | None:
+    position = {value: i for i, value in enumerate(inorder)}
+    pre_index = 0
+
+    def build(lo: int, hi: int) -> TreeNode | None:
+        nonlocal pre_index
+        if lo > hi:
+            return None
+        root = TreeNode(preorder[pre_index])
+        pre_index += 1
+        mid = position[root.val]
+        root.left = build(lo, mid - 1)
+        root.right = build(mid + 1, hi)
+        return root
+
+    return build(0, len(inorder) - 1)`,
+    complexity: {
+      time: 'O(n) — each node is created once and its inorder position is found by dict lookup, not a scan.',
+      space: 'O(n) — the position map, plus O(h) recursion depth.',
+    },
+    followUps: [
+      'What if you are given postorder and inorder instead? Consume postorder from the back and build right first.',
+      'What if preorder and postorder are given, with no inorder? The tree is not unique unless it is full.',
+      'What if values may repeat? The position map breaks, and the reconstruction becomes ambiguous.',
+    ],
   },
   {
     id: 'dsa-124-binary-tree-maximum-path-sum',
@@ -2497,6 +2906,42 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['google'],
     minutes: 45,
+    signal: 'A path may start and end anywhere and may bend at a node — so what a node returns upward is not what it contributes locally.',
+    approach: `Separate two quantities. What a node can offer its parent is a straight-line gain:
+its value plus the better of its two child gains, clamped at zero because a
+negative branch is better dropped. What it can score by itself is its value plus
+both gains, the bending path, and that is what the running best tracks.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def max_path_sum(root: TreeNode | None) -> int:
+    if root is None:
+        raise ValueError("a path needs at least one node")
+
+    best = float("-inf")
+
+    def gain(node: TreeNode | None) -> int:
+        nonlocal best
+        if node is None:
+            return 0
+        left = max(gain(node.left), 0)  # drop negative branches
+        right = max(gain(node.right), 0)
+        best = max(best, node.val + left + right)  # path bending here
+        return node.val + max(left, right)  # straight path offered upward
+
+    gain(root)
+    return int(best)`,
+    complexity: {
+      time: 'O(n) — one post-order pass, each node computing its gain once from its children\'s gains.',
+      space: 'O(h) — the recursion stack; nothing else is stored.',
+    },
+    followUps: [
+      'What if the path must pass through the root? The bending case at the root is the only candidate.',
+      'What if all values are negative — why does clamping at zero not force a wrong answer of 0?',
+      'What if you must return the path\'s nodes, not just the sum?',
+    ],
   },
   {
     id: 'dsa-297-serialize-and-deserialize-binary-tree',
@@ -2508,6 +2953,53 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 45,
+    signal: 'Round-trip a shape, not just values — so the encoding must record absent children or the structure cannot be recovered.',
+    approach: `A preorder walk that writes an explicit marker for every null child is enough to
+rebuild the tree unambiguously, because the marker tells the reader exactly when
+a subtree ends. Deserialising is the same preorder walk consuming tokens in
+order. Without the null markers, two different trees can share an encoding.`,
+    solution: `class TreeNode:
+    def __init__(self, val: int = 0, left: "TreeNode | None" = None, right: "TreeNode | None" = None) -> None:
+        self.val, self.left, self.right = val, left, right
+
+
+def serialize(root: TreeNode | None) -> str:
+    out: list[str] = []
+
+    def walk(node: TreeNode | None) -> None:
+        if node is None:
+            out.append("#")
+            return
+        out.append(str(node.val))
+        walk(node.left)
+        walk(node.right)
+
+    walk(root)
+    return ",".join(out)
+
+
+def deserialize(data: str) -> TreeNode | None:
+    tokens = iter(data.split(","))
+
+    def build() -> TreeNode | None:
+        token = next(tokens)
+        if token == "#":
+            return None
+        node = TreeNode(int(token))
+        node.left = build()
+        node.right = build()
+        return node
+
+    return build()`,
+    complexity: {
+      time: 'O(n) for each direction — every real node and every null marker is written once and read once.',
+      space: 'O(n) — the token list is proportional to the tree, plus O(h) recursion depth.',
+    },
+    followUps: [
+      'What if values can contain commas? The delimiter breaks; use length prefixes or escaping.',
+      'What if the tree is a BST? Preorder alone suffices, because the ordering implies the splits.',
+      'What if the encoding must be as small as possible — how much do the null markers actually cost?',
+    ],
   },
 
   // --- Heap / Priority Queue (7) ---
@@ -2521,6 +3013,36 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: [],
     minutes: 20,
+    signal: 'The k-th largest, maintained across an unbounded stream — you can never store everything, and only the top k ever matter.',
+    approach: `Keep a min-heap of exactly the k largest values seen. Its root is by definition
+the k-th largest. On each arrival push and, if the heap grew past k, pop the
+smallest — the value just evicted can never re-enter the top k. Sorting the
+whole history on each query would be O(n log n) per call.`,
+    solution: `import heapq
+
+
+class KthLargest:
+    def __init__(self, k: int, nums: list[int]) -> None:
+        self.k = k
+        self.heap = list(nums)
+        heapq.heapify(self.heap)
+        while len(self.heap) > k:
+            heapq.heappop(self.heap)
+
+    def add(self, val: int) -> int:
+        heapq.heappush(self.heap, val)
+        if len(self.heap) > self.k:
+            heapq.heappop(self.heap)
+        return self.heap[0]`,
+    complexity: {
+      time: 'O(log k) per add — one push and at most one pop on a heap that never exceeds k elements.',
+      space: 'O(k) — only the current top k are retained, independent of stream length.',
+    },
+    followUps: [
+      'What if k changes between queries? A fixed-size heap no longer works; you need an order-statistic tree.',
+      'What if values may be removed as well as added? A lazy-deletion heap or a balanced BST handles it.',
+      'What if the stream is distributed across machines — how do you merge per-shard top-k heaps?',
+    ],
   },
   {
     id: 'dsa-1046-last-stone-weight',
@@ -2532,6 +3054,34 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: [],
     minutes: 20,
+    signal: 'Repeatedly take the two largest, replace them with something derived — a loop over extremes is a heap, not a re-sort.',
+    approach: `Re-sorting after every smash is O(n^2 log n). A max-heap gives the two largest in
+O(log n) each and reinserts the remainder just as cheaply. Python's heapq is a
+min-heap, so negate on the way in and out — a standard idiom worth naming
+explicitly in the interview.`,
+    solution: `import heapq
+
+
+def last_stone_weight(stones: list[int]) -> int:
+    heap = [-s for s in stones]  # negate: heapq is a min-heap
+    heapq.heapify(heap)
+
+    while len(heap) > 1:
+        first = -heapq.heappop(heap)
+        second = -heapq.heappop(heap)
+        if first != second:
+            heapq.heappush(heap, -(first - second))
+
+    return -heap[0] if heap else 0`,
+    complexity: {
+      time: 'O(n log n) — heapify is O(n), then each of at most n smashes does a constant number of O(log n) heap operations.',
+      space: 'O(n) — the negated copy of the stones; the smashing itself allocates nothing new.',
+    },
+    followUps: [
+      'What if you may choose which stones to smash to minimise the remainder? That is partition, a DP problem, not a heap one.',
+      'What if three stones collide at a time — does the greedy still hold?',
+      'What if stones stream in while smashing continues? The heap handles inserts, the answer just becomes a running one.',
+    ],
   },
   {
     id: 'dsa-973-k-closest-points-to-origin',
@@ -2543,6 +3093,26 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'The k best by some score, where k is far smaller than n — a full sort does more work than the question asks for.',
+    approach: `Rank by squared distance; the square root is monotonic so it changes nothing but
+costs precision and time. A size-k max-heap keeps only the current best k at
+O(n log k), better than the O(n log n) full sort. Quickselect gets O(n) average
+but gives up the heap's streaming ability.`,
+    solution: `import heapq
+
+
+def k_closest(points: list[list[int]], k: int) -> list[list[int]]:
+    # squared distance: sqrt is monotonic, so it cannot change the ordering
+    return heapq.nsmallest(k, points, key=lambda p: p[0] * p[0] + p[1] * p[1])`,
+    complexity: {
+      time: 'O(n log k) — nsmallest maintains a heap of size k, doing one O(log k) operation per point.',
+      space: 'O(k) — only the current best k points are held, not a sorted copy of the input.',
+    },
+    followUps: [
+      'What if points stream in forever? The size-k heap already handles it; a full sort cannot.',
+      'What if you want O(n) average time? Quickselect partitions around the k-th distance instead.',
+      'What if the origin moves between queries — can any of the precomputation be reused?',
+    ],
   },
   {
     id: 'dsa-215-kth-largest-element-in-an-array',
@@ -2554,6 +3124,34 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: ['google', 'amazon'],
     minutes: 30,
+    signal: 'The k-th largest, not the largest and not a sorted array — a selection problem, where sorting is strictly more than you need.',
+    approach: `A min-heap holding the k largest values seen answers it in O(n log k): push each
+element, pop when the heap exceeds k, and the root is the answer. Quickselect
+partitions around a pivot and recurses into one side only, giving O(n) average
+but O(n^2) worst case unless the pivot is randomised.`,
+    solution: `import heapq
+
+
+def find_kth_largest(nums: list[int], k: int) -> int:
+    if not nums or not 1 <= k <= len(nums):
+        raise ValueError("k must be between 1 and len(nums)")
+
+    heap: list[int] = []
+    for n in nums:
+        heapq.heappush(heap, n)
+        if len(heap) > k:
+            heapq.heappop(heap)  # evicted values can never be in the top k
+
+    return heap[0]`,
+    complexity: {
+      time: 'O(n log k) — one push and at most one pop per element on a heap capped at k entries.',
+      space: 'O(k) — only the running top k is stored, versus O(n) for a sorted copy.',
+    },
+    followUps: [
+      'What if you need O(n) average time? Quickselect with a randomised pivot recurses into one partition only.',
+      'What if the array does not fit in memory? Stream it through the same k-sized heap, which never grows.',
+      'What if many different k values are queried on the same static array?',
+    ],
   },
   {
     id: 'dsa-621-task-scheduler',
@@ -2565,6 +3163,33 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Identical items must be spaced apart by a cooldown — the most frequent item alone dictates the schedule\'s skeleton.',
+    approach: `The task with the highest count sets the frame: max_count - 1 gaps, each of width
+n + 1, plus one final slot for every task tied at that count. Other tasks fill
+the idle slots for free. If there are more tasks than the frame holds, no idling
+is ever needed and the answer is simply len(tasks).`,
+    solution: `from collections import Counter
+
+
+def least_interval(tasks: list[str], n: int) -> int:
+    if not tasks:
+        return 0
+
+    counts = Counter(tasks)
+    max_count = max(counts.values())
+    ties = sum(1 for c in counts.values() if c == max_count)
+
+    frame = (max_count - 1) * (n + 1) + ties
+    return max(len(tasks), frame)`,
+    complexity: {
+      time: 'O(m) — one pass to count the tasks and one over the at most 26 distinct counts; no simulation.',
+      space: 'O(k) — one counter entry per distinct task, so O(1) for a fixed alphabet.',
+    },
+    followUps: [
+      'What if you must output an actual valid schedule, not just its length? Then you do need the max-heap simulation.',
+      'What if different tasks have different cooldowns? The single-frame formula collapses.',
+      'What if tasks arrive as a stream and the schedule must be produced online?',
+    ],
   },
   {
     id: 'dsa-355-design-twitter',
@@ -2576,6 +3201,45 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: false,
     companies: ['meta', 'amazon'],
     minutes: 30,
+    signal: 'A design question whose only algorithmic core is "merge k sorted feeds and take the newest ten".',
+    approach: `Store each user's tweets as an append-only list, newest last, and follows as a set.
+A feed is then the merge of the followees' lists, which is k sorted lists: a heap
+seeded with each list's newest entry yields the ten most recent in O(k log k).
+A global timestamp counter is what makes the ordering total.`,
+    solution: `import heapq
+from collections import defaultdict
+
+
+class Twitter:
+    def __init__(self) -> None:
+        self._clock = 0
+        self._tweets: dict[int, list[tuple[int, int]]] = defaultdict(list)  # user -> [(time, id)]
+        self._following: dict[int, set[int]] = defaultdict(set)
+
+    def post_tweet(self, user_id: int, tweet_id: int) -> None:
+        self._clock += 1
+        self._tweets[user_id].append((self._clock, tweet_id))
+
+    def get_news_feed(self, user_id: int) -> list[int]:
+        sources = self._following[user_id] | {user_id}
+        recent = (t for u in sources for t in self._tweets[u][-10:])
+        return [tweet_id for _, tweet_id in heapq.nlargest(10, recent)]
+
+    def follow(self, follower_id: int, followee_id: int) -> None:
+        if follower_id != followee_id:
+            self._following[follower_id].add(followee_id)
+
+    def unfollow(self, follower_id: int, followee_id: int) -> None:
+        self._following[follower_id].discard(followee_id)`,
+    complexity: {
+      time: 'O(1) for post, follow and unfollow; O(k log k) for a feed, since only the last 10 tweets of each of the k followees can qualify.',
+      space: 'O(total tweets + total follow edges) — tweets are never discarded and each edge is stored once.',
+    },
+    followUps: [
+      'What if a user follows millions of accounts? Pull-on-read stops scaling; precompute and push into follower inboxes instead.',
+      'What if celebrities have millions of followers? Fan-out on write explodes, so real systems use a hybrid of both.',
+      'What if the feed must be ranked rather than purely chronological — where does the heap go?',
+    ],
   },
   {
     id: 'dsa-295-find-median-from-data-stream',
@@ -2587,6 +3251,40 @@ def reverse_k_group(head: ListNode | None, k: int) -> ListNode | None:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'A running median over a stream — you need the middle, and the middle is the boundary between the small half and the large half.',
+    approach: `Keep the lower half in a max-heap and the upper half in a min-heap, sized so they
+differ by at most one. The median is then either the larger heap's root or the
+average of both roots, in O(1). Every insert pushes into one heap and rebalances
+by moving at most one element across.`,
+    solution: `import heapq
+
+
+class MedianFinder:
+    def __init__(self) -> None:
+        self._low: list[int] = []  # max-heap via negation: the smaller half
+        self._high: list[int] = []  # min-heap: the larger half
+
+    def add_num(self, num: int) -> None:
+        heapq.heappush(self._low, -num)
+        heapq.heappush(self._high, -heapq.heappop(self._low))  # keep order across halves
+        if len(self._high) > len(self._low):
+            heapq.heappush(self._low, -heapq.heappop(self._high))
+
+    def find_median(self) -> float:
+        if not self._low:
+            raise ValueError("no elements yet")
+        if len(self._low) > len(self._high):
+            return float(-self._low[0])
+        return (-self._low[0] + self._high[0]) / 2`,
+    complexity: {
+      time: 'O(log n) per insert for the pushes and the rebalance; O(1) per median query, which only reads two roots.',
+      space: 'O(n) — every value seen is retained, split across the two heaps.',
+    },
+    followUps: [
+      'What if you only need an approximate median with bounded memory? Reservoir sampling or a t-digest.',
+      'What if values must also be removed? Heaps do not support deletion; use lazy removal or a balanced BST.',
+      'What if you need an arbitrary percentile rather than the 50th?',
+    ],
   },
 
   // --- Backtracking (9) ---
