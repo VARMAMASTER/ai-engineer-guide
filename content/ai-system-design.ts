@@ -2112,10 +2112,311 @@ const evalQuestions: AiSdQuestion[] = [
   },
 ]
 
+/**
+ * Pattern 6 — multimodal. Pixels and audio have their own cost curves: diffusion scales with
+ * steps and resolution rather than output length, video chunking is the extreme case of the
+ * granularity trade, and streaming speech trades accuracy against latency directly.
+ */
+const multimodalQuestions: AiSdQuestion[] = [
+  {
+    id: 'aisdq-multimodal-search',
+    patternId: 'aisdp-multimodal',
+    title: 'Design multimodal search over text, image and video',
+    companies: ['google', 'amazon'],
+    minutes: 60,
+    steps: {
+      define: [
+        'What queries must work: text to image, image to image, text to video moment, or all of them?',
+        'What does a result look like — a whole asset, or a timestamp inside one?',
+        'What corpus size and what growth rate are we designing for?',
+      ],
+      data: [
+        'How do you embed a video, and what is the unit: the file, a shot, a frame?',
+        'Size the index for each choice and show what the granularity decision costs.',
+        'What metadata and text signals exist alongside the pixels, and how valuable are they?',
+      ],
+      architecture: [
+        'One shared embedding space or separate per-modality indexes, and why?',
+        'Draw the ingestion pipeline for a two-hour video.',
+        'How do you serve a text-to-video-moment query in under a second?',
+        'How do you combine visual similarity with text signals like titles, captions and transcripts?',
+      ],
+      evaluate: [
+        'How do you build ground truth for cross-modal retrieval?',
+        'What quality metric matters, and how does it differ per query type?',
+      ],
+      deploy: [
+        'How do you re-embed a petabyte-scale corpus when the model improves?',
+        'How do you handle a modality the current model handles badly, like text inside images?',
+      ],
+      wrapup: [
+        'What dominates cost: ingestion or serving?',
+        'What would you drop from v1?',
+      ],
+    },
+    solution: {
+      define:
+        'All four query types, but they are not equally hard and I would sequence them. Text-to-image and image-to-image are one shared-space problem and can ship first. Text-to-video-moment is the difficult one, because the result is a timestamp rather than an asset, and it is also the most valuable — users want the moment, not the two-hour file. So the result unit is a timestamped segment with the asset as its parent. Corpus assumption: 200M images and 1M hours of video, growing 20 percent a year, which is large enough that the granularity decision dominates the cost model and small enough to fit in a memory-resident index if the vectors are compressed.',
+      data:
+        'Video granularity is the central trade and I would work it explicitly. One embedding per file is useless for moment retrieval. One per frame at 1 frame per second over 1M hours is 3.6 billion vectors, which at 768 dimensions in int8 is about 2.8TB before graph overhead — expensive but not impossible, and mostly redundant, because consecutive seconds of the same shot are near-identical. So: shot-boundary detection first, then a small number of representative frames per shot — typically 1 to 3 — pooled into one shot embedding, plus keeping the individual frame embeddings only for shots longer than a few seconds. At an average shot length of 5 seconds that is about 720M shot vectors, roughly 550GB in int8, a fifth of the per-frame cost with almost all of the retrieval value. Alongside pixels there is a great deal of text that is usually undervalued: titles, descriptions, on-screen text via OCR, and above all the audio transcript, which for talking-head content is often a stronger retrieval signal than the visual embedding.',
+      architecture:
+        'A shared embedding space for text, image and video frames — a CLIP-style dual encoder — because it makes text-to-image, image-to-image and text-to-frame one index and one query path, and the operational simplicity is worth real money. I pair it with per-modality specialists rather than pretending the shared space is enough: a text index over transcripts and metadata, and OCR text indexed as text. Retrieval is then hybrid across those, fused by reciprocal rank fusion and reranked. Ingestion for a two-hour video: demux, decode, shot-boundary detect, sample representative frames per shot, embed frames, pool to shot vectors, run ASR on the audio to a timestamped transcript, run OCR on sampled frames, then write shot vectors, transcript segments and OCR text with their timestamps. That is a minutes-long GPU job per video and it runs on a queue with spot capacity, because it is latency-tolerant. Serving a moment query in under a second: query embedding, ANN over shot vectors and BM25 over transcript segments in parallel, fuse, then rerank the top candidates with a cross-modal reranker that scores the query against a few frames plus the transcript window — the rerank is where the moment gets localised precisely, and it only runs on 50 to 100 candidates so it fits the budget.',
+      evaluate:
+        'Cross-modal ground truth is expensive, so I build it in layers. Free weak labels from user behaviour: click-through on results, and dwell or play-past-the-moment for video. Cheap synthetic labels: use captions and transcripts as pseudo-queries for the asset they describe, which gives millions of pairs with a known bias toward describable content. And a small human-labelled gold set of a few thousand real queries with graded relevance, which is what the other two are calibrated against. Metrics differ by query type and reporting one number hides that: recall at 10 for text-to-image where users scan a grid, precision at 1 for image-to-image duplicate finding where a single right answer exists, and for moment retrieval a temporal IoU against the labelled span, because returning the right video at the wrong minute is a failure users feel sharply.',
+      deploy:
+        'Re-embedding at this scale is a serious project, not a job: 720M shots plus 200M images is close to a billion embeddings, and at an assumed 2,000 images per GPU-second that is roughly 130 GPU-hours of pure inference plus decode, which is affordable, while the decode and I/O of re-reading a petabyte of source media is what actually dominates. So representative frames are cached as small JPEGs at ingest time, which makes re-embedding a re-read of a few terabytes rather than a petabyte — that single decision is the difference between a two-day backfill and a two-month one. Cutover is a parallel index with a gold-set evaluation gate and a per-surface flag. For a modality the model handles badly, the honest answer is to route around it: dense visual embeddings are famously weak at text inside images, so OCR plus a text index carries that case rather than waiting for a better encoder.',
+      wrapup:
+        'Ingestion dominates by a wide margin: decode, shot detection, ASR and embedding for a two-hour video is several GPU-minutes, while a query is milliseconds of ANN plus a small rerank. That is the opposite of the LLM serving pattern and it changes the operational posture — ingestion runs on spot and preemptible capacity with a queue and no latency SLO, and serving runs on a small, stable, memory-heavy fleet. From v1 I would drop image-to-image duplicate search and OCR, ship text-to-image and transcript-based video search, and add the visual moment retrieval once the shared-space quality is measured on the gold set.',
+      numbers: [
+        'Granularity cost: 1M hours at 1 frame/s = 3.6B vectors, about 2.8TB at 768 dims int8; shot-level at a 5-second average shot is 720M vectors, roughly 550GB — a 5x saving for a small recall loss.',
+        'Ingestion cost per video: a 2-hour video needs decode, shot detection, roughly 1,440 frame embeddings, ASR over 2 hours of audio and sampled OCR — several GPU-minutes, versus milliseconds to serve a query against it.',
+        'Re-embedding: about 1B embeddings at an assumed 2,000 per GPU-second is roughly 140 GPU-hours of inference; caching representative frames as JPEGs at ingest turns the source re-read from petabytes into a few terabytes.',
+        'Serving budget: 5ms query embed + 20ms ANN over 720M compressed vectors + 15ms BM25 + 200ms cross-modal rerank on 80 candidates = about 240ms, inside a one-second target.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 9, apiAndData: 10, architecture: 15, deepDive: 13, wrapUp: 5 },
+      opening:
+        'The decision that sets the cost of this whole system is video granularity, so let me price per-frame against per-shot embeddings before I draw anything, because it is a five-fold difference in index size.',
+      traps: [
+        'Embedding whole videos. It makes moment retrieval impossible, and the moment is what users actually want.',
+        'Ignoring the transcript. For a lot of video the audio transcript is a stronger retrieval signal than any visual embedding, and it is nearly free once you are running ASR anyway.',
+        'Assuming a shared embedding space is enough. It is beaten per-modality by specialists, and it is specifically weak on text inside images, which OCR plus a text index handles far better.',
+        'Not caching representative frames at ingest. Without them a re-embedding campaign means re-decoding the entire source corpus, which turns a two-day job into a two-month one.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not one index per modality with separate models?',
+          answer:
+            'For pure quality on a single modality, specialists win, and I keep specialists for text. The shared space earns its place on the cross-modal queries, which are the product: a text query against a frame index needs both in the same space, and maintaining a separate bridging model per pair does not scale past three modalities.',
+        },
+        {
+          challenge: 'Your cross-modal reranker at 200ms is most of your latency budget.',
+          answer:
+            'It is, and it is what localises the moment, which is the thing the first-stage retrieval cannot do. If I needed the budget I would cut the candidate set from 80 to 30 and measure the temporal IoU loss on the gold set, and I would cache reranker scores for popular queries, which in search follow a heavy head.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  VID["2-hour video"] --> DEC["Demux + decode"]
+  DEC --> SHOT["Shot-boundary detection (~5s average)"]
+  SHOT --> FR["Sample 1-3 representative frames per shot"]
+  FR --> JPG[("Cached frame JPEGs (makes re-embedding cheap)")]
+  FR --> VEMB["Shared-space frame encoder"]
+  VEMB --> POOL["Pool to shot vector"]
+  POOL --> VIDX[("Shot vector index: 720M x int8")]
+  DEC --> ASR["ASR to timestamped transcript"]
+  FR --> OCR["OCR on sampled frames"]
+  ASR --> TIDX[("Transcript + OCR text index (BM25)")]
+  OCR --> TIDX
+  IMG["200M images"] --> VEMB
+  Q["Text or image query"] --> QE["Shared-space query encoder"]
+  QE --> VIDX
+  Q --> TIDX
+  VIDX -->|top 100| RRF["Reciprocal rank fusion"]
+  TIDX -->|top 100| RRF
+  RRF -->|top 80| XR["Cross-modal reranker: frames + transcript window"]
+  XR --> RES["Timestamped moment + parent asset"]
+  GOLD[("Gold set: graded relevance, temporal IoU")] --> XR`,
+  },
+  {
+    id: 'aisdq-image-generation-service',
+    patternId: 'aisdp-multimodal',
+    title: 'Design an image generation service',
+    companies: ['google', 'amazon', 'microsoft'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What is the latency expectation, and how does it differ from a text model?',
+        'What resolutions and aspect ratios must be supported, and what does each cost?',
+        'What safety obligations attach to generated images specifically?',
+      ],
+      data: [
+        'What governs the cost of one image, and how is that different from tokens?',
+        'What must be stored: the image, the prompt, the seed, or all three?',
+      ],
+      architecture: [
+        'Draw the request path and say where the GPU time goes.',
+        'How do you batch diffusion requests, and how is that different from batching an LLM?',
+        'How do you give the user progress on a 4-second generation?',
+        'How do you handle the safety pipeline without doubling latency?',
+      ],
+      evaluate: [
+        'How do you measure image quality at scale when it is subjective?',
+        'How do you detect that a model update made a category of prompts worse?',
+      ],
+      deploy: [
+        'How do you roll out a new checkpoint when outputs change completely?',
+        'How do you handle the fact that the same prompt and seed must reproduce the same image?',
+      ],
+      wrapup: [
+        'What is the cost per image and what are the levers?',
+        'When would you generate at lower quality deliberately?',
+      ],
+    },
+    solution: {
+      define:
+        'Latency expectation is 3 to 6 seconds for a standard image, and the psychology is different from text: there is no streaming payoff because a half-denoised image is not useful in the way half a sentence is, so the wait is a real wait and the product needs a progress affordance rather than a stream. Resolutions: 1024x1024 as the default plus common aspect ratios at similar pixel counts, with a 2048 upscale as a separate, more expensive operation rather than a native generation. That matters because diffusion cost scales with the number of latent pixels, so doubling each side is roughly four times the work. Safety obligations are heavier than for text and legally specific: no generation of CSAM under any circumstance, restrictions on real-person likeness and on public figures, and provenance metadata on every output, which for images means an embedded C2PA-style credential and an invisible watermark rather than a policy statement.',
+      data:
+        'Cost is governed by denoising steps times latent resolution, and not at all by prompt length — which is the single most important difference from LLM serving and reframes every optimisation. Halving steps halves cost linearly; the levers are step count, the scheduler (a better scheduler reaches the same quality in fewer steps), resolution, and model size. What is stored: the image in object storage with a CDN in front, and a generation record holding prompt, negative prompt, seed, model checkpoint version, scheduler, steps, guidance scale and resolution. Storing the seed and full parameters is what makes reproduction possible and it costs almost nothing; teams that omit it cannot regenerate a user image after a bug and cannot investigate a safety report properly.',
+      architecture:
+        'Request path: prompt safety classification on text first, which is cheap and rejects the clearly disallowed before any GPU is used; enqueue; a worker on a GPU runs the denoising loop; the output goes through an image safety classifier and a watermarker; then to object storage and the CDN, with the URL returned. Batching is genuinely different from LLM batching: every request in a diffusion batch does the same number of steps on the same shaped latent, so a batch is a clean, uniform matrix operation with no continuous-batching machinery and no KV cache at all — you simply group requests with the same resolution and step count. That means batching is easy and effective, but it also means a batch cannot admit a latecomer mid-run, so the scheduler holds a short window, tens of milliseconds, to gather same-shape requests, and that window is a direct latency-versus-throughput knob. Progress is reported as step count over total, and optionally as a preview decoded from the latent at a few checkpoints, which is cheap and greatly improves perceived latency. The safety pipeline runs in parallel where it can: text classification happens while the request queues, and the image classifier runs on the GPU immediately after the last denoising step while the image is still resident, so it adds tens of milliseconds rather than a second.',
+      evaluate:
+        'Automated metrics for image quality are weak and I would say so rather than quoting one: FID measures distributional similarity to a reference set and does not track human preference at the level of one image, and CLIP score measures prompt adherence and is easily gamed. So the ranking signal is human preference on a fixed prompt suite — a few thousand pairwise comparisons per checkpoint, which is affordable and is the only measurement I would gate a release on — supported by cheaper proxies that are directional. To catch a category regression, the prompt suite is deliberately stratified: portraits, hands, text rendering, styles, compositions with multiple subjects, and known-hard cases, and results are reported per stratum. Model updates almost never regress uniformly; they trade a category away, and only a stratified suite shows it.',
+      deploy:
+        'A new checkpoint changes every output, so there is no diff and no gradual behavioural rollout in the usual sense. The rollout is: stratified prompt suite with pairwise human preference against the current checkpoint, then a limited public exposure behind an opt-in preview, then default with the old checkpoint still selectable by version for a deprecation window. Version-pinning is essential here because users build workflows around a checkpoint appearance, and silently replacing it is the single most-hated thing an image service can do. Reproducibility is a promise I would scope carefully: same prompt, seed, checkpoint, scheduler, step count and resolution should reproduce the image, and I would pin all of those in the generation record — but I would state that exact bitwise reproduction is not guaranteed across different GPU models or library versions, because floating-point non-determinism in attention kernels is real. Promising bitwise reproducibility across a heterogeneous fleet is a promise you will break.',
+      wrapup:
+        'Cost per image: at an assumed 3 seconds of H100 time at 2.50 USD per GPU-hour, a single image is about 0.0021 USD, and batching four same-shape requests brings the per-image GPU time down to well under a second, roughly 0.0006 USD. The levers in order are step count, batch efficiency, resolution and model size — and notably not prompt engineering, which is free. I would deliberately generate at lower quality for previews and iteration: a 4-step distilled model at low resolution gives a usable thumbnail in under a second, users choose from four of those, and only the chosen composition is generated at full quality. That pattern cuts total cost per satisfied user by a large factor because most generations are discarded during exploration.',
+      numbers: [
+        'Cost per image: 3 seconds of GPU at an assumed 2.50 USD/GPU-hour = 0.0021 USD; at batch 4 the per-image GPU time falls to roughly 0.9 seconds, about 0.0006 USD.',
+        'Resolution scaling: 2048x2048 is 4x the latent pixels of 1024x1024, so roughly 4x the cost per step — which is why upscaling is a separate cheaper operation rather than native high-res generation.',
+        'Step scaling: cost is linear in denoising steps, so a scheduler reaching acceptable quality in 20 steps instead of 50 is a 60 percent cost cut with no hardware change.',
+        'Preview pattern: four 4-step low-resolution previews at roughly 0.15 seconds of GPU each cost about 0.0004 USD total, less than one full generation, and remove most of the discarded full-quality generations.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 6, estimates: 7, apiAndData: 6, architecture: 12, deepDive: 10, wrapUp: 4 },
+      opening:
+        'The thing I want to establish first is that diffusion cost is steps times latent resolution and has nothing to do with prompt length, because that inverts most of the intuitions carried over from LLM serving.',
+      traps: [
+        'Applying LLM serving reasoning. There is no KV cache, batching is uniform and simple, and prompt length is nearly free — the cost model is steps and pixels.',
+        'Not storing the seed and full generation parameters. Without them you cannot reproduce a user image to investigate a complaint or a safety report.',
+        'Silently replacing a checkpoint. Users build workflows around an appearance, so version-pin and give a deprecation window.',
+        'Running the safety classifier as a separate round trip after the image has left the GPU, doubling latency for something that costs tens of milliseconds if done in place.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Can you not stream the image as it denoises, like tokens?',
+          answer:
+            'You can decode intermediate latents to previews and I do that for progress, but it is not the same product win: a half-denoised image is not usable, whereas half a sentence is readable. So it improves perceived latency without changing the fact that the user waits for the whole thing, and the bigger perceived-latency win is the cheap-preview-then-refine pattern.',
+        },
+        {
+          challenge: 'Watermarking is easily stripped, so why bother?',
+          answer:
+            'Invisible watermarks are removable by a determined adversary and I would not claim otherwise. They are still worth it because most provenance questions are not adversarial — they are a platform asking whether an image was generated — and because the C2PA metadata plus a server-side hash registry of what we generated answers that even when the watermark is gone.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  REQ["Prompt + params"] --> TXTSAFE["Text safety classifier (pre-GPU reject)"]
+  TXTSAFE --> QUEUE["Scheduler: gather same shape+steps, ~tens of ms window"]
+  QUEUE --> BATCH["Uniform diffusion batch (no KV cache)"]
+  BATCH --> LOOP["Denoising loop: cost = steps x latent pixels"]
+  LOOP -->|latent at checkpoints| PREV["Decoded progress previews"]
+  LOOP --> IMGSAFE["Image safety classifier, on-GPU, in place"]
+  IMGSAFE -->|blocked| REJ["Reject + log"]
+  IMGSAFE --> WM["Invisible watermark + C2PA credential"]
+  WM --> OBJ[("Object store")]
+  OBJ --> CDN["CDN"]
+  REQ --> GREC[("Generation record: prompt, seed, checkpoint, scheduler, steps, resolution")]
+  GREC --> REPRO["Reproduce on demand (same GPU class only)"]
+  CHK["New checkpoint"] --> SUITE["Stratified prompt suite: portraits, hands, text, styles"]
+  SUITE --> PAIR["Pairwise human preference vs current"]
+  PAIR -->|gate| CHK
+  FAST["4-step distilled preview model"] --> PREV`,
+  },
+  {
+    id: 'aisdq-realtime-transcription',
+    patternId: 'aisdp-multimodal',
+    title: 'Design real-time transcription at scale',
+    companies: ['microsoft', 'google', 'amazon'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What does real-time mean here in milliseconds, and who feels that latency?',
+        'What accuracy target, and measured how — is word error rate the right metric for this product?',
+        'Is this one speaker or a meeting with many, and does that change the system or just the model?',
+      ],
+      data: [
+        'What is the audio ingest volume, and what does that mean for bandwidth and storage?',
+        'What context does the model need beyond the audio to be accurate — names, jargon, prior turns?',
+      ],
+      architecture: [
+        'Draw the path from a microphone to a displayed word.',
+        'How do you chunk a continuous audio stream for a model that expects windows?',
+        'How do you handle the accuracy-versus-latency trade explicitly?',
+        'How many concurrent streams fit on one GPU, and how do you schedule them?',
+      ],
+      evaluate: [
+        'How do you measure quality without a transcript of every call?',
+        'What accuracy differences would you specifically test for across speaker groups?',
+      ],
+      deploy: [
+        'How do you deploy a new acoustic model when a live meeting is in progress?',
+        'What is the degradation path when GPU capacity runs out mid-meeting?',
+      ],
+      wrapup: [
+        'What is the cost per hour of audio, and how does that compare with the alternative?',
+        'What would you simplify if the transcript could be delivered after the meeting?',
+      ],
+    },
+    solution: {
+      define:
+        'Real-time means a word appears within about 300ms of being spoken for live captions, and the person who feels it is the reader, not the speaker — which matters because it lets me spend latency asymmetrically. The right accuracy metric is not raw word error rate: a product that transcribes a meeting is judged on whether names, numbers, and action items are right, so I measure entity error rate on names and numbers alongside WER, and weight the former heavily. A 5 percent WER with every participant name wrong is a bad product and a 7 percent WER with names right is a good one. Multi-speaker changes the system, not just the model: diarisation is a separate component with its own latency profile, and speaker labels can lag the words, which is a useful product concession because attributing a sentence a second later is acceptable while displaying it a second later is not.',
+      data:
+        'Audio at 16kHz mono in 16-bit PCM is 32KB per second, so 10,000 concurrent streams is about 320MB/s of ingest — real but modest, and Opus-compressed at the edge it is closer to 25MB/s. Storage is the bigger question: an hour of raw audio is 115MB, so retaining audio for a million meeting-hours a month is over 100TB, which is why audio retention is short and policy-driven while transcripts, at a few hundred kilobytes an hour, are kept. Context beyond the audio is what separates a good transcription product from a raw ASR endpoint: participant names from the calendar invite, the organisation glossary of product names and acronyms, prior meeting transcripts in the same series, and the shared document open in the meeting. These are supplied as a biasing context — a contextual bias list at decode time — and they are where the entity error rate improvement actually comes from.',
+      architecture:
+        'Client captures at 16kHz, applies voice activity detection locally so silence is not transmitted or billed, encodes with Opus, and streams over WebRTC or a WebSocket to a media gateway. The gateway decodes and hands a per-stream buffer to an ASR worker on a GPU. Chunking is the core mechanism: the model consumes overlapping windows, say 1 second of new audio with 4 seconds of left context and a small right-context lookahead, emitting partial hypotheses that are revised as more audio arrives. Right context is where the accuracy-latency trade lives, and I make it explicit: 200ms of lookahead measurably improves word accuracy at word boundaries and delays every word by 200ms, so it is a product-tunable parameter, with live captions taking a small lookahead and a note-taking transcript taking a larger one. The client shows partials in grey and finalises them when a segment is committed, which lets the system revise without the display flickering distractingly. A second-pass model runs behind the live path on the committed segments with full context, plus punctuation and casing, and it produces the transcript people actually read afterwards — the live path optimises latency and the second pass optimises accuracy, and that split is what stops one component being forced to be good at both.',
+      evaluate:
+        'There is no transcript of every call, so quality measurement is sampled and consented: a small set of customers on a research agreement provide audio for human transcription, and a synthetic set covering accents, noise conditions and domain vocabulary is maintained permanently. Beyond that, proxies from production: the rate at which the second pass materially disagrees with the live pass, the frequency of user edits when a transcript is editable, and the confidence distribution emitted by the model, which shifts before accuracy does. What I would test for specifically, and report separately, is accuracy across accent and dialect groups, across gender, across noise conditions, and on non-native speakers of the transcription language — ASR systems have a well-documented history of large disparities across exactly these groups, and an aggregate WER hides them completely. I would treat a gap between groups as a launch blocker rather than a backlog item.',
+      deploy:
+        'A live meeting cannot be interrupted by a deploy, so ASR workers drain: a worker stops accepting new streams and keeps existing ones until they end, with a maximum bound of a few hours after which a stream is migrated. Migration is possible because the per-stream state is small — the audio buffer and the decoder state — and can be transferred, but a migration costs a brief accuracy dip at the seam, so it is a last resort rather than the routine path. Capacity exhaustion mid-meeting has a designed degradation ladder rather than a failure: first reduce right-context lookahead and increase chunk size, which lowers per-stream compute at a small accuracy cost; then move new streams to a smaller, faster model; then drop live captions for new joiners while keeping the recording, so the post-meeting transcript is unaffected. Losing live captions is a much better failure than losing the transcript.',
+      wrapup:
+        'Cost per hour of audio: if one GPU sustains roughly 40 concurrent streams with the live model, an hour of audio costs about 1/40th of a GPU-hour, or 0.06 USD at an assumed 2.50 USD per GPU-hour, plus the second pass at a fraction of that since it runs batched and offline. Against human transcription at tens of dollars per hour, that is not a close comparison, which is why the interesting constraints here are latency and fairness rather than cost. If the transcript could be delivered after the meeting, the entire design collapses: no streaming, no chunking, no partial revision, no right-context trade — just a batch job on whole files with full bidirectional context, which is both cheaper per hour and more accurate. Live captioning is where all the complexity lives, and it is worth knowing that when scoping.',
+      numbers: [
+        'Ingest: 16kHz 16-bit mono is 32KB/s raw, so 10,000 concurrent streams is about 320MB/s, or roughly 25MB/s Opus-compressed at the edge.',
+        'GPU density: at an assumed 40 concurrent streams per GPU, 10,000 streams need 250 GPUs, so peak-hour concurrency rather than total audio volume is what sizes the fleet.',
+        'Cost per audio hour: 1/40th of a GPU-hour at an assumed 2.50 USD/GPU-hour = about 0.06 USD, against tens of USD for human transcription.',
+        'Latency budget: 100ms capture and network + 1s chunk with 200ms right-context lookahead + 50ms inference, with partials emitted continuously so a word displays roughly 300ms after it is spoken.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 7, estimates: 6, apiAndData: 6, architecture: 12, deepDive: 10, wrapUp: 4 },
+      opening:
+        'I want to separate the live path from the post-meeting path early, because forcing one model to be both low-latency and maximally accurate is the mistake that makes these systems mediocre at both.',
+      traps: [
+        'Reporting aggregate word error rate only. ASR disparities across accent, dialect and non-native speakers are large and well documented, and an aggregate number hides them entirely.',
+        'Treating WER as the product metric. Users judge on names, numbers and action items, so entity error rate deserves more weight than raw WER.',
+        'Ignoring contextual biasing. Participant names and organisation jargon supplied at decode time are where most of the accuracy gain on the words users care about comes from.',
+        'No degradation ladder. When capacity runs out mid-meeting, dropping live captions while preserving the recording is far better than failing the stream.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not run the model on the device and skip the GPU fleet entirely?',
+          answer:
+            'For a single speaker on a modern laptop, on-device is genuinely competitive and I would offer it — it removes bandwidth, privacy and cost concerns at once. It breaks on multi-party meetings where a server already has all the streams, on low-end and mobile devices, and on contextual biasing against an organisation glossary you do not want to ship to every client. So: on-device where it fits, server for the rest, with the same transcript format.',
+        },
+        {
+          challenge: 'Your 200ms lookahead is an arbitrary number.',
+          answer:
+            'It is a tunable I would set from measurement rather than defend as a constant. The shape is what matters: accuracy improves with right context and saturates, so the job is to find the knee on our own data and expose it per surface — small for live captions, larger for a note-taker where nobody is reading in real time.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  MIC["Client mic 16kHz"] --> VAD["On-device VAD (silence not sent)"]
+  VAD --> OPUS["Opus encode"]
+  OPUS -->|WebRTC / WebSocket| MG["Media gateway: decode, per-stream buffer"]
+  MG --> SCHED["Stream scheduler (~40 streams per GPU)"]
+  SCHED --> ASR["Live ASR: 1s chunk, 4s left context, 200ms lookahead"]
+  BIAS[("Context bias: participant names, glossary, prior transcripts")] --> ASR
+  ASR -->|partial hypotheses, revisable| CAP["Live captions (grey until committed)"]
+  ASR --> COMMIT["Committed segments"]
+  COMMIT --> P2["Second pass: full context, punctuation, casing"]
+  P2 --> TR[("Transcript store")]
+  MG --> DIAR["Diarisation (labels may lag words)"]
+  DIAR --> TR
+  SCHED -->|capacity pressure| DEG["Ladder: less lookahead, then smaller model, then drop live captions"]
+  P2 -->|disagreement with live pass| QP[("Quality proxy")]
+  GOLD[("Consented + synthetic sets: accents, noise, non-native speakers")] --> QP`,
+  },
+]
+
 export const aiSdQuestions: AiSdQuestion[] = [
   ...servingQuestions,
   ...gatewayQuestions,
   ...ragQuestions,
   ...agentQuestions,
   ...evalQuestions,
+  ...multimodalQuestions,
 ]
