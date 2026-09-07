@@ -1813,9 +1813,309 @@ const agentQuestions: AiSdQuestion[] = [
   },
 ]
 
+/**
+ * Pattern 5 — evaluation and observability. The answer to "how do you roll back a system
+ * whose outputs you cannot diff": offline gates, calibrated judges, online experiments with
+ * honest statistics, and traces that explain one bad answer.
+ */
+const evalQuestions: AiSdQuestion[] = [
+  {
+    id: 'aisdq-llm-evaluation-service',
+    patternId: 'aisdp-eval-platform',
+    title: 'Design an evaluation service for LLM features',
+    companies: ['google', 'amazon', 'microsoft'],
+    minutes: 60,
+    steps: {
+      define: [
+        'Who uses this service and what decision does each of them make with its output?',
+        'What is being evaluated — a prompt, a model, a retrieval config, or a whole product flow?',
+        'What does it mean for an eval to gate a release, and who can override it?',
+      ],
+      data: [
+        'Where do eval datasets come from, and how do you stop them going stale or becoming the training target?',
+        'What is a test case here: an input, an input and a reference output, or an input and a rubric?',
+        'How do you version a dataset so a score from March is comparable with a score from September?',
+      ],
+      architecture: [
+        'Draw the service: how is a run defined, executed, scored and stored?',
+        'How do you support deterministic checks, model-graded checks and human review in one system?',
+        'How do you make a judge trustworthy, and how do you know when it stops being?',
+        'How do you keep an eval run from taking six hours?',
+      ],
+      evaluate: [
+        'How do you evaluate the evaluator?',
+        'What do you do when the eval score improves but users get worse outcomes?',
+      ],
+      deploy: [
+        'How does this plug into CI, and what happens on a red run?',
+        'How do you handle the fact that scores move when the underlying model provider changes something?',
+      ],
+      wrapup: [
+        'What does an eval run cost, and what governs that?',
+        'What is the minimum viable version of this that a team should build first?',
+      ],
+    },
+    solution: {
+      define:
+        'Three users making three decisions. An engineer changing a prompt needs a fast signal in minutes — does this regress anything. A release manager needs a gate — is this build shippable. A product owner needs a trend — is the feature getting better over months. Those need the same storage and different run shapes, so the service exposes a small fast suite and a full suite rather than one. The unit under evaluation is a versioned configuration — prompt, model, retrieval settings, tool definitions together — because evaluating a prompt in isolation is meaningless when retrieval changed underneath it. Gating means a red run blocks the deploy; override requires a named person and a written reason recorded on the run, because an override with no record is just a disabled gate.',
+      data:
+        'Test cases come from four sources with different properties, and mixing them without labelling which is which is a common mistake. Curated cases written by the team, which encode intent but are unrepresentative. Sampled production traffic, which is representative and needs scrubbing. Harvested failures — cases from incidents and thumbs-down reports, which is the highest-value source and also the one that gradually turns the set into a fix list. And adversarial cases, written to probe known weaknesses. A case is an input plus either a reference output, a rubric, or a set of assertions, and the service supports all three because different tasks need different ones: extraction has a reference, a summary has a rubric, and a tool-calling flow has assertions. Staleness is fought by holding back a portion of the set that is never shown in failure analysis, rotating a fresh production sample in monthly, and reporting scores per-slice so an aggregate cannot hide a slice getting worse. Every dataset is immutable and versioned; a change creates a new version, and scores are only ever compared within a version.',
+      architecture:
+        'A run is a job: dataset version plus config version plus scorer set. The executor fans out cases to workers that call the system under test through the same gateway production uses — evaluating against a hand-rolled client is how you ship a bug the eval could not see. Results are stored per case, not aggregated, so any score is drillable to the individual output that caused it. Scorers are pluggable and come in three kinds: deterministic (exact match, JSON schema validity, regex, latency, cost), model-graded (a judge with a rubric), and human (queued to a review tool). A run mixes them — most cases get cheap deterministic checks, a sample gets a judge, and a smaller sample gets human review — which is what makes the economics work. Judge trustworthiness is not assumed, it is measured: every judge has a calibration set of a few hundred human-labelled examples, and the judge is reported with its agreement against those humans (Cohen kappa) alongside every score it produces. A judge below the agreement floor is not used for gating. Judges are also pinned to a specific model version, because a silently updated judge model shifts every historical score. Run time is kept down by parallel fan-out, aggressive caching of unchanged (case, config) pairs, and the fast-versus-full suite split.',
+      evaluate:
+        'Evaluating the evaluator has two parts. Agreement: re-label a rotating sample of judge decisions with humans monthly and watch the kappa; a judge that was 0.72 in March and is 0.55 in September has drifted, usually because production inputs moved away from the calibration set. Bias probes: run the judge on paired outputs that differ only in length, in position, or in which model produced them, and measure how much the score moves — position and verbosity bias are large and correctable by randomising order and by rubric design, and the probe is what tells you they are still under control. The harder failure is when eval scores improve while users do not, and it is almost always one of three things: the eval set has been optimised against, the metric is a proxy that has decoupled from the outcome, or the offline distribution no longer matches production. I diagnose it by checking the held-out slice first, then by comparing the offline input distribution with a fresh production sample, and the standing rule is that an online metric always outranks an offline one when they disagree.',
+      deploy:
+        'In CI, a pull request touching prompts, retrieval config or model selection triggers the fast suite — a few hundred cases, mostly deterministic scorers, under 10 minutes — and a red run blocks merge with the failing cases linked. The full suite runs nightly on the main branch and before a release, with the judge and human components. On a red run the artefact is a diff of per-case scores against the baseline, so the reviewer sees which cases changed rather than that a number moved. Provider drift is handled by treating the score baseline as a moving reference rather than a constant: a fixed control configuration is re-run nightly, and when the control moves without any change from us, that is a provider drift alert and every subsequent comparison rebases on the new control. Without that control run, a provider silently updating a model looks exactly like a regression in your own code, and teams waste days on it.',
+      wrapup:
+        'Cost is dominated by judge calls: a 1,000-case run with a judge on every case at roughly 2,000 tokens each is 2M tokens, about 6 USD at an assumed 3 USD per million, plus the system-under-test calls. That is small enough that per-pull-request evaluation is affordable and large enough that judging every case in a 50,000-case set nightly is not, which is exactly why sampling and deterministic-first scoring matter. The minimum viable version a team should build first is not this service: it is 50 cases in a file, a script that runs them, and the scores checked into the repository next to the prompt. That catches most regressions, takes an afternoon, and the platform is only worth building once several teams are doing it.',
+      numbers: [
+        'Judge cost: 1,000 cases x 2,000 tokens = 2M tokens, about 6 USD at an assumed 3 USD per million, so a per-PR run is affordable while judging a 50,000-case set nightly at 300 USD/night is not.',
+        'Calibration: a judge with Cohen kappa of 0.7 against human labels on 300 examples is usable for gating; below about 0.5 its scores are close to noise and gating on them blocks good changes at random.',
+        'Run time: 1,000 cases at 4 seconds each is 67 minutes serially and about 4 minutes at 16-way fan-out, which is what makes a CI gate practical.',
+        'Sampling mix: deterministic scorers on 100 percent of cases, judge on 20 percent, human on 1 percent gives a 1,000-case run roughly 200 judge calls and 10 human reviews — an hour of reviewer time per week rather than per run.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 8, estimates: 7, apiAndData: 11, architecture: 15, deepDive: 14, wrapUp: 5 },
+      opening:
+        'The thing I want to get right here is that the judge is itself a model with its own error rate, so I will design for measuring judge agreement against humans continuously rather than treating a judge score as ground truth.',
+      traps: [
+        'Treating an LLM judge as ground truth. It has position, verbosity and self-preference bias, and without a human-labelled calibration set you cannot say whether its score means anything.',
+        'Mutable eval datasets. If the set changes when scores change, no comparison across time is valid; version it immutably and compare only within a version.',
+        'No control run. When a provider silently updates a model, your score drops and you spend three days looking for a bug in your own diff.',
+        'Aggregating scores without slices. A flat overall number hides one segment collapsing, and the segment that collapses is usually the one a customer cares about.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Why not just use human evaluation for everything?',
+          answer:
+            'Cost and latency. Human review is the ground truth and I keep it in the loop at about 1 percent, but at 20 to 60 seconds per judgement you cannot gate a pull request on it. The design intent is to spend human labels where they buy the most: calibrating judges, and reviewing the cases where the judge is uncertain.',
+        },
+        {
+          challenge: 'Your eval set will just become the thing you overfit to.',
+          answer:
+            'It will, which is why a portion is held out and never shown during failure analysis, why a fresh production sample rotates in monthly, and why the harvested-failure source is labelled separately — that source is the one that turns a set into a fix list. Ultimately the offline suite is a regression net, not a quality measurement, and I say so: the quality measurement is online.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  PR["Prompt / model / retrieval change"] --> CI["CI: fast suite (~10 min)"]
+  CI --> RUN["Run = dataset version + config version + scorer set"]
+  NIGHT["Nightly + pre-release: full suite"] --> RUN
+  DS[("Immutable versioned datasets: curated, production sample, harvested failures, adversarial")] --> RUN
+  RUN --> EXEC["Executor: fan-out through the production gateway"]
+  EXEC --> DET["Deterministic scorers: schema, exact match, latency, cost (100%)"]
+  EXEC --> JUDGE["Model-graded judge, pinned version (20%)"]
+  EXEC --> HUM["Human review queue (1%)"]
+  HUM --> CAL[("Judge calibration set + Cohen kappa")]
+  CAL -->|below floor| BLOCK["Judge not usable for gating"]
+  DET --> STORE[("Per-case results, drillable")]
+  JUDGE --> STORE
+  HUM --> STORE
+  STORE --> DIFF["Per-case diff vs baseline"]
+  DIFF -->|red| GATE["Block merge; override needs a named reason"]
+  CTRL["Fixed control config, re-run nightly"] --> DRIFT["Provider drift alert; rebase baseline"]
+  STORE --> SLICE["Per-slice reporting"]`,
+  },
+  {
+    id: 'aisdq-ab-test-generative',
+    patternId: 'aisdp-eval-platform',
+    title: 'Design A/B testing for a generative feature',
+    companies: ['google', 'amazon'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What is the metric, given there is no click-through rate on a generated paragraph?',
+        'What is the unit of randomisation, and why not the request?',
+        'What effect size do you care about, and what does that imply about how long you run?',
+      ],
+      data: [
+        'What signals do you actually have, and how biased is each one?',
+        'How do you log enough to analyse an experiment without storing every prompt forever?',
+      ],
+      architecture: [
+        'How do you assign variants when the same user may hit several surfaces?',
+        'How do you keep the cost difference between variants from confounding the result?',
+        'How do you run an experiment where one arm is ten times slower?',
+      ],
+      evaluate: [
+        'How do you compute significance on a metric this noisy without fooling yourself?',
+        'How do you handle the fact that quality is multidimensional and one arm may win on some dimensions and lose on others?',
+      ],
+      deploy: [
+        'How do you stop an experiment that is actively harming users?',
+        'What do you do when the experiment is flat but you believe the new model is better?',
+      ],
+      wrapup: [
+        'What decision rule do you commit to before you look at the data?',
+        'When is an A/B test the wrong instrument entirely?',
+      ],
+    },
+    solution: {
+      define:
+        'There is no click on a generated paragraph, so the metric hierarchy is explicit and stated before launch. Primary: task completion — did the user do the thing the feature exists to help with, such as sending the drafted email, accepting the suggested code, or resolving the support conversation. Secondary: regeneration rate, edit distance between the generated text and what the user finally used, session continuation, and explicit feedback. Guardrail: latency, cost per session, error rate, and safety-filter trigger rate. Randomisation is by user, not by request, because a user seeing two different model behaviours within a session contaminates their own baseline and because the outcome metrics are session-level. The effect size I care about is a 2 percentage point move in task completion from a base of about 40 percent, and that choice is what determines the run length — a smaller detectable effect is not free, it is weeks of traffic.',
+      data:
+        'Every signal available here is biased in a known direction and I would say which. Thumbs-down is heavily negative-selected: a tiny, angry minority. Regeneration is a good proxy for dissatisfaction but confounded by latency, because users regenerate when a response feels slow. Edit distance is the strongest implicit signal for drafting features and is confounded by length — a longer response invites more edits. Copy and export events are strong and only exist on some surfaces. So the analysis uses several and expects them to disagree at the margins. Logging: variant assignment, metric events, latencies and token counts are retained long-term because they are small and non-sensitive; prompts and completions are sampled at a few percent with a short TTL for qualitative review, which is enough to read fifty examples of a losing arm and understand why, without building a permanent store of user content.',
+      architecture:
+        'Assignment lives in a central experiment service, hashing a stable user id with the experiment id to produce a deterministic bucket, so the same user gets the same arm on every surface and across devices — cross-surface consistency is the thing that breaks when teams roll their own. The assignment is stamped on every event and on every trace, which is what makes analysis possible later. Cost and latency confounding is real and often ignored: if arm B is a larger model, it is also slower, and a slower arm loses on engagement metrics for reasons that have nothing to do with quality. I handle it by measuring latency as a covariate and reporting a latency-adjusted estimate alongside the raw one, and where the gap is severe I run a third arm — the old model with artificial latency matching the new one — to separate the two effects. That third arm feels wasteful and it is often the only way to get an interpretable answer. Cost per session is a guardrail metric with a pre-declared ceiling, so an arm that wins on completion by spending four times as much fails the experiment rather than winning it.',
+      evaluate:
+        'Two disciplines keep the analysis honest. First, sample size from the effect size: detecting 2 percentage points on a 40 percent base at 80 percent power and 5 percent significance needs roughly 9,400 users per arm, so at 5,000 daily eligible users per arm the experiment runs about two days for that effect and two weeks for a 0.7 point effect — I compute that before launch and commit to the duration, because peeking daily and stopping at the first significant result is how flat experiments become wins. If I do want to peek, I use a sequential test with an alpha-spending boundary rather than pretending a fixed-horizon test allows it. Second, multidimensionality: I declare one primary metric and treat everything else as secondary or guardrail, with the decision rule that the primary decides, guardrails can veto, and secondaries inform but never rescue a flat primary. When arms split across dimensions — B writes better but slower, or B is preferred by new users and disliked by power users — the segmented result is the finding, and the right outcome is often to ship B to the segment that likes it rather than to force a global winner.',
+      deploy:
+        'Guardrail metrics are monitored continuously with automatic stopping: safety-filter trigger rate, error rate, p95 latency and cost per session each have a threshold that halts the experiment and reverts all users to control without waiting for a human. That is separate from the significance test and deliberately trigger-happy, because a harmful arm should stop in minutes rather than at the end of the run. When the experiment comes back flat but the team believes the new model is better, the honest answers are: the effect is real but smaller than the experiment could detect, so either accept that it does not matter commercially or run longer with a stated smaller effect size; or the metric does not capture what improved, in which case find the segment or the sub-task where it should show and test there. What I would not do is ship on belief and call the flat result inconclusive, which is how a team accumulates a decade of unmeasured changes.',
+      wrapup:
+        'The decision rule is committed in writing before launch: primary metric, direction, minimum detectable effect, run duration, guardrail thresholds, and what we do on flat. Writing it down is most of the value, because it removes the post-hoc reasoning that generative metrics invite. An A/B test is the wrong instrument when traffic is too small to ever reach power — a B2B feature with 300 weekly users will not detect a 2 point effect this decade, and there the right tools are paired human evaluation on a curated set and qualitative interviews — and when the change is a safety fix or a legal requirement, where the decision does not depend on the metric anyway.',
+      numbers: [
+        'Sample size: detecting a 2 percentage point lift on a 40 percent base at 80 percent power and 5 percent significance needs about 2 x 7.85 x 0.24 / 0.0004, roughly 9,400 users per arm.',
+        'Run length: at 5,000 eligible users per arm per day that is about two days for a 2 point effect, and roughly 15 days for a 0.7 point effect — the effect size, not the calendar, sets the duration.',
+        'Latency confound: if arm B is 900ms slower at p50, expect a measurable engagement drop from latency alone, which is why a latency-matched control arm is worth its cost when the arms differ in model size.',
+        'Logging: variant, metrics and token counts at roughly 400 bytes per session x 1M sessions/day = 400MB/day retained long-term, while prompts and completions are sampled at 2 percent with a 14-day TTL.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 7, estimates: 7, apiAndData: 6, architecture: 11, deepDive: 10, wrapUp: 4 },
+      opening:
+        'The hardest part of this is that there is no natural success event on a generated paragraph, so I want to build a metric hierarchy first — a primary completion metric, implicit secondaries with their known biases, and cost and latency as guardrails.',
+      traps: [
+        'Randomising by request. The same user seeing both arms contaminates their own baseline and makes session-level outcome metrics meaningless.',
+        'Ignoring that the better model is also slower and more expensive. Latency is a confound that can swamp a real quality gain, and cost belongs as a guardrail with a declared ceiling.',
+        'Peeking daily and stopping on the first significant result. Generative metrics are noisy enough that this manufactures wins; commit to a duration or use a sequential test.',
+        'Reporting the aggregate only. Generative changes frequently help one segment and hurt another, and the segmented result is usually the actual finding.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Two weeks is too slow. The team wants to ship on Friday.',
+          answer:
+            'Then we are choosing a larger minimum detectable effect, and I would say that explicitly: with three days of data we can detect a 4 point move, so if the change is expected to be subtle the experiment cannot answer the question in that window. I would ship behind a flag with guardrails on, keep the experiment running, and be honest that the Friday decision is a judgement call rather than a measured one.',
+        },
+        {
+          challenge: 'Why not just use an LLM judge on production traffic instead of an A/B test?',
+          answer:
+            'I do, as a fast leading indicator, and it is much quicker to move. But a judge measures whether the output looks better by a rubric I wrote, and the A/B test measures whether users did more of what the product exists for. When they disagree I trust the behavioural metric, because the judge shares its blind spots with the model being judged.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  U["User"] --> ASSIGN["Experiment service: hash(user id, experiment id)"]
+  ASSIGN -->|control| A["Arm A: current config"]
+  ASSIGN -->|treatment| B["Arm B: new model"]
+  ASSIGN -.->|when arms differ in speed| C["Arm C: control + matched latency"]
+  A --> FEAT["Generative feature"]
+  B --> FEAT
+  C --> FEAT
+  FEAT --> EV["Events stamped with variant + trace id"]
+  EV --> PRIM[("Primary: task completion")]
+  EV --> SEC[("Secondary: regen rate, edit distance, continuation")]
+  EV --> GUARD[("Guardrails: p95 latency, cost/session, safety triggers, errors")]
+  GUARD -->|threshold breach| STOP["Auto-stop, revert to control"]
+  PRIM --> STAT["Fixed-horizon or alpha-spending sequential test"]
+  STAT --> SEGS["Segmented readout: new vs power users, surface, locale"]
+  SEGS --> DEC["Pre-committed decision rule"]
+  FEAT -.->|2% sample, 14-day TTL| QUAL[("Qualitative review of losing arm")]`,
+  },
+  {
+    id: 'aisdq-llm-tracing-observability',
+    patternId: 'aisdp-eval-platform',
+    title: 'Design tracing and observability for LLM applications',
+    companies: ['microsoft', 'amazon', 'google'],
+    minutes: 45,
+    steps: {
+      define: [
+        'What question must a trace answer that a normal APM trace cannot?',
+        'Who is the user of this system — an on-call engineer, a prompt engineer, or a support agent handling a complaint?',
+        'What is the retention requirement, and who sets it?',
+      ],
+      data: [
+        'What exactly goes in a span for a model call, a retrieval, and a tool call?',
+        'How large is this data, and what does full-fidelity capture cost per day?',
+        'How do you store prompts and completions when they contain customer data?',
+      ],
+      architecture: [
+        'Draw the pipeline from an instrumented call to a queryable trace.',
+        'How do you sample without losing the traces you actually need?',
+        'How do you link a user complaint to the exact trace that produced the bad answer?',
+        'How do you attribute cost to a team, a feature and a customer from these traces?',
+      ],
+      evaluate: [
+        'How do you detect a quality regression from traces alone, with no error rate change?',
+        'What alerts would you actually page on?',
+      ],
+      deploy: [
+        'How do you add instrumentation without every team writing it by hand?',
+        'What happens when the tracing backend is down — does the application still serve?',
+      ],
+      wrapup: [
+        'What does this cost as a fraction of the LLM bill, and is that proportionate?',
+        'What is the first thing you would instrument if you could only do one?',
+      ],
+    },
+    solution: {
+      define:
+        'A conventional APM trace answers where the time went. The question here is why this answer was bad, and that needs data an APM span deliberately does not carry: the resolved prompt including retrieved context, the model and its parameters, the completion, the token counts, and the eval or judge verdicts attached after the fact. Three users with three needs: on-call wants latency and error attribution across a multi-step chain; a prompt engineer wants to find the fifty worst outputs of the last day and see what they had in common; a support engineer wants to open the exact trace behind a specific complaint. Retention is set by legal and privacy rather than by engineering: metadata for 13 months for cost and audit, prompt and completion bodies for 30 days by default, and less where a customer contract says so.',
+      data:
+        'A model-call span carries model id and version, parameters, prompt token count, completion token count, cached-token count, latency split into time-to-first-token and total, finish reason, cost computed from the price table, and references to the prompt and completion bodies. A retrieval span carries the query, the retrieved document ids with scores, which ones survived reranking, and how many were dropped for context budget — that last field is what explains most bad RAG answers and almost nobody logs it. A tool-call span carries tool name, arguments, result size, latency, error, and whether it was a retry. Bodies go to a separate encrypted store keyed by trace id, with PII detection and redaction on write, so the trace index stays queryable and cheap while the sensitive payload is separately governed and separately deletable. At 10M LLM calls a day and roughly 6KB of body per call, that is 60GB a day of bodies against about 20GB of structured span metadata.',
+      architecture:
+        'Instrumentation is an SDK wrapper around the gateway client, so teams get spans by calling the client they already call — asking each team to instrument by hand guarantees inconsistent fields and missing traces. Spans go to a local collector, then to a stream, then to two sinks: a columnar store for structured span data, which is what powers aggregation and cost attribution, and the encrypted body store. Sampling is the crucial design choice and head-based random sampling is wrong here, because the traces you need are exactly the rare ones. So: tail-based sampling that keeps 100 percent of errors, 100 percent of thumbs-down and user-reported traces, 100 percent of traces above a latency or cost threshold, 100 percent of traces where a guardrail or safety filter fired, and a few percent of everything else for baseline distributions. Linking a complaint to a trace requires the trace id to travel outward: it is returned in the response headers and stored on the message record in the product, so support can paste a conversation id and land on the trace. Cost attribution falls out of the span data because every span carries tokens and a price, aggregated by the team, feature and tenant tags the gateway stamps on the request.',
+      evaluate:
+        'Detecting a silent quality regression from traces is the whole reason this exists, and it is done with distributional monitoring rather than thresholds on errors. I track, per feature and per model version: mean and p95 output length, refusal and decline rate, JSON parse-failure rate, tool-call rate and tool-call error rate, retrieval no-hit rate, number of chunks dropped for context budget, regeneration rate, and a sampled judge score. Each is compared against its own trailing baseline with a change-point test, because these move for legitimate reasons and a fixed threshold either pages constantly or never. The single most reliable early signal in my experience is output-length distribution shift — it moves for prompt changes, model swaps and context truncation alike. What I would page on is short: safety-filter rate spiking, JSON parse-failure rate above a hard floor for a structured-output feature, cost per hour above a ceiling, and end-to-end error rate. Judge-score drops raise a ticket rather than a page, because the judge is noisy and a 3am wake-up for a 2-point rubric move is how teams learn to ignore the alerting.',
+      deploy:
+        'The SDK wrapper is the deployment mechanism: a version bump gets a team new fields, and the collector tolerates missing fields so a lagging team degrades rather than breaks. Tracing must never be in the critical path — the collector is fire-and-forget over a local buffer, the buffer drops oldest on overflow, and a backend outage means we lose observability, not availability. I would state that explicitly, because the alternative failure has actually happened to people: a synchronous trace write to a struggling backend taking down the product it was monitoring. Body redaction runs before the body leaves the process where possible, so raw customer data is not written to a queue and then cleaned up later.',
+      wrapup:
+        'Cost: about 80GB a day of combined span and body data, which at an assumed 0.03 USD per GB-month for the columnar store and short retention on bodies is a few thousand dollars a month, against an LLM bill for 10M daily calls that is easily six figures a month. So observability is on the order of 1 to 3 percent of the model spend, which is proportionate for the only mechanism that explains a bad answer. If I could instrument one thing it would be the resolved prompt — the exact final string sent to the model, including retrieved context and applied template — because almost every quality investigation ends up there, and it is the field teams most often fail to capture.',
+      numbers: [
+        'Volume: 10M LLM calls/day x 6KB of body = 60GB/day of bodies plus about 20GB/day of structured spans, so 80GB/day and roughly 2.4TB/month at full fidelity.',
+        'Sampling economics: keeping 100 percent of errors, flagged and expensive traces plus 3 percent of the rest cuts stored volume by about 95 percent while retaining every trace an investigation would want.',
+        'Cost ratio: a few thousand USD/month of storage against a six-figure monthly model bill puts observability at roughly 1-3 percent of LLM spend.',
+        'Retention split: metadata at about 20GB/day for 13 months is 7.8TB, while bodies at 60GB/day for 30 days is 1.8TB — separating the two is what makes long audit retention affordable.',
+      ],
+    },
+    delivery: {
+      budget: { requirements: 6, estimates: 6, apiAndData: 8, architecture: 11, deepDive: 10, wrapUp: 4 },
+      opening:
+        'I want to be clear that this is not APM with extra fields: the question a trace has to answer is why the answer was bad, which means the resolved prompt and the retrieval decisions are first-class span data.',
+      traps: [
+        'Head-based random sampling. The traces worth keeping are the rare bad ones, so sampling must be tail-based on error, feedback, cost and guardrail signals.',
+        'Not logging the resolved prompt. Logging the template and the variables separately means nobody can reproduce what the model actually saw once retrieval is in the loop.',
+        'Making trace writes synchronous. A struggling observability backend must never be able to take down the product it is observing.',
+        'Alerting on judge score. It is noisy, it pages at 3am for a rubric wobble, and within a month everyone ignores the channel.',
+      ],
+      whenPushed: [
+        {
+          challenge: 'Storing prompts and completions is a privacy problem you have just created.',
+          answer:
+            'It is, and I would rather design it deliberately than have teams keep them in application logs, which is what happens otherwise. Bodies live in a separate encrypted store with redaction on write, a 30-day default TTL, per-tenant opt-out, tenant-scoped deletion, and access that is audited. The trace index itself holds no customer content, so the useful aggregate work needs no access to bodies at all.',
+        },
+        {
+          challenge: 'Can you not just use your existing OpenTelemetry setup?',
+          answer:
+            'Yes for transport and context propagation, and I would: these are OTel spans with a semantic convention for model calls. What OTel does not give me is the body store with its own retention and redaction, the tail-sampling policy driven by feedback signals, or the cost attribution from token counts. So it is a layer on OTel rather than a parallel system.',
+        },
+      ],
+    },
+    diagram: `flowchart TD
+  APP["App calls gateway SDK"] --> SPANS["Auto-instrumented spans"]
+  SPANS --> MS["Model span: model+version, params, tokens, TTFT, finish reason, cost"]
+  SPANS --> RS["Retrieval span: query, doc ids + scores, survived rerank, chunks dropped"]
+  SPANS --> TS["Tool span: name, args, result size, retry, error"]
+  MS --> COL["Local collector (fire-and-forget, drops on overflow)"]
+  RS --> COL
+  TS --> COL
+  COL --> STREAM["Stream"]
+  STREAM --> TAIL["Tail sampler: keep all errors, feedback, over-cost, guardrail hits, 3% baseline"]
+  TAIL --> COLD[("Columnar span store, 13 months")]
+  TAIL --> BODY[("Encrypted body store, redacted on write, 30-day TTL")]
+  COLD --> COST["Cost attribution by team, feature, tenant"]
+  COLD --> DIST["Distribution monitors: output length, refusal, JSON failures, no-hit rate"]
+  DIST --> CP["Change-point test vs trailing baseline"]
+  CP -->|safety, JSON floor, cost ceiling, errors| PAGE["Page"]
+  CP -->|judge score drop| TICKET["Ticket, not a page"]
+  RESP["Response headers carry trace id"] --> SUPPORT["Support: complaint to exact trace"]`,
+  },
+]
+
 export const aiSdQuestions: AiSdQuestion[] = [
   ...servingQuestions,
   ...gatewayQuestions,
   ...ragQuestions,
   ...agentQuestions,
+  ...evalQuestions,
 ]
