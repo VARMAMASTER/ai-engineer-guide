@@ -538,4 +538,59 @@ export const hwQuestions: HwQuestion[] = [
       'At large batch sizes the FFN has crossed to compute-bound, and there the in-kernel dequantize is added arithmetic on the critical path — weight-only quantization can then be slower than doing nothing.',
     minutes: 12,
   },
+
+  // ---------------------------------------------------------------- topic 7
+  {
+    id: 'hwq-mesi-states',
+    topicId: 'hwt-cache-coherence',
+    text: 'Walk through the MESI protocol states, and say what happens when one core requests a line another core holds as Modified.',
+    answer:
+      'Every cache line sits in one of four states. Modified means this cache has the only copy and it is dirty. Exclusive means the only copy, but clean and identical to memory. Shared means clean and possibly present in other caches. Invalid means the line holds nothing usable. If core 1 issues a read for a line core 0 holds Modified, core 0 snoops the request, must supply the current data rather than let memory answer with stale bytes, writes back or forwards it, and both caches settle into Shared. Had core 1 requested it for writing instead, core 0 would invalidate its copy and core 1 would take it Modified.',
+    numbers: ['MESI: Modified, Exclusive, Shared, Invalid — four states per cache line'],
+    keyPoint:
+      'Exclusive is the state that earns its keep: it lets a core write to a line it loaded alone without broadcasting anything, which is why read-then-write on private data costs no coherence traffic.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-false-sharing',
+    topicId: 'hwt-cache-coherence',
+    text: 'What is false sharing, and how would you detect and fix it?',
+    answer:
+      'Coherence works on whole cache lines, not on variables. If two threads write to different variables that happen to land in the same line, every write invalidates the other core\'s copy, so the line ping-pongs between caches even though the threads never touch the same data. You see it as a workload that gets slower as you add threads, with a high coherence-miss count in the profiler. The fix is to pad or align the hot variables onto separate lines, or give each thread a private accumulator and combine once at the end.',
+    keyPoint:
+      'It is invisible in the source — the code is correctly synchronised and race-free, and the only clue is that performance moves when you change struct padding, which is why it is usually found with a profiler rather than by reading.',
+    minutes: 10,
+  },
+  {
+    id: 'hwq-gpu-coherence',
+    topicId: 'hwt-cache-coherence',
+    text: 'Does a GPU maintain MESI-style coherence between its SMs?',
+    answer:
+      'No, and that is a deliberate design choice. Per-SM L1 caches are not kept coherent with each other — snooping thousands of concurrent threads across a hundred-plus SMs would cost far more than it is worth. Instead the GPU-wide L2 acts as the single coherence point: writes that must be visible to other SMs go through L2, and the programmer asks for visibility explicitly with barriers, atomics and volatile or relaxed-memory qualifiers. Within a block you get __syncthreads and shared memory; across blocks you get very little for free.',
+    numbers: ['GPU-wide L2 (~50 MB on H100) is the coherence point; per-SM L1 caches are not coherent with each other'],
+    keyPoint:
+      'That is why inter-block communication inside a kernel is a bug magnet: the CPU habit of assuming a write becomes visible shortly after it retires simply does not hold, and correctness depends on explicit synchronisation.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-multi-gpu-no-coherence',
+    topicId: 'hwt-cache-coherence',
+    text: 'How does the coherence question change once you have several GPUs?',
+    answer:
+      'There is no hardware coherence protocol keeping two GPUs\' HBM in agreement — nothing invalidates GPU 1\'s copy of a tensor because GPU 0 wrote to it. Consistency is entirely explicit and comes from collectives: all-reduce, all-gather, broadcast over NVLink or PCIe. Unified or managed memory gives you a single address space and page migration on fault, which is convenient but is coarse-grained, page-level movement rather than cache-line coherence, and can be far slower than an explicit copy.',
+    numbers: ['Cross-GPU consistency runs over NVLink 4.0 at 900 GB/s bidirectional per GPU, or PCIe Gen4 x16 at ~31.5 GB/s per direction'],
+    keyPoint:
+      'This is the thread back to interconnect: because consistency is explicit and synchronous, its cost is your link bandwidth and latency, which is exactly why tensor parallelism lives or dies on NVLink.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-cache-line-and-tensor-layout',
+    topicId: 'hwt-cache-coherence',
+    text: 'What does cache-line granularity have in common with GPU memory coalescing?',
+    answer:
+      'Both are the same underlying fact: memory systems move fixed-size blocks, not the bytes you asked for. On a CPU, touching one byte pulls a whole line, so strided access wastes most of every fetch and false sharing becomes possible. On a GPU, a warp\'s loads are combined into wide transactions, so scattered addresses fetch far more than they use. In both cases effective bandwidth is the fraction of each fetched block you actually consume, and the fix in both cases is data layout.',
+    keyPoint:
+      'It generalises to the whole stack — page size for host memory, block size for paged KV cache, row groups in columnar files — every layer has a transfer granularity you either match or waste.',
+    minutes: 10,
+  },
 ]
