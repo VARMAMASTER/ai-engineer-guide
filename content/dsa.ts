@@ -3298,6 +3298,35 @@ class MedianFinder:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Enumerate every combination — each element is an independent include-or-exclude decision, giving a binary decision tree of depth n.',
+    approach: `Walk the elements in order; at each one branch into "take it" and "skip it", and
+record the running selection whenever the recursion bottoms out. Every leaf of
+that tree is one subset, so there are exactly 2^n of them and no pruning is
+possible — the output size is the lower bound.`,
+    solution: `def subsets(nums: list[int]) -> list[list[int]]:
+    out: list[list[int]] = []
+    current: list[int] = []
+
+    def backtrack(i: int) -> None:
+        if i == len(nums):
+            out.append(current.copy())  # copy: current keeps mutating
+            return
+        current.append(nums[i])
+        backtrack(i + 1)
+        current.pop()
+        backtrack(i + 1)
+
+    backtrack(0)
+    return out`,
+    complexity: {
+      time: 'O(n * 2^n) — there are 2^n subsets and copying each costs up to n.',
+      space: 'O(n) for the recursion depth and working list, excluding the 2^n results returned.',
+    },
+    followUps: [
+      'What if the input has duplicates? Sort first and skip repeated values at the same depth, which is Subsets II.',
+      'What if n is 40 — is enumeration still viable, or must the question change to a count?',
+      'Can you generate them iteratively by treating each integer 0..2^n-1 as a bitmask?',
+    ],
   },
   {
     id: 'dsa-39-combination-sum',
@@ -3309,6 +3338,37 @@ class MedianFinder:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Build combinations summing to a target with unlimited reuse — and order must not matter, so each branch may only look forward.',
+    approach: `At each step either use the current candidate again — staying at the same index,
+which is what allows reuse — or move past it forever. Never revisiting an index
+once you have moved on is what prevents [2,3] and [3,2] both appearing. Prune
+the branch as soon as the running sum passes the target.`,
+    solution: `def combination_sum(candidates: list[int], target: int) -> list[list[int]]:
+    out: list[list[int]] = []
+    current: list[int] = []
+
+    def backtrack(i: int, remaining: int) -> None:
+        if remaining == 0:
+            out.append(current.copy())
+            return
+        if i >= len(candidates) or remaining < 0:
+            return
+        current.append(candidates[i])
+        backtrack(i, remaining - candidates[i])  # reuse the same candidate
+        current.pop()
+        backtrack(i + 1, remaining)  # never look at candidates[i] again
+
+    backtrack(0, target)
+    return out`,
+    complexity: {
+      time: 'O(n^(target / min candidate)) — the recursion tree is as deep as target divided by the smallest candidate, branching n ways.',
+      space: 'O(target / min candidate) — the recursion depth and the working combination, excluding the output.',
+    },
+    followUps: [
+      'What if each candidate may be used at most once? That is Combination Sum II, and duplicates need skipping.',
+      'What if you only need the count of combinations? That is unbounded-knapsack DP in O(n * target), no enumeration.',
+      'What if candidates can be negative — why does the pruning argument collapse?',
+    ],
   },
   {
     id: 'dsa-40-combination-sum-ii',
@@ -3320,6 +3380,40 @@ class MedianFinder:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Each element usable once and the input may repeat values — the answer set must be free of duplicate combinations, not just duplicate elements.',
+    approach: `Sort so equal values sit together. At each depth, take the first copy of a value
+freely but skip any later copy at the same depth: choosing the second copy where
+the first was skipped would rebuild a combination already generated. Advancing
+the index every time enforces the use-once rule.`,
+    solution: `def combination_sum2(candidates: list[int], target: int) -> list[list[int]]:
+    candidates.sort()
+    out: list[list[int]] = []
+    current: list[int] = []
+
+    def backtrack(start: int, remaining: int) -> None:
+        if remaining == 0:
+            out.append(current.copy())
+            return
+        for i in range(start, len(candidates)):
+            if candidates[i] > remaining:
+                break  # sorted, so nothing further can fit either
+            if i > start and candidates[i] == candidates[i - 1]:
+                continue  # skip duplicate choices at this depth
+            current.append(candidates[i])
+            backtrack(i + 1, remaining - candidates[i])
+            current.pop()
+
+    backtrack(0, target)
+    return out`,
+    complexity: {
+      time: 'O(2^n) — every element is taken or not, with duplicate branches pruned and an O(n log n) sort up front.',
+      space: 'O(n) — recursion depth and the working combination, excluding the output list.',
+    },
+    followUps: [
+      'What if candidates could be reused without limit? Drop the i + 1 and the duplicate skip becomes unnecessary.',
+      'What if you need combinations of exactly k elements summing to the target?',
+      'Why does the skip use i > start rather than i > 0 — what breaks with the other condition?',
+    ],
   },
   {
     id: 'dsa-46-permutations',
@@ -3331,6 +3425,40 @@ class MedianFinder:
     core: false,
     companies: ['google', 'meta'],
     minutes: 30,
+    signal: 'All orderings, not all selections — every element appears in every answer, only the arrangement changes.',
+    approach: `At each position choose any element not yet used, recurse, then undo the choice.
+Tracking used elements with a boolean array keeps each level O(n) instead of
+scanning the partial result. There are n! outputs, so enumeration is inherently
+factorial and no pruning exists for the unconstrained case.`,
+    solution: `def permute(nums: list[int]) -> list[list[int]]:
+    out: list[list[int]] = []
+    current: list[int] = []
+    used = [False] * len(nums)
+
+    def backtrack() -> None:
+        if len(current) == len(nums):
+            out.append(current.copy())
+            return
+        for i, n in enumerate(nums):
+            if used[i]:
+                continue
+            used[i] = True
+            current.append(n)
+            backtrack()
+            current.pop()
+            used[i] = False  # undo, or later branches see a stale state
+
+    backtrack()
+    return out`,
+    complexity: {
+      time: 'O(n * n!) — there are n! permutations and each costs O(n) to build and copy.',
+      space: 'O(n) for the used array, the working list and the recursion depth, excluding the output.',
+    },
+    followUps: [
+      'What if the input has duplicates? Sort and skip equal values whose predecessor is unused, or you emit repeats.',
+      'What if you need only the k-th permutation in lexicographic order? Factorial number system, no enumeration.',
+      'What if you must generate the next permutation in place from a given one?',
+    ],
   },
   {
     id: 'dsa-90-subsets-ii',
@@ -3342,6 +3470,36 @@ class MedianFinder:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Subsets from an input containing repeated values, with no repeated subsets in the answer — dedup has to happen during generation.',
+    approach: `Generating all 2^n subsets and filtering with a set costs the full exponential
+work plus hashing. Sort instead, and at each depth skip any value equal to the
+one just considered at that same depth: the branch it would open was already
+explored by its first copy.`,
+    solution: `def subsets_with_dup(nums: list[int]) -> list[list[int]]:
+    nums.sort()
+    out: list[list[int]] = []
+    current: list[int] = []
+
+    def backtrack(start: int) -> None:
+        out.append(current.copy())
+        for i in range(start, len(nums)):
+            if i > start and nums[i] == nums[i - 1]:
+                continue  # this value already opened a branch at this depth
+            current.append(nums[i])
+            backtrack(i + 1)
+            current.pop()
+
+    backtrack(0)
+    return out`,
+    complexity: {
+      time: 'O(n * 2^n) worst case — distinct inputs still yield 2^n subsets, each costing O(n) to copy; duplicates only reduce it.',
+      space: 'O(n) — recursion depth and the working subset, excluding the returned list.',
+    },
+    followUps: [
+      'What if duplicates should produce distinct subsets by position rather than by value?',
+      'What if you only need the count of distinct subsets? Multiply (count + 1) over the distinct values.',
+      'Why is sorting mandatory here — what goes wrong if the equal values are not adjacent?',
+    ],
   },
   {
     id: 'dsa-79-word-search',
@@ -3353,6 +3511,45 @@ class MedianFinder:
     core: true,
     companies: ['google', 'meta'],
     minutes: 30,
+    signal: 'A path through a grid where cells cannot be reused within one path — that is DFS with an undo, not a visited set that persists.',
+    approach: `From every cell that matches the first letter, walk in four directions matching
+successive letters. Mark the cell as in-use before recursing and unmark it after,
+because a cell blocked on this path must be free for a different one. Mismatches
+prune immediately, which is what keeps it tractable.`,
+    solution: `def exist(board: list[list[str]], word: str) -> bool:
+    if not word:
+        return True
+    if not board or not board[0]:
+        return False
+
+    rows, cols = len(board), len(board[0])
+
+    def dfs(r: int, c: int, i: int) -> bool:
+        if i == len(word):
+            return True
+        if not (0 <= r < rows and 0 <= c < cols) or board[r][c] != word[i]:
+            return False
+
+        board[r][c] = "\\0"  # mark in use for this path only
+        found = (
+            dfs(r + 1, c, i + 1)
+            or dfs(r - 1, c, i + 1)
+            or dfs(r, c + 1, i + 1)
+            or dfs(r, c - 1, i + 1)
+        )
+        board[r][c] = word[i]  # undo
+        return found
+
+    return any(dfs(r, c, 0) for r in range(rows) for c in range(cols))`,
+    complexity: {
+      time: 'O(rows * cols * 3^len(word)) — each of the cells may start a search that branches three ways after the first step.',
+      space: 'O(len(word)) — the recursion depth; marking happens in the board itself, so no visited set is allocated.',
+    },
+    followUps: [
+      'What if you must find many words at once? Build a trie of the words and walk the grid once — that is Word Search II.',
+      'What if diagonal moves are allowed? The branching factor rises from 3 to 7.',
+      'What if the board must not be mutated — what does a separate visited set cost?',
+    ],
   },
   {
     id: 'dsa-131-palindrome-partitioning',
@@ -3364,6 +3561,43 @@ class MedianFinder:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Split a string every possible way subject to a per-piece predicate — the cut positions are the decision tree.',
+    approach: `At each position try every prefix that is a palindrome, recurse on the rest, then
+backtrack. The palindrome test prunes whole subtrees early, which is the only
+thing keeping this below pure 2^(n-1) enumeration of cut sets. Precomputing an
+is-palindrome table makes each test O(1) instead of O(n).`,
+    solution: `def partition(s: str) -> list[list[str]]:
+    out: list[list[str]] = []
+    current: list[str] = []
+
+    def is_palindrome(lo: int, hi: int) -> bool:
+        while lo < hi:
+            if s[lo] != s[hi]:
+                return False
+            lo, hi = lo + 1, hi - 1
+        return True
+
+    def backtrack(start: int) -> None:
+        if start == len(s):
+            out.append(current.copy())
+            return
+        for end in range(start, len(s)):
+            if is_palindrome(start, end):
+                current.append(s[start : end + 1])
+                backtrack(end + 1)
+                current.pop()
+
+    backtrack(0)
+    return out`,
+    complexity: {
+      time: 'O(n * 2^n) — up to 2^(n-1) cut sets, each verified and copied in O(n).',
+      space: 'O(n) — recursion depth and the working partition, excluding the output.',
+    },
+    followUps: [
+      'What if you only need the minimum number of cuts? That is DP in O(n^2), not enumeration.',
+      'What if the pieces must instead all be distinct, or all be a fixed length?',
+      'How much does a precomputed n by n palindrome table actually save here?',
+    ],
   },
   {
     id: 'dsa-17-letter-combinations-of-a-phone-number',
@@ -3375,6 +3609,43 @@ class MedianFinder:
     core: false,
     companies: ['meta'],
     minutes: 30,
+    signal: 'One choice per input position, drawn from a fixed set — the Cartesian product, which is a fixed-depth decision tree.',
+    approach: `Each digit contributes one letter to every output, so the tree has depth len(digits)
+and branches by that digit's letter count. Recurse position by position; there
+is nothing to prune because every leaf is valid. The empty input is the classic
+trap: it should yield no combinations, not one empty string.`,
+    solution: `def letter_combinations(digits: str) -> list[str]:
+    if not digits:
+        return []
+
+    keypad = {
+        "2": "abc", "3": "def", "4": "ghi", "5": "jkl",
+        "6": "mno", "7": "pqrs", "8": "tuv", "9": "wxyz",
+    }
+
+    out: list[str] = []
+    current: list[str] = []
+
+    def backtrack(i: int) -> None:
+        if i == len(digits):
+            out.append("".join(current))
+            return
+        for letter in keypad[digits[i]]:
+            current.append(letter)
+            backtrack(i + 1)
+            current.pop()
+
+    backtrack(0)
+    return out`,
+    complexity: {
+      time: 'O(n * 4^n) — at most four letters per digit gives up to 4^n leaves, each costing O(n) to join.',
+      space: 'O(n) — the recursion depth and the working buffer, excluding the returned list.',
+    },
+    followUps: [
+      'What if you must return only combinations that are real dictionary words? Prune with a trie mid-recursion.',
+      'What if digits 0 and 1 appear — is that an error, a skip, or a literal?',
+      'What if the result is huge and should be a generator rather than a list?',
+    ],
   },
   {
     id: 'dsa-51-n-queens',
@@ -3386,6 +3657,46 @@ class MedianFinder:
     core: false,
     companies: ['google'],
     minutes: 45,
+    signal: 'Place items under mutual-exclusion constraints — the constraints are checkable incrementally, so illegal branches die early.',
+    approach: `Place one queen per row, so rows can never clash by construction. Track the used
+columns and the two diagonal families — row + col is constant on one diagonal,
+row - col on the other — as sets, making each legality test O(1). Backtracking
+with those three sets prunes the vast majority of the n^n placements.`,
+    solution: `def solve_n_queens(n: int) -> list[list[str]]:
+    out: list[list[str]] = []
+    cols: set[int] = set()
+    diag: set[int] = set()  # row + col is constant down-right
+    anti: set[int] = set()  # row - col is constant down-left
+    placement: list[int] = []
+
+    def backtrack(row: int) -> None:
+        if row == n:
+            out.append(["." * c + "Q" + "." * (n - c - 1) for c in placement])
+            return
+        for col in range(n):
+            if col in cols or (row + col) in diag or (row - col) in anti:
+                continue
+            cols.add(col)
+            diag.add(row + col)
+            anti.add(row - col)
+            placement.append(col)
+            backtrack(row + 1)
+            placement.pop()
+            anti.discard(row - col)
+            diag.discard(row + col)
+            cols.discard(col)
+
+    backtrack(0)
+    return out`,
+    complexity: {
+      time: 'O(n!) in the worst case — row r has at most n - r legal columns, and the three sets make each check O(1).',
+      space: 'O(n) — three sets and the placement list all hold at most one entry per row, excluding the output.',
+    },
+    followUps: [
+      'What if you only need the count of solutions? Drop the board construction; bitmasks then make it dramatically faster.',
+      'What if n is 30 — is exact enumeration still possible, or do you switch to a constructive heuristic?',
+      'What if the board has pre-placed queens or forbidden squares?',
+    ],
   },
 
   // --- Tries (3) ---
@@ -3399,6 +3710,50 @@ class MedianFinder:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Prefix queries over a set of words — a hash set can answer "is this a word" but never "does any word start with this".',
+    approach: `Store one node per character position, with children keyed by the next character
+and a flag marking the end of a complete word. Lookup and insert both walk the
+string once, independent of how many words are stored. That prefix sharing is
+what a hash set cannot give you.`,
+    solution: `class TrieNode:
+    def __init__(self) -> None:
+        self.children: dict[str, "TrieNode"] = {}
+        self.is_word = False
+
+
+class Trie:
+    def __init__(self) -> None:
+        self.root = TrieNode()
+
+    def insert(self, word: str) -> None:
+        node = self.root
+        for ch in word:
+            node = node.children.setdefault(ch, TrieNode())
+        node.is_word = True
+
+    def _walk(self, prefix: str) -> TrieNode | None:
+        node = self.root
+        for ch in prefix:
+            node = node.children.get(ch)
+            if node is None:
+                return None
+        return node
+
+    def search(self, word: str) -> bool:
+        node = self._walk(word)
+        return node is not None and node.is_word
+
+    def starts_with(self, prefix: str) -> bool:
+        return self._walk(prefix) is not None`,
+    complexity: {
+      time: 'O(len(word)) per operation — one dict step per character, with no dependence on the number of stored words.',
+      space: 'O(total characters) — shared prefixes are stored once, so it is at most the sum of word lengths.',
+    },
+    followUps: [
+      'What if memory is tight? A radix tree collapses single-child chains; a DAWG also shares suffixes.',
+      'What if you must support deletion? Refcount each node or prune empty branches on the way back up.',
+      'What if you need autocomplete ranked by popularity — where does the score live?',
+    ],
   },
   {
     id: 'dsa-211-design-add-and-search-words-data-structure',
@@ -3410,6 +3765,47 @@ class MedianFinder:
     core: true,
     companies: [],
     minutes: 30,
+    signal: 'Exact lookup plus a single-character wildcard — the wildcard forks the search, which only a tree structure survives.',
+    approach: `Insertion is an ordinary trie insert. Search walks the trie, but a '.' must try
+every child, so the walk becomes a DFS with branching. Non-wildcard characters
+still narrow to one child, so the branching is confined to the wildcard
+positions rather than the whole word.`,
+    solution: `class WordNode:
+    def __init__(self) -> None:
+        self.children: dict[str, "WordNode"] = {}
+        self.is_word = False
+
+
+class WordDictionary:
+    def __init__(self) -> None:
+        self.root = WordNode()
+
+    def add_word(self, word: str) -> None:
+        node = self.root
+        for ch in word:
+            node = node.children.setdefault(ch, WordNode())
+        node.is_word = True
+
+    def search(self, word: str) -> bool:
+        def dfs(node: WordNode, i: int) -> bool:
+            if i == len(word):
+                return node.is_word
+            ch = word[i]
+            if ch == ".":
+                return any(dfs(child, i + 1) for child in node.children.values())
+            child = node.children.get(ch)
+            return child is not None and dfs(child, i + 1)
+
+        return dfs(self.root, 0)`,
+    complexity: {
+      time: 'O(len(word)) with no wildcards; O(26^w * len(word)) worst case, where w is the number of dots that each fork the search.',
+      space: 'O(total characters) for the trie, plus O(len(word)) recursion depth during a search.',
+    },
+    followUps: [
+      'What if \'*\' matching any number of characters were allowed? The DFS must also try consuming zero characters.',
+      'What if a leading wildcard is common? Index suffixes too, or the fork happens at the root every time.',
+      'What if the dictionary is enormous — how do you keep the trie off the heap?',
+    ],
   },
   {
     id: 'dsa-212-word-search-ii',
@@ -3421,6 +3817,61 @@ class MedianFinder:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'Many words to find in one grid — searching each word separately repeats the same prefix walks over and over.',
+    approach: `Put all the words in a trie, then DFS the grid once carrying a trie node instead
+of a word index. A cell whose character has no child in the trie kills every
+word sharing that prefix at once. Pruning found words out of the trie stops the
+search revisiting them.`,
+    solution: `class GridNode:
+    def __init__(self) -> None:
+        self.children: dict[str, "GridNode"] = {}
+        self.word: str | None = None
+
+
+def find_words(board: list[list[str]], words: list[str]) -> list[str]:
+    if not board or not board[0]:
+        return []
+
+    root = GridNode()
+    for word in words:
+        node = root
+        for ch in word:
+            node = node.children.setdefault(ch, GridNode())
+        node.word = word
+
+    rows, cols = len(board), len(board[0])
+    found: list[str] = []
+
+    def dfs(r: int, c: int, node: GridNode) -> None:
+        if not (0 <= r < rows and 0 <= c < cols):
+            return
+        ch = board[r][c]
+        child = node.children.get(ch)
+        if child is None:
+            return
+        if child.word is not None:
+            found.append(child.word)
+            child.word = None  # do not report it twice
+
+        board[r][c] = "\\0"
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            dfs(r + dr, c + dc, child)
+        board[r][c] = ch
+
+    for r in range(rows):
+        for c in range(cols):
+            dfs(r, c, root)
+
+    return found`,
+    complexity: {
+      time: 'O(rows * cols * 4 * 3^(L-1)) where L is the longest word — the trie collapses all words into one walk instead of one per word.',
+      space: 'O(total characters in words) for the trie, plus O(L) recursion depth.',
+    },
+    followUps: [
+      'What if a found word should be prunable from the trie entirely, not just unmarked? Delete childless nodes on the way back up.',
+      'What if there are a million words but a tiny grid — which side should drive the search?',
+      'What if words may reuse a cell? The whole in-use marking disappears and the search may not terminate.',
+    ],
   },
 
   // --- Graphs (13) ---
@@ -3434,6 +3885,43 @@ class MedianFinder:
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 30,
+    signal: 'Count connected regions in a grid — every cell is a node and adjacency is the edge set, so this is connected components.',
+    approach: `Scan the grid; each unvisited land cell starts a new island, and a flood fill from
+it consumes the whole component so it is never counted again. Sinking visited
+land by overwriting it avoids a separate visited structure. BFS or union-find
+give the same count.`,
+    solution: `def num_islands(grid: list[list[str]]) -> int:
+    if not grid or not grid[0]:
+        return 0
+
+    rows, cols = len(grid), len(grid[0])
+    count = 0
+
+    def sink(r: int, c: int) -> None:
+        stack = [(r, c)]
+        while stack:
+            cr, cc = stack.pop()
+            if not (0 <= cr < rows and 0 <= cc < cols) or grid[cr][cc] != "1":
+                continue
+            grid[cr][cc] = "0"  # sink it, so it is never counted again
+            stack.extend([(cr + 1, cc), (cr - 1, cc), (cr, cc + 1), (cr, cc - 1)])
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == "1":
+                count += 1
+                sink(r, c)
+
+    return count`,
+    complexity: {
+      time: 'O(rows * cols) — every cell is examined once by the scan and sunk at most once by a flood fill.',
+      space: 'O(rows * cols) — the explicit stack, in the worst case where the whole grid is one island.',
+    },
+    followUps: [
+      'What if land is added one cell at a time and the count must stay current? Union-find with a running component count.',
+      'What if the grid is too large for memory? Process in stripes and union the components that touch the seam.',
+      'What if diagonal adjacency counts as connected — which line changes?',
+    ],
   },
   {
     id: 'dsa-695-max-area-of-island',
@@ -3445,6 +3933,42 @@ class MedianFinder:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Same connected-components sweep as counting islands, but each component must be measured rather than merely counted.',
+    approach: `Flood fill from every unvisited land cell as before, except the fill returns the
+number of cells it consumed. Take the maximum over all components. Sinking as
+you go keeps each cell in exactly one component, so the total work stays linear
+in the grid size.`,
+    solution: `def max_area_of_island(grid: list[list[int]]) -> int:
+    if not grid or not grid[0]:
+        return 0
+
+    rows, cols = len(grid), len(grid[0])
+
+    def fill(r: int, c: int) -> int:
+        stack = [(r, c)]
+        area = 0
+        while stack:
+            cr, cc = stack.pop()
+            if not (0 <= cr < rows and 0 <= cc < cols) or grid[cr][cc] != 1:
+                continue
+            grid[cr][cc] = 0
+            area += 1
+            stack.extend([(cr + 1, cc), (cr - 1, cc), (cr, cc + 1), (cr, cc - 1)])
+        return area
+
+    return max(
+        (fill(r, c) for r in range(rows) for c in range(cols) if grid[r][c] == 1),
+        default=0,
+    )`,
+    complexity: {
+      time: 'O(rows * cols) — each cell is pushed and popped a bounded number of times across all fills.',
+      space: 'O(rows * cols) — the stack, when the entire grid is a single island.',
+    },
+    followUps: [
+      'What if you may flip one water cell to land to maximise an island? You must keep per-component areas, not just the best.',
+      'What if the grid must not be mutated? A visited set costs the same order but real extra memory.',
+      'What if you need the areas of all islands sorted, not just the largest?',
+    ],
   },
   {
     id: 'dsa-133-clone-graph',
@@ -3456,6 +3980,41 @@ class MedianFinder:
     core: true,
     companies: ['google', 'meta', 'amazon'],
     minutes: 30,
+    signal: 'Deep copy a cyclic structure — plain recursion would loop forever, so you need a map from original to clone as the visited marker.',
+    approach: `Create a clone the first time a node is seen and record it in a dict immediately,
+before recursing into neighbours. That entry doubles as the visited set, so a
+cycle finds the existing clone instead of recursing again. Then link each
+clone's neighbours through the same map.`,
+    solution: `class Node:
+    def __init__(self, val: int = 0, neighbors: "list[Node] | None" = None) -> None:
+        self.val = val
+        self.neighbors = neighbors if neighbors is not None else []
+
+
+def clone_graph(node: Node | None) -> Node | None:
+    if node is None:
+        return None
+
+    clones: dict[Node, Node] = {}
+
+    def dfs(current: Node) -> Node:
+        if current in clones:
+            return clones[current]
+        copy = Node(current.val)
+        clones[current] = copy  # register before recursing, or cycles never terminate
+        copy.neighbors = [dfs(n) for n in current.neighbors]
+        return copy
+
+    return dfs(node)`,
+    complexity: {
+      time: 'O(V + E) — each node is cloned once and each edge is traversed once.',
+      space: 'O(V) — the clone map plus recursion depth, which can be the whole graph on a chain.',
+    },
+    followUps: [
+      'What if the graph is disconnected? You are only given one node, so unreachable components cannot be cloned.',
+      'What if it is directed with weights — does the map trick change at all?',
+      'What if the graph is too deep for recursion? The same map works with an explicit stack.',
+    ],
   },
   {
     id: 'dsa-286-walls-and-gates',
@@ -3467,6 +4026,41 @@ class MedianFinder:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Shortest distance from every cell to the nearest of several sources — run one BFS from all sources at once, not one per source.',
+    approach: `A BFS from each gate would be O(gates * cells). Instead seed the queue with every
+gate at distance zero: the wavefront expands from all of them simultaneously, so
+the first time a room is reached it is by its nearest gate. Writing the distance
+on arrival doubles as the visited marker.`,
+    solution: `from collections import deque
+
+INF = 2**31 - 1
+
+
+def walls_and_gates(rooms: list[list[int]]) -> None:
+    if not rooms or not rooms[0]:
+        return
+
+    rows, cols = len(rooms), len(rooms[0])
+    queue = deque(
+        (r, c) for r in range(rows) for c in range(cols) if rooms[r][c] == 0
+    )
+
+    while queue:
+        r, c = queue.popleft()
+        for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < rows and 0 <= nc < cols and rooms[nr][nc] == INF:
+                rooms[nr][nc] = rooms[r][c] + 1
+                queue.append((nr, nc))`,
+    complexity: {
+      time: 'O(rows * cols) — multi-source BFS visits each cell once regardless of how many gates there are.',
+      space: 'O(rows * cols) — the queue, which can hold a whole wavefront.',
+    },
+    followUps: [
+      'What if you also need which gate is nearest, not just how far? Carry the source id along the wavefront.',
+      'What if moves had different costs? BFS no longer suffices; you need Dijkstra with a priority queue.',
+      'What if gates are added over time — can you update incrementally instead of rerunning?',
+    ],
   },
   {
     id: 'dsa-994-rotting-oranges',
@@ -3478,6 +4072,51 @@ class MedianFinder:
     core: false,
     companies: ['amazon'],
     minutes: 30,
+    signal: 'Something spreads to neighbours one time-step at a time — the answer is a number of rounds, which is BFS depth.',
+    approach: `Seed a queue with every already-rotten orange and expand level by level, each
+level being one minute. Count the fresh oranges up front so you can tell at the
+end whether any were unreachable. The number of levels processed is the answer;
+DFS would give a wrong time because it does not expand uniformly.`,
+    solution: `from collections import deque
+
+
+def oranges_rotting(grid: list[list[int]]) -> int:
+    if not grid or not grid[0]:
+        return 0
+
+    rows, cols = len(grid), len(grid[0])
+    queue = deque()
+    fresh = 0
+
+    for r in range(rows):
+        for c in range(cols):
+            if grid[r][c] == 2:
+                queue.append((r, c))
+            elif grid[r][c] == 1:
+                fresh += 1
+
+    minutes = 0
+    while queue and fresh:
+        for _ in range(len(queue)):  # one full minute per level
+            r, c = queue.popleft()
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 1:
+                    grid[nr][nc] = 2
+                    fresh -= 1
+                    queue.append((nr, nc))
+        minutes += 1
+
+    return -1 if fresh else minutes`,
+    complexity: {
+      time: 'O(rows * cols) — each cell is enqueued at most once and its four neighbours checked once.',
+      space: 'O(rows * cols) — the queue holds at most one wavefront, which can be the whole grid.',
+    },
+    followUps: [
+      'What if rotting spreads diagonally too, or at different rates per direction?',
+      'What if you must report which oranges can never rot, not just that some cannot?',
+      'What if the grid is 3D — does anything but the neighbour list change?',
+    ],
   },
   {
     id: 'dsa-417-pacific-atlantic-water-flow',
@@ -3489,6 +4128,53 @@ class MedianFinder:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Cells that can reach two different destinations — invert the question and flood inward from each destination, then intersect.',
+    approach: `Testing every cell's downhill path separately repeats enormous amounts of work.
+Instead start at each ocean's border and walk uphill — the reverse of the flow —
+marking everything reachable. Two such sweeps give two reachable sets, and the
+answer is their intersection.`,
+    solution: `def pacific_atlantic(heights: list[list[int]]) -> list[list[int]]:
+    if not heights or not heights[0]:
+        return []
+
+    rows, cols = len(heights), len(heights[0])
+
+    def flood(starts: list[tuple[int, int]]) -> set[tuple[int, int]]:
+        seen: set[tuple[int, int]] = set()
+        stack = list(starts)
+        while stack:
+            r, c = stack.pop()
+            if (r, c) in seen:
+                continue
+            seen.add((r, c))
+            for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                nr, nc = r + dr, c + dc
+                if (
+                    0 <= nr < rows
+                    and 0 <= nc < cols
+                    and (nr, nc) not in seen
+                    and heights[nr][nc] >= heights[r][c]  # walk uphill, against the flow
+                ):
+                    stack.append((nr, nc))
+        return seen
+
+    pacific = flood(
+        [(0, c) for c in range(cols)] + [(r, 0) for r in range(rows)]
+    )
+    atlantic = flood(
+        [(rows - 1, c) for c in range(cols)] + [(r, cols - 1) for r in range(rows)]
+    )
+
+    return [list(cell) for cell in pacific & atlantic]`,
+    complexity: {
+      time: 'O(rows * cols) — two floods, each visiting every cell at most once thanks to the seen set.',
+      space: 'O(rows * cols) — the two reachable sets and the traversal stack.',
+    },
+    followUps: [
+      'What if there were three oceans? The intersection generalises, but each extra sweep costs another full pass.',
+      'What if water may only flow strictly downhill? The >= becomes >, and plateaus stop conducting.',
+      'What if you need the count of such cells only — can you avoid materialising both sets?',
+    ],
   },
   {
     id: 'dsa-130-surrounded-regions',
@@ -3500,6 +4186,45 @@ class MedianFinder:
     core: false,
     companies: [],
     minutes: 30,
+    signal: 'Regions are captured unless they touch the border — so the cheap move is to mark what survives, not to hunt for what is enclosed.',
+    approach: `Detecting enclosure directly means proving a negative for every region. Invert it:
+flood from every border 'O' and mark those cells safe. Everything still marked
+'O' afterwards is by definition enclosed and flips; the safe marks are then
+restored.`,
+    solution: `def solve_surrounded(board: list[list[str]]) -> None:
+    if not board or not board[0]:
+        return
+
+    rows, cols = len(board), len(board[0])
+
+    def mark_safe(r: int, c: int) -> None:
+        stack = [(r, c)]
+        while stack:
+            cr, cc = stack.pop()
+            if not (0 <= cr < rows and 0 <= cc < cols) or board[cr][cc] != "O":
+                continue
+            board[cr][cc] = "S"  # reachable from the border, so it survives
+            stack.extend([(cr + 1, cc), (cr - 1, cc), (cr, cc + 1), (cr, cc - 1)])
+
+    for r in range(rows):
+        mark_safe(r, 0)
+        mark_safe(r, cols - 1)
+    for c in range(cols):
+        mark_safe(0, c)
+        mark_safe(rows - 1, c)
+
+    for r in range(rows):
+        for c in range(cols):
+            board[r][c] = "O" if board[r][c] == "S" else "X"`,
+    complexity: {
+      time: 'O(rows * cols) — border floods visit each cell at most once, then one final pass rewrites the board.',
+      space: 'O(rows * cols) — the flood stack in the worst case; the marking itself is done in place.',
+    },
+    followUps: [
+      'What if you must report the enclosed regions rather than flip them? Keep component ids during the sweep.',
+      'What if the board is streamed row by row? Union-find over the seam is the standard trick.',
+      'Why is marking survivors easier than detecting enclosure directly?',
+    ],
   },
   {
     id: 'dsa-207-course-schedule',
@@ -3511,6 +4236,43 @@ class MedianFinder:
     core: true,
     companies: ['google', 'amazon'],
     minutes: 30,
+    signal: 'Prerequisites that must be satisfiable — a directed graph where the only obstacle is a cycle.',
+    approach: `The schedule is possible exactly when the prerequisite graph is acyclic. Kahn's
+algorithm repeatedly removes a node with no remaining prerequisites; if it can
+remove all n, there was no cycle. Whatever it cannot remove is stuck inside one,
+which is also the useful diagnostic to report.`,
+    solution: `from collections import defaultdict, deque
+
+
+def can_finish(num_courses: int, prerequisites: list[list[int]]) -> bool:
+    graph: dict[int, list[int]] = defaultdict(list)
+    indegree = [0] * num_courses
+
+    for course, prereq in prerequisites:
+        graph[prereq].append(course)
+        indegree[course] += 1
+
+    queue = deque(c for c in range(num_courses) if indegree[c] == 0)
+    taken = 0
+
+    while queue:
+        course = queue.popleft()
+        taken += 1
+        for nxt in graph[course]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                queue.append(nxt)
+
+    return taken == num_courses`,
+    complexity: {
+      time: 'O(V + E) — every course is enqueued once and every prerequisite edge is relaxed once.',
+      space: 'O(V + E) — the adjacency lists, the indegree array and the queue.',
+    },
+    followUps: [
+      'What if you must output a valid order? That is Course Schedule II; record the pop order.',
+      'What if you must name the courses inside the cycle? Kahn tells you which remain; DFS colouring finds the cycle itself.',
+      'What if prerequisites arrive incrementally and each addition must be checked?',
+    ],
   },
   {
     id: 'dsa-210-course-schedule-ii',
@@ -3522,6 +4284,43 @@ class MedianFinder:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'Produce an order respecting dependencies — a topological sort, with a cycle meaning no order exists.',
+    approach: `Same Kahn's algorithm as the yes-or-no version, except you record the order in
+which nodes are removed. Every node emitted had all its prerequisites already
+emitted, so the sequence is valid. If fewer than n nodes come out, a cycle
+blocked the rest and there is no answer at all.`,
+    solution: `from collections import defaultdict, deque
+
+
+def find_order(num_courses: int, prerequisites: list[list[int]]) -> list[int]:
+    graph: dict[int, list[int]] = defaultdict(list)
+    indegree = [0] * num_courses
+
+    for course, prereq in prerequisites:
+        graph[prereq].append(course)
+        indegree[course] += 1
+
+    queue = deque(c for c in range(num_courses) if indegree[c] == 0)
+    order: list[int] = []
+
+    while queue:
+        course = queue.popleft()
+        order.append(course)
+        for nxt in graph[course]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                queue.append(nxt)
+
+    return order if len(order) == num_courses else []`,
+    complexity: {
+      time: 'O(V + E) — one enqueue and one dequeue per course, one decrement per prerequisite edge.',
+      space: 'O(V + E) — adjacency lists, indegrees, queue and the emitted order.',
+    },
+    followUps: [
+      'What if the order must be lexicographically smallest? Swap the queue for a min-heap, at O(V log V + E).',
+      'What if courses can be taken in parallel and you want the minimum number of semesters? Count BFS levels.',
+      'What if the graph is enormous — can a DFS post-order topological sort use less memory?',
+    ],
   },
   {
     id: 'dsa-261-graph-valid-tree',
@@ -3533,6 +4332,44 @@ class MedianFinder:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: '"Is this a tree" — two conditions at once: exactly n-1 edges and fully connected, which together forbid cycles.',
+    approach: `A tree on n nodes has exactly n-1 edges and is connected; either property alone is
+not enough. Check the edge count first, in O(1), then confirm one traversal
+reaches every node. With the count already right, connectivity implies
+acyclicity, so no separate cycle check is needed.`,
+    solution: `from collections import defaultdict
+
+
+def valid_tree(n: int, edges: list[list[int]]) -> bool:
+    if n == 0:
+        return False
+    if len(edges) != n - 1:  # too few cannot connect, too many must cycle
+        return False
+
+    graph: dict[int, list[int]] = defaultdict(list)
+    for a, b in edges:
+        graph[a].append(b)
+        graph[b].append(a)
+
+    seen = {0}
+    stack = [0]
+    while stack:
+        node = stack.pop()
+        for neighbour in graph[node]:
+            if neighbour not in seen:
+                seen.add(neighbour)
+                stack.append(neighbour)
+
+    return len(seen) == n`,
+    complexity: {
+      time: 'O(V + E) — building the adjacency lists and one traversal that touches each node and edge once.',
+      space: 'O(V + E) — the adjacency lists plus the seen set and the stack.',
+    },
+    followUps: [
+      'What if self-loops or duplicate edges can appear? The edge count check passes but the traversal quietly hides them.',
+      'What if edges arrive one at a time? Union-find rejects the first edge joining two already-connected nodes.',
+      'What if the graph is directed — what is the right definition of a tree then?',
+    ],
   },
   {
     id: 'dsa-323-number-of-connected-components-in-an-undirected-graph',
@@ -3544,6 +4381,42 @@ class MedianFinder:
     core: true,
     companies: ['google'],
     minutes: 30,
+    signal: 'Count components in an edge list — either a traversal per unvisited node, or union-find if edges keep arriving.',
+    approach: `Start with n components and union the endpoints of each edge; every union that
+actually merges two different sets reduces the count by one. Union-find with
+path compression and union by size makes each operation effectively constant,
+and unlike DFS it handles edges arriving online.`,
+    solution: `def count_components(n: int, edges: list[list[int]]) -> int:
+    parent = list(range(n))
+    size = [1] * n
+    components = n
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]  # path compression
+            x = parent[x]
+        return x
+
+    for a, b in edges:
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            continue  # already together, no component disappears
+        if size[ra] < size[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        size[ra] += size[rb]
+        components -= 1
+
+    return components`,
+    complexity: {
+      time: 'O(E * alpha(n)) — path compression with union by size makes each find and union effectively constant.',
+      space: 'O(n) — the parent and size arrays; no adjacency lists are built at all.',
+    },
+    followUps: [
+      'What if edges can also be removed? Union-find cannot undo; you need a link-cut tree or offline processing.',
+      'What if you need the size of each component? It is already in the size array at each root.',
+      'What if the graph is directed — does connectivity still mean the same thing?',
+    ],
   },
   {
     id: 'dsa-684-redundant-connection',
@@ -3555,6 +4428,37 @@ class MedianFinder:
     core: false,
     companies: ['google'],
     minutes: 30,
+    signal: 'A tree plus one extra edge — the culprit is the first edge whose endpoints are already connected.',
+    approach: `Process the edges in order, unioning endpoints as you go. Every edge that joins
+two separate components is legitimate; the first that joins two nodes already in
+the same set is the one closing the cycle. Because the input is a tree plus one
+edge, that first offender is the answer.`,
+    solution: `def find_redundant_connection(edges: list[list[int]]) -> list[int]:
+    nodes = max((max(a, b) for a, b in edges), default=0) + 1
+    parent = list(range(nodes))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for a, b in edges:
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return [a, b]  # both ends already connected: this edge closes the cycle
+        parent[rb] = ra
+
+    return []`,
+    complexity: {
+      time: 'O(n * alpha(n)) — one find pair and at most one union per edge, each effectively constant with path compression.',
+      space: 'O(n) — the parent array, one slot per node.',
+    },
+    followUps: [
+      'What if the graph is directed? A node can have two parents, so union-find alone no longer identifies the right edge.',
+      'What if several extra edges were added and all must be found?',
+      'What if the answer had to be the edge that appears earliest rather than last — does the scan direction matter?',
+    ],
   },
   {
     id: 'dsa-127-word-ladder',
@@ -3566,6 +4470,44 @@ class MedianFinder:
     core: false,
     companies: ['google', 'amazon'],
     minutes: 45,
+    signal: 'Shortest transformation sequence with unit-cost steps — that is BFS on an implicit graph you never build.',
+    approach: `Words are nodes and one-letter changes are edges. Building the graph by comparing
+every pair is O(n^2 * L); instead generate each word's neighbours by trying all
+26 letters at each position and testing membership in the word set, which is
+O(26 * L). BFS then gives the shortest ladder.`,
+    solution: `from collections import deque
+from string import ascii_lowercase
+
+
+def ladder_length(begin_word: str, end_word: str, word_list: list[str]) -> int:
+    words = set(word_list)
+    if end_word not in words:
+        return 0
+
+    queue = deque([(begin_word, 1)])
+    words.discard(begin_word)
+
+    while queue:
+        word, steps = queue.popleft()
+        if word == end_word:
+            return steps
+        for i in range(len(word)):
+            for letter in ascii_lowercase:
+                candidate = word[:i] + letter + word[i + 1 :]
+                if candidate in words:
+                    words.remove(candidate)  # first arrival is the shortest
+                    queue.append((candidate, steps + 1))
+
+    return 0`,
+    complexity: {
+      time: 'O(n * L * 26) — each of the n words is expanded once, generating 26 candidates per position of length L.',
+      space: 'O(n * L) — the word set plus the BFS queue, both linear in the dictionary.',
+    },
+    followUps: [
+      'What if you must return every shortest ladder? BFS to build a parent DAG, then DFS back through it.',
+      'What if the dictionary is huge? Bidirectional BFS from both ends roughly square-roots the frontier.',
+      'What if words have different lengths, so insertions and deletions are allowed too?',
+    ],
   },
 
   // --- Advanced Graphs (6) ---
