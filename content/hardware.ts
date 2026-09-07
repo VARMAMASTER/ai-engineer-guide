@@ -391,4 +391,151 @@ export const hwQuestions: HwQuestion[] = [
       'Doubling FLOPS without bandwidth makes the memory-bound region larger, so a generation that looks twice as fast on paper can deliver almost no inter-token latency improvement.',
     minutes: 11,
   },
+
+  // ---------------------------------------------------------------- topic 5
+  {
+    id: 'hwq-cpu-serving-role',
+    topicId: 'hwt-cpu-role',
+    text: 'What is the CPU actually doing while a GPU serves LLM requests?',
+    answer:
+      'All the work between kernel launches. Tokenization and detokenization, request admission and queueing, continuous-batching bookkeeping — deciding which sequences join or leave the batch this step — KV-cache block-table management for paged attention, sampling and stop-condition logic, and the CUDA kernel dispatch itself. None of it is arithmetic-heavy, but all of it is on the critical path: the GPU cannot start step N+1 until the host has decided what step N+1 contains.',
+    keyPoint:
+      'It is a producer-consumer pipeline, so the host does not need to be fast in absolute terms — it needs to stay ahead of a GPU step, and it is the variance in host time, not the mean, that shows up as decode jitter.',
+    minutes: 10,
+  },
+  {
+    id: 'hwq-tokenization-latency',
+    topicId: 'hwt-cpu-role',
+    text: 'Can CPU-side tokenization really matter next to GPU compute?',
+    answer:
+      'Yes, and more than people expect. One source reports CPU-side tokenization accounting for up to 50% of total inference latency under realistic concurrency — I would flag that as one study\'s finding rather than a consensus constant, but the mechanism behind it is well documented. Tokenization is a serial string-processing pass, it runs per request rather than per batch, and under concurrency it competes with the scheduler loop for the same cores. The mitigations are the usual ones: a fast native tokenizer, tokenizing off the request-handling thread, batching or caching where prompts repeat.',
+    numbers: [
+      'One source reports CPU-side tokenization at up to 50% of total inference latency under realistic concurrency — one study\'s finding, not a universal constant',
+    ],
+    keyPoint:
+      'The general failure mode is what matters: a CPU-bound host loop starves the GPU, and you see it as low GPU utilisation with healthy queue depth, which no amount of GPU tuning will fix.',
+    minutes: 10,
+  },
+  {
+    id: 'hwq-pinned-memory',
+    topicId: 'hwt-cpu-role',
+    text: 'What does pinned memory do, and why does it speed up host-to-device transfers?',
+    answer:
+      'Ordinary pageable host memory cannot be DMA\'d to the GPU, because the OS can relocate or swap those pages at any moment and the DMA engine holds a physical address. So the CUDA runtime does a hidden extra copy: pageable memory into an internal pinned staging buffer, then DMA from there to the GPU. Allocating pinned memory yourself with cudaMallocHost removes that staging hop. In practice pinned transfers reach over 90% of theoretical PCIe bandwidth while pageable ones typically manage 40-60%.',
+    numbers: [
+      'Pinned transfers hit >90% of theoretical PCIe bandwidth; pageable transfers typically reach only 40-60%',
+    ],
+    keyPoint:
+      'Pinning is not free — it locks physical pages away from the OS, so over-pinning degrades the whole machine, which is why it belongs on a small set of reused staging buffers rather than every allocation.',
+    minutes: 10,
+  },
+  {
+    id: 'hwq-pin-memory-flag',
+    topicId: 'hwt-cpu-role',
+    text: 'Why does PyTorch\'s DataLoader have a pin_memory flag, and when does it help in an inference server?',
+    answer:
+      'It allocates the batch in pinned host memory so the copy to device skips the staging buffer and can be issued asynchronously, overlapping with compute on another stream. It helps whenever you are moving a meaningful volume of host tensors across PCIe on the critical path — training input pipelines, and on the serving side tokenized batches and image or audio inputs. It does nothing for tensors already resident on the GPU, and it is pure overhead if the transfer was never your bottleneck.',
+    numbers: ['The gap it closes: >90% of PCIe peak pinned versus 40-60% pageable'],
+    keyPoint:
+      'Asynchronous copy is really the point — pinned memory is what makes cudaMemcpyAsync actually asynchronous, so you get overlap with compute rather than just a marginally faster blocking copy.',
+    minutes: 9,
+  },
+  {
+    id: 'hwq-kernel-launch-overhead',
+    topicId: 'hwt-cpu-role',
+    text: 'How does kernel launch overhead hurt decode, and what do CUDA graphs fix?',
+    answer:
+      'A decode step is hundreds of small kernels — one or more per layer — each of which the host must dispatch. Each launch costs microseconds of CPU time, and when the kernels themselves are short, launch overhead becomes a real fraction of the step. CUDA graphs let you record the whole sequence once and replay it with a single submission, amortising per-launch cost. What they do not remove is the round trip: the scheduler still returns to the host after every decode step to update batch membership and dispatch the next graph.',
+    keyPoint:
+      'Because a graph freezes shapes, continuous batching has to bucket to a fixed set of batch sizes and replay the matching graph — the interaction between graphs and dynamic batching is where this actually gets hard.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-diagnose-low-gpu-util',
+    topicId: 'hwt-cpu-role',
+    text: 'GPU utilisation sits at 30% while requests queue up. How do you diagnose it?',
+    answer:
+      'That pattern says the GPU is starved, so I look host-side first. Check whether a CPU core is pinned — tokenization, the scheduler loop or Python overhead saturating one thread. Profile the timeline and look for gaps between kernels: wide gaps mean dispatch or scheduling stalls, not slow kernels. Check whether host-to-device copies are synchronous and blocking on pageable memory. Only after that would I look at the kernels themselves.',
+    keyPoint:
+      'Also distrust the utilisation number: nvidia-smi reports the fraction of time at least one kernel was resident, so a GPU running one tiny kernel can read 100% busy while doing almost no useful work.',
+    minutes: 11,
+  },
+
+  // ---------------------------------------------------------------- topic 6
+  {
+    id: 'hwq-fp16-vs-bf16',
+    topicId: 'hwt-precision',
+    text: 'FP16 and BF16 are both 16 bits. What is the difference and why did BF16 win for LLMs?',
+    answer:
+      'They split the bits differently. FP16 is 1 sign, 5 exponent, 10 mantissa, so it has more precision but a narrow range topping out around 65,504. BF16 is 1 sign, 8 exponent, 7 mantissa — the same exponent field as FP32, so it covers the full FP32 dynamic range at half the memory, with less precision. LLM training cares about range far more than mantissa bits: gradients and activations span many orders of magnitude, and FP16 overflows or underflows on them. BF16 just works, which is why it became the dominant training format.',
+    numbers: [
+      'FP16: 1/5/10 sign/exponent/mantissa, max ~65,504',
+      'BF16: 1/8/7 — same exponent field as FP32, so the same dynamic range at half the memory',
+      'FP32: 1/8/23',
+    ],
+    keyPoint:
+      'BF16 is what let mixed precision stop needing loss scaling — FP16 training required dynamically rescaling gradients to keep them inside its range, and that whole apparatus disappears with BF16.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-tf32',
+    topicId: 'hwt-precision',
+    text: 'What is TF32, and why can it speed up code you did not change?',
+    answer:
+      'TF32 is an NVIDIA Tensor Core internal format: 1 sign, 8 exponent, 10 mantissa. It keeps FP32\'s exponent field, so the same dynamic range, but truncates the mantissa to FP16\'s width so the Tensor Core can chew through it much faster. The point is that it operates inside a nominally FP32 matmul — inputs and accumulation stay FP32-shaped, the multiply happens at reduced mantissa — so a framework can enable it for you and existing FP32 code gets near-FP16 matmul throughput without a code change.',
+    numbers: ['TF32: 1/8/10 — FP32 range with an FP16-width mantissa, Tensor Core internal'],
+    keyPoint:
+      'It is silent by default in some framework versions, so a numerically sensitive workload can change results between releases with no code change — worth knowing about before you debug a reproducibility failure.',
+    minutes: 10,
+  },
+  {
+    id: 'hwq-fp8-formats',
+    topicId: 'hwt-precision',
+    text: 'What are the two FP8 formats, and how are they used differently?',
+    answer:
+      'E5M2 spends more bits on the exponent, so it has wider range and less precision; E4M3 does the opposite, narrower range and more precision. FP8 arrived on H100 through the Transformer Engine, which A100 has no native support for. The typical pattern is E4M3 for the tensors where precision matters more — forward-pass weights and activations — and E5M2 where dynamic range matters more, notably gradients in the backward pass, with per-tensor scaling factors keeping values inside the representable window.',
+    numbers: [
+      'FP8 comes in E5M2 (wider range) and E4M3 (more precision), 8 bits total',
+      'Introduced on H100 via the Transformer Engine; A100 has no native FP8',
+    ],
+    keyPoint:
+      'At 8 bits the scaling factors are the real engineering — the format alone has too little range to hold raw tensors, so FP8 is a format plus a dynamic per-tensor scaling scheme, not just narrower floats.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-int8-vs-float8',
+    topicId: 'hwt-precision',
+    text: 'How does INT8 or INT4 quantization differ from an 8-bit float format?',
+    answer:
+      'Integer quantization is a uniform grid: fixed, equal steps across the range, with a scale and often a zero point mapping the tensor onto it. A float format spends bits on an exponent, so its steps get coarser as magnitude grows — fine resolution near zero, wide near the extremes. That non-uniformity happens to suit the roughly bell-shaped distribution of weights, which is why FP8 tends to need less care than INT8. Integer formats are inference-only in practice, fastest and smallest, and need calibration data to pick the scales.',
+    numbers: ['INT8/INT4: uniform quantization with fixed equal steps — lowest precision, smallest footprint, inference-only'],
+    keyPoint:
+      'Outliers are the real difficulty: a handful of large-magnitude activation channels blow up the scale for everything else, which is why practical INT8 schemes go per-channel or keep the outlier channels at higher precision.',
+    minutes: 11,
+  },
+  {
+    id: 'hwq-precision-roofline-link',
+    topicId: 'hwt-precision',
+    text: 'Where does dropping precision actually buy you speed, and by what mechanism?',
+    answer:
+      'It depends which side of the roofline the layer is on, and the mechanism is different in each case. For compute-bound layers — the large matmuls — the win is Tensor Core throughput: lower precision means more MMA operations per cycle, so the arithmetic itself goes faster. For memory-bound layers — layernorm, activations, elementwise ops — the arithmetic was never the limit, so the win comes purely from moving fewer bytes per element. Same halving of bit width, two completely different reasons it helps.',
+    numbers: ['Compute-bound layers gain Tensor Core throughput; memory-bound layers gain only from fewer bytes moved per element'],
+    keyPoint:
+      'Which means quantizing a memory-bound kernel and then measuring FLOPS shows nothing, and quantizing a compute-bound one and measuring bandwidth shows nothing — you have to know the regime before you can even read the result.',
+    minutes: 12,
+  },
+  {
+    id: 'hwq-weight-only-quantization',
+    topicId: 'hwt-precision',
+    text: 'Why is weight-only quantization enough to speed up decode, even when the arithmetic stays in BF16?',
+    answer:
+      'Because decode is bandwidth-bound at roughly 1 FLOP per byte, and the bytes are dominated by streaming the weight matrices out of HBM every step. Storing weights at 8 or 4 bits halves or quarters that traffic; you then dequantize into BF16 inside the kernel and do the matmul as before. You gained nothing arithmetically and a large amount on the term that was actually limiting you. The catch is that it only holds while you stay memory-bound.',
+    numbers: [
+      'Decode intensity: ~1 FLOP/byte — weight streaming from HBM dominates',
+      'BF16 weights are 2 bytes per parameter; INT8/FP8 are 1',
+    ],
+    keyPoint:
+      'At large batch sizes the FFN has crossed to compute-bound, and there the in-kernel dequantize is added arithmetic on the critical path — weight-only quantization can then be slower than doing nothing.',
+    minutes: 12,
+  },
 ]
