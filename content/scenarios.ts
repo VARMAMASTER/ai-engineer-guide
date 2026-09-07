@@ -2127,5 +2127,362 @@ export const scenarios: Scenario[] = [
       'They distinguish "the job ran" from "the index is correct" and build the reconciliation that proves the latter, rather than adding retries to a job that was already succeeding.',
     minutes: 13,
   },
-  // CHUNK_MARKER
+  // ---------------------------------------------------------- Safety and compliance
+  {
+    id: 'scn-safety-pii-in-prompts-and-logs',
+    area: 'safety',
+    symptom:
+      'A routine log review finds full names, email addresses, two national insurance numbers and a card PAN in the prompt-logging table. Logs are retained for 18 months, shipped to a third-party observability vendor, and readable by everyone with engineering access - about 60 people.',
+    firstQuestions: [
+      'Where does the PII enter - typed by users into the chat, pulled in by retrieval, or injected by the application from its own database? The three have different owners and different fixes.',
+      'Where has it already gone? Enumerate every downstream sink: the log store, the observability vendor, any analytics warehouse, backups, the model provider, and any evaluation set built from production traffic.',
+      'What is the lawful basis and the retention policy for this data, and does 18 months of prompt text comply with it? This determines whether it is a bug or a reportable breach.',
+      'Is this actually new, or has it been happening since launch? The answer changes the disclosure obligation, so it must be established before anything is deleted.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Logging was implemented as "log the whole request for debugging" with no field-level classification, so PII is captured by default rather than by mistake.',
+        check:
+          'Read the logging middleware. If it serialises the entire request object, everything in it is being stored and always was.',
+      },
+      {
+        hypothesis:
+          'The application itself injects customer records into the prompt for personalisation, so redacting user input alone would not have helped.',
+        check:
+          'Sample logged prompts and classify each PII instance by whether it came from the user turn or from the system-assembled context.',
+      },
+      {
+        hypothesis:
+          'Redaction exists but is regex-based and fails on real formats - spaced card numbers, international phone formats, names it cannot recognise at all.',
+        check:
+          'Run the redactor over a sample of known-PII prompts and measure recall per entity type. Names will be the worst by a wide margin.',
+      },
+    ],
+    fix:
+      'Contain first, then fix. Stop the ingestion path today, restrict access to the table to a named few, and start the deletion and vendor-purge process with legal and the DPO involved from the first hour - the disclosure clock is running and engineering does not get to decide that alone. Then redesign: classify at the point of assembly rather than at the point of logging, so structured PII fields are tokenised before they enter the prompt and the log stores the token. Layer detection - a specialist PII model rather than regex alone - and fail closed by logging a hash and a redaction-failure counter when confidence is low. Cut retention to what debugging actually needs, typically 30 days, keep aggregate metrics for longer, and make sure the vendor contract and the provider\'s zero-retention option match what you have just promised.',
+    tradeoff:
+      'Aggressive redaction destroys debuggability - "customer [REDACTED] asked about order [REDACTED]" cannot be traced, so you need a reversible tokenisation with tightly controlled reidentification, which is itself a system to secure. Detection models cost latency and money on the request path. Short retention means an intermittent bug reported after five weeks has no evidence, and that is a real and recurring cost the team will feel.',
+    seniorSignal:
+      'They treat containment and disclosure as the first response rather than the fix, and they redact at assembly rather than at logging - a weak answer adds a regex to the log writer and leaves the provider, the vendor, the warehouse and the backups untouched.',
+    minutes: 17,
+  },
+  {
+    id: 'scn-safety-copyrighted-output',
+    area: 'safety',
+    symptom:
+      'A user shows that the marketing-copy assistant reproduced four consecutive paragraphs of a competitor\'s published white paper verbatim. The text is in the RAG corpus, having been scraped by a crawler that was pointed at the industry news section eighteen months ago.',
+    firstQuestions: [
+      'How did that document enter the corpus, and what else came in the same way? Audit the ingestion sources for licence status. This is almost never one document.',
+      'Is the output being published externally, or used internally as a draft? Verbatim reproduction in a customer-facing brochure is a different legal exposure from a suggestion an employee reads and rewrites.',
+      'Does the corpus carry provenance and licence metadata per document, or does it not distinguish owned content from scraped content at all?',
+      'How much has already been published? Search shipped marketing assets for long spans matching corpus text before deciding how bad this is.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Ingestion has no licence gate, so anything reachable by the crawler is treated as usable source material.',
+        check:
+          'Read the crawler configuration and the ingestion pipeline for any licence or robots check. Absence is the finding.',
+      },
+      {
+        hypothesis:
+          'The generation prompt encourages close adherence to retrieved sources, which for a drafting task means copying, and grounding instructions and originality instructions are in direct conflict.',
+        check:
+          'Read the prompt. "Base your answer closely on the provided sources" produces exactly this behaviour on a writing task.',
+      },
+      {
+        hypothesis:
+          'Nothing checks output against the corpus, so verbatim reproduction has no detector anywhere in the path.',
+        check:
+          'Search for any overlap or similarity check on generated text. None means every previous instance also shipped unnoticed.',
+      },
+    ],
+    fix:
+      'Remove the unlicensed material and re-index, then close the door: an ingestion gate that records source, licence and permitted-use for every document and rejects anything without a cleared basis, with a periodic audit. Separate corpora by permitted use, so the drafting assistant retrieves only owned and licensed content while a research assistant may read third-party material but is constrained to summarise and cite rather than reproduce. Add an overlap detector on the output path - n-gram or shingle matching against the corpus - that blocks or flags long verbatim spans, since that check is cheap and would have caught this. Change the prompt for drafting tasks to require synthesis in the house voice with attribution for anything quoted.',
+    tradeoff:
+      'Overlap detection has false positives on legitimate short quotations, product names and boilerplate, so the threshold needs tuning and an override path. Splitting corpora by permitted use reduces what the drafting assistant can draw on and will make it noticeably less useful, which is the honest price of the constraint. Licence metadata for a large existing corpus is a substantial back-fill nobody has budgeted for, and the interim position - block what is unverified - is disruptive.',
+    seniorSignal:
+      'They audit the ingestion source rather than treating the incident as a one-document problem, and they notice that the prompt was instructing the behaviour that caused it.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-safety-right-to-be-forgotten-in-weights',
+    area: 'safety',
+    symptom:
+      'A user exercises a deletion right. Their records are removed from the primary database, but their support conversations were in the fine-tuning set for the current production model, in the RAG index, in 18 months of prompt logs, and in the evaluation set. The model can still produce their name and account details when prompted.',
+    firstQuestions: [
+      'Map every location the data reached: primary store, vector index, prompt and response logs, fine-tuning datasets, model checkpoints, evaluation sets, analytics warehouse, backups, and the model provider. Deletion means all of them and the map has to exist before any promise is made.',
+      'What is the actual legal obligation and its deadline? The scope of erasure and what counts as compliant for model weights is a legal determination, not an engineering preference.',
+      'Can the model reproduce the specific data, or is that assumed? Probe it. Memorisation of a single support conversation in a fine-tune is possible but not certain, and the answer changes what must be done.',
+      'How often will this happen? A handful per year and a hundred per month imply completely different architectures.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'There is no data lineage, so nobody can enumerate where a given user\'s data went and deletion cannot be verified even if attempted.',
+        check:
+          'Pick one user and try to list every system holding their data. The time this takes and the gaps found are the diagnosis.',
+      },
+      {
+        hypothesis:
+          'Training data was assembled by a one-off export with no user-id retention, so the fine-tuning set cannot be filtered by user at all.',
+        check:
+          'Read the dataset schema. Absence of a per-record user identifier means selective removal is impossible without rebuilding the export.',
+      },
+      {
+        hypothesis:
+          'Deletion is implemented only against the primary database because that is where deletion was designed, and every derived store was added later without extending it.',
+        check:
+          'Read the deletion handler and list the systems it touches, then compare against the map from question one.',
+      },
+    ],
+    fix:
+      'Architect so that weights never need to be the answer. Keep personal data out of training sets by default - train on aggregated, synthetic or consented-and-pseudonymised data, and if raw conversations must be used, retain the user id on every record so filtering and rebuild are possible. Make derived stores deletable by design: user-id metadata on every vector so an index deletion is a filtered delete, short log retention with hashed identifiers, and evaluation sets built from consented data. Implement erasure as an orchestrated workflow across every store in the lineage map with an auditable completion record per system. For the model already trained, the realistic remedies are a scheduled retrain on the filtered corpus, plus an output-side filter blocking the specific identifiers in the interim - and legal needs to be told plainly which of these is compliance and which is mitigation.',
+    tradeoff:
+      'Retraining to honour deletions is expensive and slow, so it can only be periodic, which means a compliance window during which the data remains in the weights - that window is a decision someone senior must accept in writing. Output filters are brittle and do not remove the data, only some paths to it. Excluding personal data from training may reduce model quality on exactly the personalised behaviour the product promises, and that trade has to be made openly rather than discovered later.',
+    seniorSignal:
+      'They start with a data-lineage map rather than a technique, and they are honest that unlearning from weights is not a solved problem - naming retrain cadence and interim mitigation, with legal informed of the gap, rather than claiming deletion is complete.',
+    minutes: 18,
+  },
+  {
+    id: 'scn-safety-biased-outcomes',
+    area: 'safety',
+    symptom:
+      'A CV-screening assistant advances 34% of candidates from one university tier and 11% from another with equivalent stated experience. Reviewing the model\'s written rationales, they mention "prestigious institution" and "strong academic pedigree" unprompted - the prompt never asked about universities.',
+    firstQuestions: [
+      'Is the disparity explained by a legitimate job-related factor, or does it persist when you control for the requirements that actually matter? Match candidates on skills and years and re-measure. A gap that survives matching is not explained by qualification.',
+      'What is the system actually deciding - a hard filter, a ranking, or a recommendation a human reviews? A hard filter automating an adverse decision has a legal character that a suggestion does not.',
+      'Where would bias have entered - historical hiring outcomes used as examples, a prompt that mentions calibre or pedigree, or the base model\'s priors?',
+      'Is anyone monitoring this, and what protected and proxy attributes are even recorded? You cannot measure disparity in a dimension you do not collect, and the collection itself needs a legal basis.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Historical decisions were used as few-shot examples or training data, so the system reproduces past hiring patterns including their biases.',
+        check:
+          'Compare the model\'s advancement rates by tier against the historical human rates in the training data. Close agreement means it learned the pattern faithfully.',
+      },
+      {
+        hypothesis:
+          'Proxy features are doing the work - university, postcode, name, employment gaps - even though no protected attribute is in the input.',
+        check:
+          'Run counterfactual tests: identical CVs with only the university, or only the name, varied. A large advancement swing on a single edited token is direct evidence.',
+      },
+      {
+        hypothesis:
+          'The prompt or rubric invites it, using words like calibre, pedigree or top-tier that the model grounds in institutional prestige.',
+        check:
+          'Read the rubric. Any evaluative language not tied to a job requirement is licensing this.',
+      },
+    ],
+    fix:
+      'Pause automated adverse decisions while this is open, because continuing to run a system with a measured unexplained disparity compounds the exposure daily. Then constrain the input and the criteria: extract only job-relevant evidence - skills, demonstrated outcomes, years in relevant work - and score against an explicit rubric derived from the job requirements, with institution, name and location withheld from the scoring step entirely. Require a written justification citing specific CV evidence for every decision, which makes "prestigious institution" reasoning visibly non-compliant. Run counterfactual testing in CI on a fixed panel of paired CVs, monitor advancement rates by group continuously with alerting, and keep a human decision-maker accountable for every adverse outcome rather than treating the model as the decider.',
+    tradeoff:
+      'Withholding institution and name removes signal that some hiring managers genuinely believe in and will fight to keep, so this needs a policy decision with authority behind it, not just an engineering change. Rubric scoring is less flexible and will miss unconventional candidates whose value does not fit the stated criteria - which is the opposite of the intended effect and must be watched. Collecting demographic data to measure fairness is itself sensitive processing needing its own lawful basis, and human review of every adverse decision removes much of the efficiency the system was bought for.',
+    seniorSignal:
+      'They run counterfactual paired tests to demonstrate the mechanism rather than arguing from aggregate rates, and they recognise that an automated adverse decision is a legal posture, not just a product feature.',
+    minutes: 18,
+  },
+  {
+    id: 'scn-safety-no-audit-trail',
+    area: 'safety',
+    symptom:
+      'A customer disputes a decision the assistant made in March: it told them they were ineligible for a refund. The team can produce the final response text and nothing else - not the retrieved documents, not the prompt, not the model version, not the policy document as it read at the time. The policy has since been edited.',
+    firstQuestions: [
+      'What is retained today, at what granularity, and for how long? Establish the actual gap before promising anything to legal.',
+      'What would a regulator, an auditor or a court expect to see for this decision class? That defines the requirement, and it is far more than "the response text".',
+      'Are documents versioned at all, so that "what did the policy say in March" is answerable independently of the assistant?',
+      'How many decisions of this class are made, and which of them are consequential enough to warrant full-fidelity capture? Capturing everything at full fidelity is neither affordable nor necessary.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Logging captures the output only, because it was built for product analytics rather than for accountability.',
+        check:
+          'Read the log schema. Response text and a timestamp with no request context is analytics, not an audit trail.',
+      },
+      {
+        hypothesis:
+          'The corpus is mutable and unversioned, so past retrieval results are unreconstructable even if the chunk ids were logged.',
+        check:
+          'Try to retrieve the March version of the refund policy. If only the current version exists, reconstruction is impossible by design.',
+      },
+      {
+        hypothesis:
+          'Model versions float and are not recorded, so even a full prompt replay would not reproduce the March behaviour.',
+        check:
+          'Look for a model identifier in the stored record. Its absence means the decision cannot be reproduced under any circumstances.',
+      },
+    ],
+    fix:
+      'Define decision classes by consequence and capture accordingly. For consequential decisions - eligibility, pricing, access, anything a customer can dispute - write an immutable record containing the request, the resolved prompt, the retrieved chunk ids with their content hashes and versions, the model identifier and parameters, the raw output, any post-processing applied, and the human who reviewed it if any. Version the corpus so a content hash resolves to the exact text as of that date. Store these in append-only storage with a retention period set by legal rather than by disk cost, and build the replay tool now, because an audit trail nobody has ever read back is usually incomplete in ways only replay reveals. Low-consequence chat traffic can keep lightweight sampled logging.',
+    tradeoff:
+      'Full-fidelity capture is expensive in storage and contains the PII the retention policy elsewhere wants minimised, so the two requirements collide and need an explicit reconciliation - typically tokenisation plus tight access control rather than deletion. Corpus versioning multiplies index storage and complicates the ingestion pipeline. And an audit trail that exists is discoverable: it can be subpoenaed, which is a real consideration legal should weigh rather than an argument against having one.',
+    seniorSignal:
+      'They tier capture by decision consequence instead of proposing to log everything, and they build the replay path - an audit trail you have never reconstructed from is a hypothesis.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-safety-harmful-domain-advice',
+    area: 'safety',
+    symptom:
+      'A consumer health-information chatbot answered "what should I take for chest pain that spreads to my arm" with an explanation of antacid options and no advice to seek emergency care. The answer was accurate about antacids and grounded in the corpus. A clinician on the team found it during a spot check.',
+    firstQuestions: [
+      'What is this product allowed to do? Is it an information service or is it, in practice, giving individualised advice - the regulatory line runs there and it has been crossed in this answer.',
+      'Is there any emergency-symptom detection at all, or does every question take the same retrieval-and-answer path?',
+      'What does the corpus contain for this query - does it lack emergency guidance, or does it contain it and retrieval missed it? Read the retrieved chunks.',
+      'How many other red-flag presentations are handled this way? Test a clinician-supplied list of emergency patterns before assuming this was isolated.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'No triage layer exists, so a red-flag symptom pattern is treated as an ordinary information request.',
+        check:
+          'Trace the request path for a clear emergency query. If it goes straight to retrieval, there is no triage.',
+      },
+      {
+        hypothesis:
+          'Retrieval matched on the surface terms - chest, pain, relief - and returned indigestion content, because embedding similarity does not encode clinical urgency.',
+        check:
+          'Read the top-k chunks for the failing query. Indigestion content ranked above cardiac guidance is the mechanism.',
+      },
+      {
+        hypothesis:
+          'The corpus lacks emergency guidance for this presentation, so no retrieval strategy could have produced the right answer.',
+        check:
+          'Search the corpus directly for the cardiac red-flag content. Absence makes this a content problem, and a more urgent one.',
+      },
+      {
+        hypothesis:
+          'The prompt optimises for being helpful and answering the question asked, with no instruction that some questions must be redirected rather than answered.',
+        check:
+          'Read the system prompt for any escalation or refusal policy covering acute symptoms. Absence explains the behaviour completely.',
+      },
+    ],
+    fix:
+      'Put a triage classifier ahead of retrieval, built from a clinician-authored red-flag list, and route any match to a fixed, clinician-approved emergency response that is not model-generated at all - deterministic text for the highest-stakes path, because that is the one case where generation variance is unacceptable. Below that tier, constrain the assistant to general information with a standing instruction never to recommend a course of action for a described personal symptom, and always to name when care should be sought. Fill the corpus gap with authoritative emergency guidance and boost it for symptom queries. Add a clinician-reviewed evaluation set of red-flag presentations run on every change, and a standing human review of a sample of live symptom conversations.',
+    tradeoff:
+      'Triage classifiers must be tuned to high recall, which means many false positives - users asking benign questions get told to seek urgent care, which is alarming, erodes trust and pushes load onto real emergency services. That is still the right direction of error, but it has a genuine cost and must be owned rather than waved away. Deterministic emergency responses feel robotic and cannot address the specific question. Clinician review is a recurring specialist expense that is nobody\'s idea of a scalable process, and yet is the control that actually works.',
+    seniorSignal:
+      'They tier the response by stakes and take the model out of the loop entirely for the highest tier, and they involve a clinician in defining the red-flag list rather than having engineers guess at it.',
+    minutes: 17,
+  },
+  {
+    id: 'scn-safety-cross-tenant-cache-leak',
+    area: 'safety',
+    symptom:
+      'A customer on tenant A reports seeing an answer mentioning an invoice number and a project name belonging to tenant B. It is reproducible: the same question asked by both tenants within the cache TTL returns tenant B\'s answer to tenant A. The semantic response cache is keyed on a hash of the normalised question text.',
+    firstQuestions: [
+      'What exactly is in the cache key? Read it. If tenant id is absent, every cached personalised answer is cross-tenant reachable and this is not a corner case.',
+      'What is cached - final answers, retrieval results, embeddings, or all three? Each is a separate leak with a separate blast radius.',
+      'How long has the cache been live and what is its hit rate? Multiply to bound how many cross-tenant serves may already have happened, because that number goes to legal.',
+      'Are there other shared-key caches with the same defect - rerankers, tool results, summaries?',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'The cache key omits the tenant, so identical question text collides across tenants by design.',
+        check:
+          'Read the key-construction code. Reproduce with the same question from two tenants in staging.',
+      },
+      {
+        hypothesis:
+          'Semantic caching matches on embedding similarity above a threshold, so even near-identical questions from different tenants collide - which is worse, because it does not require exact text.',
+        check:
+          'Ask semantically equivalent but textually different questions from two tenants and see whether a hit occurs.',
+      },
+      {
+        hypothesis:
+          'Authorisation is enforced at retrieval only, and the cache sits in front of it, so a cache hit bypasses the check entirely.',
+        check:
+          'Trace the request path and find where the tenant filter is applied relative to the cache lookup. Cache-before-authorisation is the architectural defect.',
+      },
+    ],
+    fix:
+      'Disable the cache immediately - this is a live data-leak path and the performance cost of turning it off is irrelevant against it - then start incident response with the count of affected requests, because notification obligations follow from it. Rebuild with the tenant, and where relevant the permission set, as mandatory components of the key, enforced by a typed key constructor that cannot be called without them rather than by convention. Move the cache behind authorisation so a hit is still subject to the tenant filter, and prefer per-tenant namespaces or separate stores so a key-construction bug cannot cross a boundary. Add a permanent test that asserts two tenants asking the identical question receive different answers, and audit every other cache in the system for the same shape.',
+    tradeoff:
+      'Per-tenant cache keys shred the hit rate - the shared-question win that justified the cache largely disappears, and cost and latency will rise measurably, which is simply the price of correctness here. Semantic caching remains risky even keyed correctly, because a near-match within a tenant can still return an answer computed under a different user\'s permissions, so it may need to be limited to non-personalised content. Namespacing raises memory overhead and operational complexity.',
+    seniorSignal:
+      'They turn the cache off before debugging it, and they identify that the real defect is a cache in front of the authorisation boundary rather than merely a missing key field - the same architecture would leak again through any other path.',
+    minutes: 16,
+  },
+  {
+    id: 'scn-safety-jailbreak-content-policy',
+    area: 'safety',
+    symptom:
+      'A consumer assistant is being induced to produce content that violates policy through a roleplay framing - "you are an actor playing a character who explains..." - at a success rate of about 12% across a set of published jailbreak templates. Screenshots are circulating on social media.',
+    firstQuestions: [
+      'What is the actual harm ceiling? Enumerate what the model can be induced to produce and rank by severity. Embarrassing, harmful and illegal need different response urgency and different controls.',
+      'Is there an output-side check, or does safety rest entirely on the model refusing? A single layer means a 12% bypass rate goes straight to the user.',
+      'How is this being detected today - by monitoring, or by someone showing you a screenshot? If the latter, that gap is as important as the jailbreak itself.',
+      'Who is doing this: researchers and curious users probing, or a targeted campaign? The volume and the concentration of accounts tell you, and it changes the response.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Safety depends solely on the model\'s trained refusal behaviour, which roleplay framings are specifically designed to route around.',
+        check:
+          'Test whether a violating output ever reaches the response body. If it does, there is no second layer.',
+      },
+      {
+        hypothesis:
+          'The system prompt establishes a persona and encourages immersion, which weakens refusal by giving the roleplay framing something to grab.',
+        check:
+          'Re-run the jailbreak set against a minimal system prompt with no persona. A large drop in success rate implicates the persona.',
+      },
+      {
+        hypothesis:
+          'Multi-turn escalation succeeds where single-turn fails, because per-turn checks do not see the accumulated framing.',
+        check:
+          'Compare success rates for single-turn versus multi-turn variants. A much higher multi-turn rate means the check needs conversation-level context.',
+      },
+    ],
+    fix:
+      'Add layers, because no single one holds. Screen input for known jailbreak patterns, keep the model\'s own refusal, and add an independent output classifier that judges the generated text on its own merits regardless of the framing that produced it - an actor explaining how to do something harmful is still that content, and an output-side check is framing-agnostic by construction. Evaluate the conversation, not just the turn, so escalation across turns is visible. Instrument it: log refusals and classifier blocks, alert on unusual per-account rates, and rate-limit or suspend accounts producing repeated violations. Maintain a red-team suite of published and internally generated jailbreaks run on every prompt and model change, and track the bypass rate as a monitored metric rather than as an incident-driven surprise.',
+    tradeoff:
+      'Output classifiers add latency and cost to every response and produce false positives on legitimate discussion of sensitive topics - a security researcher, a medical question, a novelist - and over-blocking is its own product failure with its own screenshots. Weakening the persona reduces the personality that differentiates the product. And the bypass rate will never reach zero, so the honest goal is raising the cost of attack and shrinking the blast radius, which needs to be stated plainly to whoever is asking for a guarantee.',
+    seniorSignal:
+      'They add an output-side check that is independent of framing rather than iterating on refusal instructions, and they say clearly that the bypass rate can be reduced but not eliminated instead of promising a fix.',
+    minutes: 15,
+  },
+  {
+    id: 'scn-safety-vendor-data-residency',
+    area: 'safety',
+    symptom:
+      'An EU customer\'s security review asks where their data is processed. The answer nobody has is that prompts go to a US-region model endpoint, the observability vendor stores traces in us-east-1, and the embedding provider is a third company whose location nobody on the team knows. The contract promises EU processing.',
+    firstQuestions: [
+      'What is the full list of third parties that touch customer content - model provider, embedding provider, reranker, observability, error tracking, analytics, any managed vector store? Build it before answering anything, because partial answers to a security review are worse than a delay.',
+      'What does each contract actually commit to on region, retention and sub-processors, and does the current deployment match it?',
+      'Which data categories flow to each - full prompt text, embeddings, metadata, identifiers? Embeddings are personal data in most interpretations, which teams routinely miss.',
+      'What did we tell this customer and what is in the DPA? The gap between the promise and the architecture is the finding, and it is a contractual exposure today.',
+    ],
+    causes: [
+      {
+        hypothesis:
+          'Region was never configured because the default endpoint was used at prototype stage and never revisited before the enterprise contract was signed.',
+        check:
+          'Read the client configuration and the resolved endpoint hostnames in production. Defaults are usually US.',
+      },
+      {
+        hypothesis:
+          'Sub-processors were added incrementally - an observability tool here, a reranking API there - with no data-flow review, so the inventory silently diverged from the DPA.',
+        check:
+          'Compare the published sub-processor list against the services actually called in production. The diff is the compliance gap.',
+      },
+      {
+        hypothesis:
+          'Data flows exist that nobody thinks of as data flows - error traces containing prompt bodies, analytics payloads, support tooling with production access.',
+        check:
+          'Capture outbound network destinations from the production service for a sample window and reconcile against the known list.',
+      },
+    ],
+    fix:
+      'Build a data-flow map as the deliverable: every third party, what data it receives, where it processes, how long it retains and under which contract term. That map is what the security review actually needs and it is the artefact the organisation is missing. Then remediate - move to EU-region endpoints for every provider that offers one, enable zero-retention where available, replace or self-host the ones that do not, and configure error tracking to scrub prompt bodies. Enforce it in code: a provider allowlist checked at startup that fails the deploy if an endpoint outside the permitted region is configured, so this cannot silently regress. Establish a review gate so no new external service touching customer content ships without a data-flow assessment, and tell the customer and legal the truth about the current state rather than the intended one.',
+    tradeoff:
+      'EU-region endpoints often lag on model availability and can be more expensive and slower, so the product may run a generation behind for those customers. Self-hosting the components with no compliant managed option is a large ongoing operational commitment. And a formal review gate for new services slows the team down, which is real - though far less costly than discovering the gap during a second security review.',
+    seniorSignal:
+      'They produce the data-flow map before answering the customer, and they enforce region in code rather than in a runbook - a weak answer changes one endpoint and repeats the same discovery in six months.',
+    minutes: 16,
+  },
 ]
