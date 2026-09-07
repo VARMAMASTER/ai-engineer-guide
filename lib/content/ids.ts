@@ -1,4 +1,4 @@
-export const ID_PREFIXES = ['dsap', 'dsa', 'sdp', 'sdq', 'mlp', 'mlq', 'topic', 'q', 'proj', 'ms', 'doc', 'read', 'day', 'week'] as const
+export const ID_PREFIXES = ['dsap', 'dsa', 'sdp', 'sdq', 'mlp', 'mlq', 'topic', 'q', 'proj', 'ms', 'doc', 'read', 'day', 'week', 'cst'] as const
 
 export type IdPrefix = (typeof ID_PREFIXES)[number]
 
