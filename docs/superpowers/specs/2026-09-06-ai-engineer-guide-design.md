@@ -22,10 +22,12 @@ The owner has about 22.5 focused hours per week: 2.5 hours on each weekday and 5
 - A six-month roadmap with month-level themes and week-level targets for all 26 weeks.
 - A fully specified 30-day plan for month 1 with day-level tasks.
 - DSA bank: the NeetCode 150, with Blind 75 items flagged as core and company tags where sources name a problem repeatedly.
-- System design bank: 40 general questions (tiers 1 and 2 of the most reported FAANG questions plus 5 AI infrastructure questions) mapped to 10 general patterns, and 25 ML/LLM questions mapped to 10 ML patterns. Every question page carries the six-step ML system design framework.
-- AI/ML study bank: 10 topics, about 120 interview questions total.
+- System design bank: 60 questions across 10 general patterns and 10 ML/LLM patterns, each carrying the six-step framework, a reference SOLUTION, and a DELIVERY script with per-phase minute budgets (sections 6.6b).
+- Low-level design bank: 8 LLD patterns and 25 machine-coding problems with Python solutions, for machine-coding and LLD rounds (section 6.6c).
+- AI/ML study bank: 10 topics, 122 interview questions, each with an answer and a key point (section 6.7b).
+- Revision mode: a flashcard surface and printable cheat sheets for the night before an interview (section 6.7b).
 - Projects bank: 6 build projects, one per month, each with milestones, acceptance criteria, and interview defense questions. Month 1 is fully detailed.
-- Reading bank: curated papers and API launches pinned to weeks.
+- Reading bank: curated papers and API launches pinned to weeks, each with an authored structured summary and, where it helps, a Mermaid diagram (section 6.10).
 - Live feed: arXiv and Hacker News, via two keyless cached route handlers.
 - Progress: per-browser localStorage with JSON export and import.
 - Mobile-responsive layout: every page usable on a phone, with Today designed mobile-first.
@@ -415,6 +417,61 @@ Ten ML/LLM patterns, in study order, with questions:
 
 Every question carries the six-step framework with prompts. Default `minutes`: 45 for tier 1, 60 for tier 2, ml, and ai.
 
+### 6.6b System design: solutions and delivery
+
+Amended 2026-09-06 at the user's request. The bank as first built gave 60 questions with six-step PROMPTS
+and no reference answer and no delivery guidance. That is half a study tool: you can practise, but you
+cannot check yourself, and knowing what to cover is not the same as knowing how to deliver it in 45 minutes.
+
+Every `SdQuestion` gains two fields.
+
+**`solution`** — a reference answer, keyed to the same six steps, giving the ANSWER rather than the prompt.
+Not an essay. For each step, the decision a strong candidate reaches and the one-line reason. It must name
+concrete choices (which store, which algorithm, which consistency model) and the trade-off accepted, because
+a solution that hedges teaches nothing. Also carries `numbers`: the two or three estimates a candidate should
+produce out loud, with the arithmetic, since interviewers listen for whether you can size a system at all.
+
+**`delivery`** — how to perform the answer. Carries:
+- `budget`: minutes per phase, summing to the question's `minutes`. The standard split for a 45-minute
+  question is requirements 6, estimates 4, API and data model 9, architecture 11, deep dive 12, wrap up 3.
+- `opening`: the first sentence to say. Structure is judged in the first five minutes, and a candidate who
+  opens by scoping signals competence before designing anything.
+- `traps`: the specific ways THIS question goes wrong — the detail candidates skip, the premature
+  optimisation, the requirement they invent.
+- `whenPushed`: what the interviewer will challenge, and the honest answer. Conceding a real flaw quickly
+  scores better than defending it.
+
+### 6.6c Low-level design bank
+
+Amended 2026-09-06 at the user's request, and it closes a genuine hole: the guide had distributed-systems
+design and ML system design but nothing at the class level. Machine-coding and LLD rounds are standard at
+Amazon, Uber, Flipkart and Walmart, and are especially common in India, which is the user's market.
+
+**8 LLD patterns** (`lldp-` ids), each with what it solves, when it is the wrong choice, and a Python example:
+SOLID principles; creational patterns (factory, builder, singleton and why singleton is usually a smell);
+structural patterns (adapter, decorator, composite); behavioural patterns (strategy, observer, state);
+concurrency (locks, thread-safe singletons, producer-consumer); modelling entities from a problem statement;
+interface design and dependency inversion; testability and seams.
+
+**25 machine-coding problems** (`lldq-` ids), each carrying:
+- `statement`: the problem as an interviewer gives it, deliberately underspecified.
+- `clarify`: the questions to ask before writing code. Machine-coding rounds are lost here more than anywhere.
+- `entities`: the classes a strong answer identifies, and the relationships between them.
+- `solution`: a Python implementation sketch — not a full program, the class skeletons with the methods that
+  matter and the data structures chosen. Python per section 6.4b.
+- `patterns`: which LLD patterns the problem exercises.
+- `extensions`: what the interviewer asks after you finish, which is where the round is actually decided.
+- `minutes`: typical round length, usually 45 to 90.
+
+Problem set drawn from what is actually asked: Parking Lot, BookMyShow seat booking, Splitwise, Elevator
+system, Vending Machine, ATM, Snake and Ladder, Tic-Tac-Toe, Chess, Deck of Cards, Logging framework,
+Rate Limiter, In-memory cache with LRU eviction, Notification service, Food ordering (Flipkart-style),
+Billing and discounts (Flipkart-style), Ride hailing dispatch, Library management, Hotel booking,
+File system, Text editor, Undo/redo, Pub-sub, Task scheduler, Inventory management.
+
+Route: `/system-design` gains a third group alongside General and ML. LLD pattern pages render the Python
+example on a SOLID surface, never glass, per section 13.3.
+
 ### 6.7 AI/ML study bank
 
 Ten topics in study order. Each lists the questions that must be answerable cold. Default `minutes` 10 per question.
@@ -429,6 +486,33 @@ Ten topics in study order. Each lists the questions that must be answerable cold
 8. **topic-inference**: Autoregressive decoding. Prefill vs decode. KV cache: what it stores and its size formula. Why decode is memory-bandwidth bound. Static vs continuous batching. PagedAttention. FlashAttention in one paragraph. Quantization: FP16, BF16, INT8, INT4, and what each costs in quality. Speculative decoding. Throughput vs latency vs cost per token. Sizing a serving fleet for N concurrent users. Streaming and time to first token.
 9. **topic-rag-evaluation**: Chunking strategies and overlap. Hybrid retrieval and reciprocal rank fusion. Reranking. Query rewriting, HyDE, multi-query. Context window budgeting and Lost in the Middle. Citations and attribution. Retrieval metrics: Recall@k, MRR, NDCG. Generation metrics: faithfulness, relevance, LLM-as-judge and its biases. Building a gold eval set. Why RAG hallucinates and the fix for each cause. Semantic caching. Prompt injection through retrieved content.
 10. **topic-agents-safety**: Tool use and function calling. ReAct loop. Planning vs reactive agents. Memory: short-term, long-term, episodic. Multi-agent orchestration patterns: chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer. Human-in-the-loop approvals. Agent evaluation: task success, cost, steps, safety. Guardrails: input, output, action-level. Prompt injection and jailbreak defenses. Cost controls: budgets, caching, model routing. Observability: traces, spans, token accounting. Failure modes: loops, tool misuse, over-permissioning.
+
+### 6.7b Revision mode
+
+Amended 2026-09-06 at the user's request. The guide as built is a six-month practice tool. It is the wrong
+shape for the night before an interview, when you want answers rather than exercises, density rather than
+space, and to flip through rather than tick off.
+
+**Answers on every AI/ML question.** `TopicQuestion` gains `answer: string` — two to four lines, phrased the
+way you would actually SAY it in an interview, not written as prose. Each also gains `keyPoint: string`: the
+one detail that separates a strong answer from a vague one, since most candidates know the shape of these
+answers and lose on the specific. 122 questions currently have none, which makes the bank unusable for revision.
+
+**A revision surface** at `/revise`. Question on the front, answer on reveal. One topic at a time, driven by
+keyboard (space to reveal, arrows to move) and by swipe on touch. No checkboxes and no meters — this mode is
+for flow, not tracking. A confidence control per card (`again` / `good`) filters the deck so a second pass
+shows only what you were unsure of. Confidence lives in the progress blob under `revision`, separate from
+`completed`, because knowing a thing and having practised it are different facts.
+
+Decks: each AI/ML topic, each DSA pattern (signals and template on reveal), each system design pattern
+(trade-offs on reveal), and each LLD pattern.
+
+**Cheat sheets** at `/revise/sheets` — the facts people blank on under pressure, on one dense scannable page
+each: latency numbers every engineer should know; the complexity table for the 18 DSA patterns; memory maths
+for model weights and KV cache; classification and ranking metric formulas; transformer parameter counting;
+the capacity-estimation arithmetic from the system design solutions.
+
+Both surfaces are print-friendly and must read correctly at 390px, since the realistic use is a phone.
 
 ### 6.8 Projects bank
 
@@ -462,6 +546,39 @@ Papers and posts: Microsoft GraphRAG (Edge et al., 2024); MTEB (Muennighoff et a
 Default reading `minutes` by kind: paper 35, post 25, api 10. These are display hints; the Friday slot's planned time is set on the `DayTask`.
 
 API and model launches (kind `api`, week 1 and then as released): Claude Fable 5.1 (Anthropic, 2026-09-01); GPT-6 Astra (OpenAI, 2026-09-03); Gemini 3.8 Flash (Google, 2026-09-02); Claude Opus 5 with the effort dial (Anthropic, 2026-07-24); Qwen 3.8 (Alibaba, 2026-08); DeepSeek V4 Flash Vision (2026-08-21); GLM-5.3 (Z.AI, 2026-08-14). Newer launches arrive via the live feed and are added to the curated list by pull request.
+
+### 6.10 Paper summaries and diagrams
+
+Amended 2026-09-06 at the user's request.
+
+**Why summaries are authored, not generated.** There is no summarisation API in this app and adding one would
+cost an API key, break the "no environment variables" property in section 12, add per-view cost, and make the
+output vary between readers. Summaries are written once into content, reviewed once, and work offline.
+
+**`Reading` gains `summary`**, a structured object rather than a paragraph, because a reader clicking a paper
+at 11pm wants to extract it, not read an essay:
+- `problem` — what was broken before this paper
+- `idea` — the one insight, in a sentence. If it takes three, the summary has not found it
+- `how` — the mechanism, 2 to 4 lines
+- `result` — what it actually demonstrated, with the number where there is one
+- `soWhat` — why it matters for THIS user's build track or interview, naming the month or topic it feeds
+- `limits` — what it does not solve, and where practitioners hit its edges
+
+**Mermaid diagrams.** A `diagram?: string` field holding Mermaid source, on three content types:
+- `Reading` — the method's shape, where a picture beats the prose
+- `SdQuestion` — the reference architecture for the solution, as a `flowchart`
+- `LldQuestion` — the class structure, as a `classDiagram`. This is the highest-value use: a machine-coding
+  answer IS a class diagram, and reading one is faster than reading a code sketch
+
+Rules for diagrams:
+- A diagram must show the MECHANISM, not restate the title in a box. A three-node flowchart saying
+  "Input, Model, Output" is worse than no diagram.
+- Mermaid is a heavy dependency. Load it lazily, only on routes that render a diagram, and never in the
+  initial bundle for Today or Roadmap.
+- Diagrams must be legible in BOTH themes. Configure Mermaid's theme from the resolved `data-theme` and
+  re-render on theme change, or the diagram will keep dark text on a dark ground after a toggle.
+- Every diagram sits on a SOLID surface, never glass, and in its own `overflow-x-auto` container.
+- If Mermaid fails to parse or load, render the raw source in a code block rather than an empty box.
 
 ## 7. Progress state
 
@@ -581,6 +698,38 @@ violations is the bar. Keyboard-only traversal of Today and Settings must reach 
 - README: what the guide is, how to use it, the weekly template, the content schema, how to add a question or reading in one pull request, how to run locally, how to run tests.
 - Vercel project linked via the existing MCP connection. Production deploys from `main`. Preview deploys on every pull request. `prebuild` runs content validation so a broken content PR cannot deploy.
 - No environment variables are required for version 1.
+
+### 12b. Progressive Web App
+
+Amended 2026-09-08 at the user's request. The guide is used on a phone, on a commute, the night before an
+interview — exactly the conditions where a browser tab is the wrong container and the network is unreliable.
+Installability and offline reading are therefore features of the product, not polish.
+
+**Installable.** A web app manifest served from `app/manifest.ts` (Next's typed metadata route, not a static
+file). `start_url` is `/today`, because `/` only redirects there and a redirect on launch is a visible stutter.
+`display` is `standalone`. `background_color` and `theme_color` are the dark ground `#121822`, matching the
+default theme from `lib/theme.ts`; a mismatch shows as a coloured flash on every launch. Icons: 192 and 512
+square, a 512 maskable variant with content inside the inner 80 percent safe zone, and a 180 apple-touch-icon.
+
+**Offline.** A service worker with a strategy per resource class, since one strategy for everything is the
+usual way this goes wrong:
+- App shell and build assets: cache-first. This is what makes a cold offline launch work at all.
+- Content pages (question banks, revision decks, cheat sheets): stale-while-revalidate. These are effectively
+  static and are the thing that must survive no signal.
+- `/api/feed/*`: network-first with a cached fallback. News is time-sensitive and already carries a three-hour
+  HTTP cache; a service worker must never serve stale news in preference to a live fetch. On failure it falls
+  back so the Feed degrades rather than breaks.
+- Never cached: non-GET requests, and cross-origin requests the app does not control — notably the two
+  publisher image CDNs in `next.config.ts`, which carry their own caching.
+- A navigation to an uncached route offline renders an offline fallback page. Like every other route, it ships
+  a real `<h1>` in its server HTML.
+
+**Cache versioning.** The cache name carries a version and `activate` deletes every cache that is not the
+current one. A cache that never expires is the classic failure where a user is pinned to an old build forever.
+
+**Constraints that still bind.** No environment variables and no API keys (section 12). The service worker must
+not delay or interfere with the blocking theme script in `<head>`, and an offline launch must paint the stored
+theme without a flash of the wrong one.
 
 ## 13. Visual direction
 
