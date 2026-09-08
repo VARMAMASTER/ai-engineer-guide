@@ -768,11 +768,28 @@ Rules that keep it from becoming unreadable:
 
 Dark is the default. Light is a real design, not inverted tokens.
 
-- Dark ground is a deep desaturated blue-grey, never pure black, so translucent panels have something to
+- Dark ground is a near-black with a violet cast, never pure black, so translucent panels have something to
   pick up. Panels lift with a low-opacity white fill.
-- Light ground is a warm off-white with a soft tint wash, never pure white. Panels lift with a low-opacity
+- Light ground is a cool off-white with a soft tint wash, never pure white. Panels lift with a low-opacity
   white fill plus a stronger border, because on light grounds translucency alone reads as nothing.
 - Accent must satisfy contrast on BOTH grounds. If one accent cannot, the theme defines its own accent step.
+
+**Palette, amended 2026-09-08.** The scheme moved from navy-and-amber to indigo-violet at the user's request.
+Dark: ground `#0d0f17`, panel-solid `#191c26`, raised-solid `#222634`, track `#262a38`, text `#e8e9f2`,
+muted `#a2a8bd`, faint `#969cb2`, accent `#a79cff`, accent-soft `rgba(167,156,255,0.12)`.
+Light: ground `#f7f7fb`, panel-solid `#fdfdff`, raised-solid `#ffffff`, track `#e7e7f0`, text `#16171f`,
+muted `#575d70`, faint `#5f6479`, accent `#5b4bd6`, accent-soft `rgba(91,75,214,0.12)`.
+The app icons, the Mermaid theme maps, the PWA manifest and `THEME_COLOR` all derive from these and must move
+with them.
+
+**How a colour here is chosen.** Never by eye, and never against the flat ground. Every pair is computed
+against the surface it actually sits on: the translucent Panel composited over the BUSIEST point of the
+Ground, meaning the base colour plus the radial wash at full strength. That backdrop is materially lighter
+than the flat ground and it is what `tests/unit/contrast.test.ts` models. The gap is not academic — the first
+accent chosen for this palette measured 5.04:1 against flat ground and 4.16:1 against the real one, and would
+have shipped failing AA. The binding floor is 4.5:1 for every text-on-surface pair in both themes, including
+accent-on-accent-soft, which is the tightest pair because the active nav pill and the selected tab draw accent
+text on an accent wash.
 - Every colour is a token on `:root`. Dark overrides live under both `@media (prefers-color-scheme: dark)`
   and `:root[data-theme="dark"]`, so an explicit toggle wins in either direction and the system default works.
 - A visible theme toggle sits in the top bar, cycling dark / light / system, persisted in the progress blob's
