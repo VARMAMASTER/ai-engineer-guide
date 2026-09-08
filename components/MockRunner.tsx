@@ -558,7 +558,7 @@ export default function MockRunner({ kind }: { kind: MockKind }) {
             <ActionButton emphasis onClick={startOver} testId="mock-again">Draw another</ActionButton>
             <Link
               href="/mock"
-              className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--panel-border)] px-4 text-sm"
+              className="btn btn-quiet"
             >
               Back to Mock
             </Link>
@@ -933,12 +933,7 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled}
       data-testid={testId}
-      className={
-        'min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium disabled:opacity-40 ' +
-        (emphasis
-          ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
-          : 'border border-[var(--panel-border)] text-[var(--text)]')
-      }
+      className={'btn ' + (emphasis ? 'btn-accent' : 'btn-quiet')}
     >
       {children}
     </button>

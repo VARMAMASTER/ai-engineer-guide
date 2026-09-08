@@ -84,7 +84,7 @@ export default function Settings() {
             type="button"
             onClick={() => setStartDate(recentMonday)}
             disabled={!hydrated}
-            className="readout min-h-11 rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--panel-solid)] px-4 py-2 text-[var(--text)] transition-colors hover:border-[var(--accent-line)] hover:bg-[var(--track)] disabled:opacity-50"
+            className="btn btn-quiet readout"
           >
             {recentMonday}
           </button>
@@ -92,7 +92,7 @@ export default function Settings() {
             type="button"
             onClick={() => setStartDate(nextMonday)}
             disabled={!hydrated}
-            className="readout min-h-11 rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--panel-solid)] px-4 py-2 text-[var(--text)] transition-colors hover:border-[var(--accent-line)] hover:bg-[var(--track)] disabled:opacity-50"
+            className="btn btn-quiet readout"
           >
             {nextMonday}
           </button>
@@ -116,7 +116,7 @@ export default function Settings() {
             type="button"
             onClick={handleExport}
             disabled={!hydrated}
-            className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--panel-solid)] px-4 py-2 text-sm text-[var(--text)] transition-colors hover:border-[var(--accent-line)] hover:bg-[var(--track)] disabled:opacity-50"
+            className="btn btn-quiet"
           >
             Export progress
           </button>
@@ -140,7 +140,7 @@ export default function Settings() {
             accept="application/json,.json"
             onChange={handleImportChange}
             disabled={!hydrated}
-            className="text-sm text-[var(--text-muted)] file:min-h-11 file:mr-3 file:rounded-[var(--radius-sm)] file:border file:border-[var(--panel-border)] file:bg-[var(--panel-solid)] file:px-3 file:py-2 file:text-[var(--text)]"
+            className="text-sm text-[var(--text-muted)] file:mr-3 file:min-h-11 file:cursor-pointer file:rounded-[var(--radius-sm)] file:border file:border-[var(--panel-border)] file:bg-[var(--panel-solid)] file:px-4 file:py-2 file:text-sm file:font-medium file:text-[var(--text)]"
           />
         </div>
         {importError ? (
@@ -167,14 +167,14 @@ export default function Settings() {
             <button
               type="button"
               onClick={handleResetConfirm}
-              className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--danger)] bg-[var(--panel-solid)] px-4 py-2 text-sm text-[var(--danger)] transition-colors hover:bg-[var(--track)]"
+              className="btn btn-danger"
             >
               Yes, erase everything
             </button>
             <button
               type="button"
               onClick={handleResetCancel}
-              className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--panel-solid)] px-4 py-2 text-sm text-[var(--text)] transition-colors hover:bg-[var(--track)]"
+              className="btn btn-quiet"
             >
               Cancel
             </button>
@@ -185,7 +185,7 @@ export default function Settings() {
               type="button"
               onClick={handleResetClick}
               disabled={!hydrated}
-              className="min-h-11 rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--panel-solid)] px-4 py-2 text-sm text-[var(--text)] transition-colors hover:border-[var(--danger)] hover:bg-[var(--track)] disabled:opacity-50"
+              className="btn btn-quiet"
             >
               Reset progress
             </button>

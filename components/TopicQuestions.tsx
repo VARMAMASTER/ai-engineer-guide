@@ -38,7 +38,7 @@ export default function TopicQuestions({ questions }: Props) {
         <button
           type="button"
           onClick={toggleAll}
-          className="readout flex min-h-11 shrink-0 items-center rounded-[var(--radius-sm)] border border-[var(--panel-border)] px-3 text-[var(--text-muted)] transition-colors hover:border-[var(--accent-line)] hover:text-[var(--text)]"
+          className="btn btn-quiet readout shrink-0"
         >
           {allRevealed ? 'Hide all' : 'Reveal all'}
         </button>

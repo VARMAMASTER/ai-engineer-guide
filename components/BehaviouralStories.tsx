@@ -286,7 +286,7 @@ function StoryCard({ story }: { story: StorySlot }) {
                 <button
                   type="button"
                   onClick={() => clearStory(story.id)}
-                  className="readout flex min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--panel-border)] px-3 text-[var(--text-muted)] transition-colors hover:border-[var(--warning)] hover:text-[var(--text)]"
+                  className="btn btn-quiet readout"
                 >
                   Clear this draft
                 </button>

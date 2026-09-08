@@ -653,7 +653,10 @@
     filter: brightness(1.08);
   }
 
+  /* Solid, not glass: a quiet button is usually sitting inside a Panel, and a
+     second blurred layer there would spend the whole blur budget on a button. */
   .btn-quiet {
+    background-color: var(--panel-solid);
     border-color: var(--panel-border);
     color: var(--text);
   }
@@ -661,6 +664,17 @@
   .btn-quiet:hover:not(:disabled) {
     background-color: var(--track);
     border-color: var(--accent-line);
+  }
+
+  /* Destructive. Reads as a warning before it is pressed, not after. */
+  .btn-danger {
+    background-color: var(--panel-solid);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--track);
   }
 
   /* ===== meters ============================================================

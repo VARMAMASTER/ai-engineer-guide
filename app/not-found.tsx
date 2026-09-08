@@ -24,13 +24,13 @@ export default function NotFound() {
       <div className="flex flex-wrap gap-3">
         <Link
           href="/today"
-          className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--accent-line)] bg-[var(--accent-soft)] px-4 text-sm text-[var(--accent)]"
+          className="btn btn-accent"
         >
           Back to Today
         </Link>
         <Link
           href="/roadmap"
-          className="flex min-h-11 items-center rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--panel-solid)] px-4 text-sm text-[var(--text)]"
+          className="btn btn-quiet"
         >
           Open the roadmap
         </Link>
