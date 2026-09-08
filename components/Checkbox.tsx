@@ -31,7 +31,7 @@ export default function Checkbox({ itemId, label, labelText, meta }: Props) {
     <label
       data-completed={done ? 'true' : 'false'}
       data-item-id={itemId}
-      className="group flex min-h-11 w-full cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] px-2 py-2.5 transition-colors hover:bg-[var(--track)] data-[completed=true]:[filter:saturate(0.5)]"
+      className="group flex min-h-11 w-full cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] px-2 py-2.5 transition-colors duration-[var(--dur)] ease-[var(--ease)] hover:bg-[var(--accent-soft)] data-[completed=true]:[filter:saturate(0.5)]"
     >
       <span className="relative mt-px flex h-5 w-5 shrink-0 items-center justify-center">
         <input

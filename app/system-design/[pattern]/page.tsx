@@ -42,12 +42,12 @@ export default async function SystemDesignPatternPage({
       </div>
 
       <section className="panel flex min-w-0 flex-col gap-2 rounded-[var(--radius)] p-4">
-        <h2 className="text-sm font-medium text-[var(--text-muted)]">What it solves</h2>
+        <h2 className="eyebrow">What it solves</h2>
         <p className="text-sm">{pattern.solves}</p>
       </section>
 
       <section className="panel flex min-w-0 flex-col gap-2 rounded-[var(--radius)] p-4">
-        <h2 className="text-sm font-medium text-[var(--text-muted)]">Trade-offs</h2>
+        <h2 className="eyebrow">Trade-offs</h2>
         <ul className="flex flex-col gap-1.5 pl-4 text-sm">
           {pattern.tradeoffs.map((t) => (
             <li key={t} className="list-disc marker:text-[var(--text-faint)]">
@@ -59,7 +59,7 @@ export default async function SystemDesignPatternPage({
 
       <section className="flex min-w-0 flex-col gap-3">
         <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+          <h2>
             Questions
           </h2>
           {/* Said once per page rather than once per question: the reveal is the

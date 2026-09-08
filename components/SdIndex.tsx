@@ -41,7 +41,7 @@ interface GroupProps {
 function PatternGroup({ title, patterns, completed, hydrated }: GroupProps) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+      <h2>
         {title}
       </h2>
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">

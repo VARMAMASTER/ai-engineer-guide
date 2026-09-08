@@ -175,8 +175,8 @@ export default function TodayTasks() {
             <p className="text-sm text-[var(--text-muted)]">Nothing scheduled today. Rest day.</p>
           ) : (
             groupByTrack(dayTasks).map(([track, tasks]) => (
-              <section key={track} className="panel flex flex-col gap-1 p-3">
-                <h2 className="eyebrow px-2 pb-1">{TRACK_LABELS[track]}</h2>
+              <section key={track} className="panel flex flex-col gap-0.5 p-2">
+                <h2 className="eyebrow px-2 pt-1.5 pb-1">{TRACK_LABELS[track]}</h2>
                 {tasks.map((task) => {
                   const id = completionKey(task)
                   const label = labelForTask(task.refId)

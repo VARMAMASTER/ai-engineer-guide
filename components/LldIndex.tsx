@@ -114,7 +114,7 @@ export default function LldIndex() {
       </div>
 
       <section className="flex min-w-0 flex-col gap-3">
-        <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+        <h2>
           Patterns
         </h2>
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -126,7 +126,7 @@ export default function LldIndex() {
 
       <section className="flex min-w-0 flex-col gap-3">
         <div className="flex min-w-0 flex-col gap-2">
-          <h2 className="font-[family-name:var(--font-display)] text-lg font-semibold tracking-tight">
+          <h2>
             Machine coding problems
           </h2>
           <div className="max-w-sm">
