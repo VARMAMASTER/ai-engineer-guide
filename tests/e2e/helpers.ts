@@ -27,6 +27,9 @@ export const STATIC_ROUTES = [
   '/revise',
   '/revise/sheets',
   '/settings',
+  // The service worker's navigation fallback. It is a real route, so the
+  // sweep holds it to the same h1-without-JS bar as every other page.
+  '/offline',
 ] as const
 
 export const DYNAMIC_ROUTES = [
