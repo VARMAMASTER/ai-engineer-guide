@@ -8,6 +8,22 @@ import { ICONS, MARK_BOUND } from '@/scripts/generate-icons'
 
 const ROOT = process.cwd()
 
+// generate-icons.ts does not export its GROUND/ACCENT constants (and this
+// file must not touch that script), so the dark ground and accent used to
+// rasterise the icons are re-derived here from the same source of truth the
+// script's own comments point at: `--d-ground` / `--d-accent` in globals.css.
+const GLOBALS_CSS = readFileSync(join(ROOT, 'app/globals.css'), 'utf8')
+
+function cssHex(name: string): [number, number, number] {
+  const m = GLOBALS_CSS.match(new RegExp(`--${name}:\\s*#([0-9a-f]{6});`, 'i'))
+  if (!m) throw new Error(`token --${name} not found in globals.css`)
+  const n = parseInt(m[1], 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+const GROUND = cssHex('d-ground')
+const ACCENT = cssHex('d-accent')
+
 // --- a minimal PNG reader ----------------------------------------------------
 //
 // The point is not to be a decoder: it is to prove the committed icons are
@@ -148,7 +164,7 @@ describe('icon set', () => {
   it('draws nothing but ground in the outer 10% of the maskable icon', () => {
     const png = readPng('public/icons/icon-maskable-512.png')
     const inset = Math.round(png.width * 0.1)
-    const ground: [number, number, number, number] = [0x12, 0x18, 0x22, 255]
+    const ground: [number, number, number, number] = [...GROUND, 255]
 
     const edges: [number, number][] = []
     for (let x = 0; x < png.width; x += 1) {
@@ -167,7 +183,7 @@ describe('icon set', () => {
       const png = readPng(join('public/icons', name))
       let accent = 0
       for (let i = 0; i < png.pixels.length; i += 4) {
-        if (png.pixels[i] === 0xf2 && png.pixels[i + 1] === 0xb3 && png.pixels[i + 2] === 0x3d) {
+        if (png.pixels[i] === ACCENT[0] && png.pixels[i + 1] === ACCENT[1] && png.pixels[i + 2] === ACCENT[2]) {
           accent += 1
         }
       }

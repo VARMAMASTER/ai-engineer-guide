@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import Mermaid, { resolveDiagramTheme } from '@/components/Mermaid'
 
 /**
@@ -27,8 +29,20 @@ function lastPaletteBackground(): string | undefined {
   return last?.themeVariables?.background
 }
 
-const DARK_BG = '#141a22'
-const LIGHT_BG = '#efeadd'
+// Mermaid.tsx paints its diagram surface with the `code` token (a solid fill,
+// since mermaid bakes colours into the SVG rather than reading CSS vars) — so
+// pull the two theme's values straight from globals.css rather than pasting
+// them, the way tests/unit/contrast.test.ts does.
+const CSS = readFileSync(resolve(process.cwd(), 'app/globals.css'), 'utf8')
+
+function cssHex(name: string): string {
+  const m = CSS.match(new RegExp(`--${name}:\\s*(#[0-9a-f]{6});`, 'i'))
+  if (!m) throw new Error(`token --${name} not found in globals.css`)
+  return m[1]
+}
+
+const DARK_BG = cssHex('d-code')
+const LIGHT_BG = cssHex('l-code')
 
 beforeEach(() => {
   vi.clearAllMocks()
