@@ -113,6 +113,12 @@ export const THEME_LABEL: Record<ThemeChoice, string> = {
  * It reads the raw localStorage key directly — waiting for the zustand store to
  * rehydrate happens long after first paint, which is exactly the flash we are
  * avoiding. Single line, no newlines, so it stays cheap to parse.
+ *
+ * It also creates `<meta name="theme-color">` rather than expecting to find one.
+ * That tag cannot be rendered by React: React 19 hoists metadata into <head> and
+ * reconciles it on hydration, so a tag this script had already rewritten would
+ * mismatch and be joined by a second copy. Creating it here leaves exactly one,
+ * owned entirely by `syncThemeColor` from this point on.
  */
 export const THEME_INIT_SCRIPT =
-  `(function(){try{var d=document.documentElement,r=localStorage.getItem(${JSON.stringify(PROGRESS_STORAGE_KEY)}),s=r?JSON.parse(r):null,t=s&&s.state&&s.state.settings&&s.state.settings.theme;if(t!=="dark"&&t!=="light"&&t!=="system"){t=${JSON.stringify(DEFAULT_THEME)}}if(t==="system"){d.removeAttribute("data-theme");t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}else{d.setAttribute("data-theme",t)}var m=document.querySelector('meta[name="theme-color"]');if(m){m.removeAttribute("media");m.setAttribute("content",t==="light"?${JSON.stringify(THEME_COLOR.light)}:${JSON.stringify(THEME_COLOR.dark)})}}catch(e){}})()`
+  `(function(){try{var d=document.documentElement,r=localStorage.getItem(${JSON.stringify(PROGRESS_STORAGE_KEY)}),s=r?JSON.parse(r):null,t=s&&s.state&&s.state.settings&&s.state.settings.theme;if(t!=="dark"&&t!=="light"&&t!=="system"){t=${JSON.stringify(DEFAULT_THEME)}}if(t==="system"){d.removeAttribute("data-theme");t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}else{d.setAttribute("data-theme",t)}var m=document.querySelector('meta[name="theme-color"]');if(!m){m=document.createElement("meta");m.setAttribute("name","theme-color");document.head.appendChild(m)}m.removeAttribute("media");m.setAttribute("content",t==="light"?${JSON.stringify(THEME_COLOR.light)}:${JSON.stringify(THEME_COLOR.dark)})}catch(e){}})()`

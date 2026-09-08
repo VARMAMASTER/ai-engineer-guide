@@ -3,7 +3,7 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import Shell from '@/components/Shell'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
-import { DEFAULT_THEME, THEME_COLOR, THEME_INIT_SCRIPT } from '@/lib/theme'
+import { DEFAULT_THEME, THEME_INIT_SCRIPT } from '@/lib/theme'
 
 const body = Inter({
   variable: '--font-body',
@@ -51,12 +51,12 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  // The server-rendered default only, matching DEFAULT_THEME. It is deliberately
-  // NOT a prefers-color-scheme pair: the stored choice overrides the system
-  // scheme, so a light OS running the app in dark needs a dark bar. The blocking
-  // script rewrites this meta from the resolved theme before first paint, and
-  // `syncThemeColor` keeps it in step from then on.
-  themeColor: THEME_COLOR.dark,
+  // themeColor is deliberately absent, and there is no hand-written <meta> for
+  // it either: React 19 hoists metadata tags and owns them across hydration, so
+  // a tag in the tree that the blocking script has already rewritten fails to
+  // match and React appends a SECOND one — two unscoped theme-color tags whose
+  // winner comes down to insertion order. The script below creates and owns the
+  // only one. `tests/e2e/pwa.spec.ts` asserts the count stays at one.
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {

@@ -380,3 +380,41 @@ test.describe('cache hygiene', () => {
     expect(names.length, 'the current caches were swept too').toBeGreaterThan(0)
   })
 })
+
+test.describe('the system bar of the installed app', () => {
+  test('there is exactly one theme-color tag, and it follows the chosen theme', async ({ page }) => {
+    // Two unscoped theme-color tags is the bug this guards: Next emits its
+    // metadata after the layout's own <head> children, so a script that creates
+    // the tag rather than finding it leaves the page with two, and which one
+    // Chrome honours comes down to insertion order.
+    await seedDayOne(page, { theme: 'dark' })
+    await page.goto('/today')
+
+    const metas = page.locator('meta[name="theme-color"]')
+    await expect(metas).toHaveCount(1)
+    await expect(metas).toHaveAttribute('content', '#121822')
+
+    // Switching to light must move the bar with the page, live — not only on
+    // the next reload. An installed app shows this bar on every screen.
+    await page.getByTestId('theme-toggle').click()
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
+    await expect(metas).toHaveCount(1)
+    await expect(metas).toHaveAttribute('content', '#f3f1ea')
+
+    // And it survives a cold load, set by the blocking script before paint.
+    await page.reload()
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#f3f1ea')
+  })
+
+  test('a stored dark choice beats a light OS, which a media-matched tag would not', async ({
+    browser,
+  }) => {
+    const ctx = await browser.newContext({ colorScheme: 'light' })
+    const page = await ctx.newPage()
+    await seedDayOne(page, { theme: 'dark' })
+    await page.goto('/today')
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#121822')
+    await ctx.close()
+  })
+})
