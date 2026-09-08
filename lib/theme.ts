@@ -44,15 +44,61 @@ export function readStoredTheme(raw: string | null): ThemeChoice {
 }
 
 /**
+ * The painted ground for each resolved theme — `--d-ground` and `--l-ground`
+ * from `globals.css`, which `tests/unit/theme.test.ts` asserts against the
+ * stylesheet so the two cannot drift.
+ *
+ * These drive `<meta name="theme-color">`, which on an installed Android PWA is
+ * the system bar behind the app. It has to be the ground the page actually
+ * paints, or the bar reads as a stripe of a different app.
+ */
+export const THEME_COLOR: Record<'dark' | 'light', string> = {
+  dark: '#121822',
+  light: '#f3f1ea',
+}
+
+/** Collapse `system` to what the OS currently prefers. */
+export function resolveTheme(choice: ThemeChoice): 'dark' | 'light' {
+  if (choice !== 'system') return choice
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+    return DEFAULT_THEME === 'light' ? 'light' : 'dark'
+  }
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+/**
+ * Point `<meta name="theme-color">` at the resolved ground.
+ *
+ * This is driven from JavaScript rather than from a `prefers-color-scheme` pair
+ * of metas, because the stored choice overrides the system scheme: a light OS
+ * running the app in dark needs a dark bar, and a media-matched pair would give
+ * it a light one. Resolving the choice first is the only version that is right
+ * in all three modes.
+ */
+export function syncThemeColor(choice: ThemeChoice): void {
+  if (typeof document === 'undefined') return
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.name = 'theme-color'
+    document.head.appendChild(meta)
+  }
+  meta.removeAttribute('media')
+  meta.setAttribute('content', THEME_COLOR[resolveTheme(choice)])
+}
+
+/**
  * Stamp the resolved choice on `<html>`.
  *
  * An explicit choice sets `data-theme`; `system` removes it so
- * `@media (prefers-color-scheme: dark)` takes over again.
+ * `@media (prefers-color-scheme: dark)` takes over again. The system bar colour
+ * is kept in step here, since this is the one place the theme is applied.
  */
 export function applyTheme(choice: ThemeChoice): void {
   const el = document.documentElement
   if (choice === 'system') el.removeAttribute('data-theme')
   else el.setAttribute('data-theme', choice)
+  syncThemeColor(choice)
 }
 
 export const THEME_LABEL: Record<ThemeChoice, string> = {
@@ -69,4 +115,4 @@ export const THEME_LABEL: Record<ThemeChoice, string> = {
  * avoiding. Single line, no newlines, so it stays cheap to parse.
  */
 export const THEME_INIT_SCRIPT =
-  `(function(){try{var d=document.documentElement,r=localStorage.getItem(${JSON.stringify(PROGRESS_STORAGE_KEY)}),s=r?JSON.parse(r):null,t=s&&s.state&&s.state.settings&&s.state.settings.theme;if(t!=="dark"&&t!=="light"&&t!=="system"){t=${JSON.stringify(DEFAULT_THEME)}}if(t==="system"){d.removeAttribute("data-theme")}else{d.setAttribute("data-theme",t)}}catch(e){}})()`
+  `(function(){try{var d=document.documentElement,r=localStorage.getItem(${JSON.stringify(PROGRESS_STORAGE_KEY)}),s=r?JSON.parse(r):null,t=s&&s.state&&s.state.settings&&s.state.settings.theme;if(t!=="dark"&&t!=="light"&&t!=="system"){t=${JSON.stringify(DEFAULT_THEME)}}if(t==="system"){d.removeAttribute("data-theme");t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"}else{d.setAttribute("data-theme",t)}var m=document.querySelector('meta[name="theme-color"]');if(m){m.removeAttribute("media");m.setAttribute("content",t==="light"?${JSON.stringify(THEME_COLOR.light)}:${JSON.stringify(THEME_COLOR.dark)})}}catch(e){}})()`

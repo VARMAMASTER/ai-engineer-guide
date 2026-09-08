@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
-import { DEFAULT_THEME, THEME_LABEL, applyTheme, nextTheme } from '@/lib/theme'
+import { DEFAULT_THEME, THEME_LABEL, applyTheme, nextTheme, syncThemeColor } from '@/lib/theme'
 import type { ThemeChoice } from '@/lib/theme'
 
 const GLYPH: Record<ThemeChoice, React.ReactNode> = {
@@ -32,6 +32,16 @@ export default function ThemeToggle() {
   useEffect(() => {
     if (hydrated) applyTheme(stored)
   }, [hydrated, stored])
+
+  // On `system`, CSS follows the OS on its own, but the system bar colour is a
+  // meta tag holding a resolved value — so it needs telling when the OS flips.
+  useEffect(() => {
+    if (theme !== 'system' || typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => syncThemeColor('system')
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [theme])
 
   function cycle() {
     const next = nextTheme(theme)

@@ -3,7 +3,7 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import Shell from '@/components/Shell'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
-import { DEFAULT_THEME, THEME_INIT_SCRIPT } from '@/lib/theme'
+import { DEFAULT_THEME, THEME_COLOR, THEME_INIT_SCRIPT } from '@/lib/theme'
 
 const body = Inter({
   variable: '--font-body',
@@ -51,10 +51,12 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  // One value, not a prefers-color-scheme pair: DEFAULT_THEME is dark and the
-  // stored choice wins over the system scheme, so a media-matched light bar
-  // would be wrong for the common case of a light system with the app in dark.
-  themeColor: '#121822',
+  // The server-rendered default only, matching DEFAULT_THEME. It is deliberately
+  // NOT a prefers-color-scheme pair: the stored choice overrides the system
+  // scheme, so a light OS running the app in dark needs a dark bar. The blocking
+  // script rewrites this meta from the resolved theme before first paint, and
+  // `syncThemeColor` keeps it in step from then on.
+  themeColor: THEME_COLOR.dark,
 }
 
 export default function RootLayout({ children }: LayoutProps<'/'>) {
