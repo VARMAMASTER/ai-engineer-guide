@@ -12,13 +12,13 @@ import type { FeedResponse } from '@/lib/feed/types'
 // 'force-static'` — a plain `export const revalidate` segment config is not
 // documented to do anything for a route handler that isn't force-static, so
 // it would be dead code here.
-const CACHE_CONTROL = 'public, s-maxage=21600, stale-while-revalidate=3600'
+const CACHE_CONTROL = 'public, s-maxage=10800, stale-while-revalidate=3600'
 
 export async function GET() {
   const fetchedAt = new Date().toISOString()
   try {
     const res = await fetch(ARXIV_URL, {
-      next: { revalidate: 21600 },
+      next: { revalidate: 10800 },
       signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) throw new Error(`arxiv responded ${res.status}`)

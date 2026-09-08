@@ -25,14 +25,14 @@ const TERMS = ['LLM', 'OpenAI', 'Anthropic', 'AI agents', 'language model', 'tra
 
 const MAX_ITEMS = 40
 
-// Matches the route's `revalidate: 21600` / `Cache-Control: s-maxage=21600`
-// (6 hours). `next.revalidate` caches a fetch() by URL, so a `now`-derived
+// Matches the route's `revalidate: 10800` / `Cache-Control: s-maxage=10800`
+// (3 hours). `next.revalidate` caches a fetch() by URL, so a `now`-derived
 // timestamp that changes every second (e.g. `Date.now()` used directly)
 // makes every request build a unique URL and the cache never hits. Flooring
 // to this bucket keeps the URL — and therefore the cache key — identical
-// for every request within the same 6-hour window. Shifting the 7-day
+// for every request within the same 3-hour window. Shifting the 7-day
 // recency boundary by up to one bucket is irrelevant against a 7-day span.
-const CACHE_BUCKET_SECONDS = 21600
+const CACHE_BUCKET_SECONDS = 10800
 
 /** Floor `now` down to the start of its current `CACHE_BUCKET_SECONDS` window. */
 function cacheBucketStart(now: Date): number {

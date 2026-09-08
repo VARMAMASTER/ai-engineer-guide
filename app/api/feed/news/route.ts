@@ -13,8 +13,8 @@ import type { FeedItem, FeedResponse } from '@/lib/feed/types'
 // Unlike the HN route, neither URL here needs a bucketed timestamp: both are
 // fixed publisher endpoints with no query string, so the fetch cache key is
 // already byte-identical on every request inside the 6-hour window.
-const CACHE_CONTROL = 'public, s-maxage=21600, stale-while-revalidate=3600'
-const REVALIDATE_SECONDS = 21600
+const CACHE_CONTROL = 'public, s-maxage=10800, stale-while-revalidate=3600'
+const REVALIDATE_SECONDS = 10800
 const TIMEOUT_MS = 8000
 
 async function load(url: string, parse: (xml: string) => FeedItem[]): Promise<FeedItem[]> {
