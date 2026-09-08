@@ -1,11 +1,17 @@
 import { expect, test } from '@playwright/test'
 import { seedDayOne } from './helpers'
+import { NAV_ITEMS, PRIMARY_NAV_ITEMS, SECONDARY_NAV_ITEMS } from '../../lib/nav'
 
-const SECONDARY = [
-  { href: '/ai-ml', label: 'AI / ML' },
-  { href: '/reading', label: 'Reading' },
-  { href: '/settings', label: 'Settings' },
-]
+/**
+ * Every count below is derived from the nav model, never written out.
+ *
+ * The literals that used to live here (8 rail links, 3 sheet links, a
+ * hand-copied SECONDARY list) were written when the guide had eight sections.
+ * It now has sixteen, so the rail assertion had been failing and the sheet
+ * assertion was silently checking a third of what it claimed to cover. That is
+ * the third hardcoded-count drift in this suite; deriving is the fix that holds.
+ */
+const SECONDARY = SECONDARY_NAV_ITEMS.map(({ href, label }) => ({ href, label }))
 
 test.describe('navigation shell', () => {
   test.beforeEach(async ({ page }) => {
@@ -19,8 +25,8 @@ test.describe('navigation shell', () => {
     await expect(page.getByTestId('side-nav')).toBeVisible()
     await expect(page.getByTestId('bottom-nav')).toBeHidden()
 
-    // All eight sections are reachable from the rail, no sheet required.
-    await expect(page.getByTestId('side-nav').locator('a')).toHaveCount(8)
+    // Every section is reachable from the rail, no sheet required.
+    await expect(page.getByTestId('side-nav').locator('a')).toHaveCount(NAV_ITEMS.length)
     for (const { href } of SECONDARY) {
       await expect(page.getByTestId('side-nav').locator(`a[href="${href}"]`)).toBeVisible()
     }
@@ -33,12 +39,12 @@ test.describe('navigation shell', () => {
     await expect(page.getByTestId('bottom-nav')).toBeVisible()
     await expect(page.getByTestId('side-nav')).toBeHidden()
 
-    // Five primary tabs plus the More button.
-    await expect(page.getByTestId('bottom-nav').locator('a')).toHaveCount(5)
+    // The primary tabs, plus the More button (which is not a link).
+    await expect(page.getByTestId('bottom-nav').locator('a')).toHaveCount(PRIMARY_NAV_ITEMS.length)
     await expect(page.getByTestId('more-tab')).toBeVisible()
   })
 
-  test('the More sheet opens and reaches all three secondary pages', async ({ page }, testInfo) => {
+  test('the More sheet opens and reaches every secondary page', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'mobile', 'the sheet is a mobile affordance')
     await page.goto('/today')
 
@@ -47,7 +53,7 @@ test.describe('navigation shell', () => {
       const sheet = page.getByTestId('more-sheet')
       await expect(sheet).toBeVisible()
       await expect(sheet).toHaveAttribute('aria-modal', 'true')
-      await expect(sheet.locator('a')).toHaveCount(3)
+      await expect(sheet.locator('a')).toHaveCount(SECONDARY_NAV_ITEMS.length)
 
       await sheet.getByRole('link', { name: label }).click()
       await page.waitForURL(`**${href}`)

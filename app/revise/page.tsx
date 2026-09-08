@@ -25,7 +25,7 @@ export default function RevisePage() {
         </p>
         <Link
           href="/revise/sheets"
-          className="readout w-fit text-[var(--accent)] underline underline-offset-4"
+          className="readout inline-flex min-h-11 w-fit items-center text-[var(--accent)] underline underline-offset-4"
         >
           Cheat sheets — the numbers and formulas you blank on
         </Link>

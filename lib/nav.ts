@@ -1,9 +1,9 @@
 /**
- * The eight sections of the guide, in rail order.
+ * The sections of the guide, in rail order.
  *
  * `primary` marks the five that get a permanent slot in the mobile tab bar.
- * The other three live behind the More sheet. `short` is the tab-bar label and
- * is kept to ten characters or fewer so six cells fit a 390px viewport.
+ * The rest live behind the More sheet. `short` is the tab-bar label and is kept
+ * to ten characters or fewer so six cells fit a 390px viewport.
  */
 export interface NavItem {
   href: string

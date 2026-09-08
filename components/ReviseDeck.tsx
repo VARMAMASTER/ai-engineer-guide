@@ -183,7 +183,10 @@ export default function ReviseDeck({ deck }: { deck: Deck }) {
               Forget my marks
             </ActionButton>
           </div>
-          <Link href="/revise" className="readout text-[var(--accent)] underline underline-offset-4">
+          <Link
+            href="/revise"
+            className="readout inline-flex min-h-11 items-center text-[var(--accent)] underline underline-offset-4"
+          >
             Back to the decks
           </Link>
         </div>
@@ -259,7 +262,7 @@ function PassButton({
       disabled={disabled}
       aria-pressed={active}
       className={
-        'readout rounded-full px-3 py-1.5 ' +
+        'readout inline-flex min-h-11 items-center rounded-full px-3 py-1.5 ' +
         (active
           ? 'nav-pill'
           : 'border border-[var(--panel-border)] text-[var(--text-muted)] disabled:opacity-45')

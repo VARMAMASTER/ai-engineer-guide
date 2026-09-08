@@ -12,7 +12,11 @@ export default function CheatSheetsPage() {
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="flex min-w-0 flex-col gap-1">
-        <Link href="/revise" className="eyebrow w-fit hover:text-[var(--accent)]" data-print-hide>
+        <Link
+          href="/revise"
+          className="eyebrow inline-flex min-h-11 w-fit items-center hover:text-[var(--accent)]"
+          data-print-hide
+        >
           Revise
         </Link>
         <h1>Cheat sheets</h1>

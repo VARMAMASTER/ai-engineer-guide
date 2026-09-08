@@ -25,7 +25,10 @@ export default async function ReviseDeckPage({ params }: { params: Promise<{ dec
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="flex min-w-0 flex-col gap-1">
-        <Link href="/revise" className="eyebrow w-fit hover:text-[var(--accent)]">
+        <Link
+          href="/revise"
+          className="eyebrow inline-flex min-h-11 w-fit items-center hover:text-[var(--accent)]"
+        >
           Revise
         </Link>
         <h1 className="break-words">{deck.title}</h1>

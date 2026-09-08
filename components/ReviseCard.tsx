@@ -63,7 +63,7 @@ export default function ReviseCard({
         aria-expanded={revealed}
         aria-controls={answerId}
         data-testid="revise-reveal"
-        className="w-full rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--accent-soft)] px-3 py-2.5 text-sm font-medium text-[var(--accent)]"
+        className="flex min-h-11 w-full items-center justify-center rounded-[var(--radius-sm)] border border-[var(--panel-border)] bg-[var(--accent-soft)] px-3 py-2.5 text-sm font-medium text-[var(--accent)]"
       >
         {revealed ? 'Hide answer' : 'Reveal answer'}
       </button>
