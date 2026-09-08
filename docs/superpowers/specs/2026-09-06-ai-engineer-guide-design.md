@@ -705,8 +705,14 @@ Amended 2026-09-08 at the user's request. The guide is used on a phone, on a com
 interview — exactly the conditions where a browser tab is the wrong container and the network is unreliable.
 Installability and offline reading are therefore features of the product, not polish.
 
-**Installable.** A web app manifest served from `app/manifest.ts` (Next's typed metadata route, not a static
-file). `start_url` is `/today`, because `/` only redirects there and a redirect on launch is a visible stutter.
+**Installable on Android.** The acceptance gate is Chrome on Android offering "Install app" — the user's
+stated reason for wanting this. That requires all of: HTTPS; a linked manifest carrying `name`, `short_name`,
+`start_url`, `display: standalone`, a stable `id`, and icons including a real 192 and a real 512 PNG whose
+decoded dimensions match their declared `sizes`; and a registered, activated service worker with a `fetch`
+handler that can serve `start_url` with the network off. Chrome rejects the entire manifest if a declared icon
+404s or its dimensions disagree with `sizes`, so each is asserted against the served bytes rather than assumed.
+
+**Manifest.** Served from `app/manifest.ts` (Next's typed metadata route, not a static file). `start_url` is `/today`, because `/` only redirects there and a redirect on launch is a visible stutter.
 `display` is `standalone`. `background_color` and `theme_color` are the dark ground `#121822`, matching the
 default theme from `lib/theme.ts`; a mismatch shows as a coloured flash on every launch. Icons: 192 and 512
 square, a 512 maskable variant with content inside the inner 80 percent safe zone, and a 180 apple-touch-icon.
