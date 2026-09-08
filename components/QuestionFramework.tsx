@@ -176,13 +176,13 @@ export default function QuestionFramework({ question }: Props) {
           &rsaquo;
         </span>
         <span className="min-w-0 flex-1 text-sm font-medium">{question.title}</span>
-        <span className="readout shrink-0 rounded-full bg-[var(--track)] px-2 py-0.5 text-[var(--text-muted)]">
+        <span className="tag">
           {tierLabel(question.tier)}
         </span>
         {question.companies.map((c) => (
           <span
             key={c}
-            className="readout shrink-0 rounded-full bg-[var(--track)] px-2 py-0.5 text-[var(--text-muted)] capitalize"
+            className="tag capitalize"
           >
             {c}
           </span>

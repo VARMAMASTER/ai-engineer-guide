@@ -42,16 +42,7 @@ export function Pill({
   tone?: 'muted' | 'accent'
 }) {
   return (
-    <span
-      className="readout rounded-full px-2 py-0.5"
-      style={
-        tone === 'accent'
-          ? { backgroundColor: 'var(--accent-soft)', color: 'var(--accent)' }
-          : { backgroundColor: 'var(--track)', color: 'var(--text-muted)' }
-      }
-    >
-      {children}
-    </span>
+    <span className={tone === 'accent' ? 'tag tag-accent' : 'tag'}>{children}</span>
   )
 }
 
@@ -92,7 +83,7 @@ export function FilterChips<T extends string>({
               aria-pressed={active}
               onClick={() => onChange(o.value)}
               data-active={active ? 'true' : 'false'}
-              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-colors data-[active=false]:border-[var(--panel-border)] data-[active=false]:text-[var(--text-muted)] data-[active=false]:hover:border-[var(--accent-line)] data-[active=false]:hover:text-[var(--text)] data-[active=true]:border-[var(--accent-line)] data-[active=true]:bg-[var(--accent-soft)] data-[active=true]:text-[var(--accent)]"
+              className="chip shrink-0"
             >
               {o.label}
               {o.count === undefined ? null : (

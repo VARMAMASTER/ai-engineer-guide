@@ -70,12 +70,7 @@ export default function DsaIndex() {
             type="button"
             onClick={() => setFilter(f.id)}
             aria-pressed={filter === f.id}
-            className="flex min-h-11 items-center rounded-full border px-4 text-sm transition-colors"
-            style={{
-              borderColor: filter === f.id ? 'var(--accent-line)' : 'var(--panel-border)',
-              backgroundColor: filter === f.id ? 'var(--accent-soft)' : 'transparent',
-              color: filter === f.id ? 'var(--accent)' : 'var(--text-muted)',
-            }}
+            className="chip"
           >
             {f.label}
           </button>

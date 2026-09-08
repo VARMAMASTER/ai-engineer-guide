@@ -64,6 +64,67 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M21 5.5h-6.5A2.5 2.5 0 0 0 12 8v11a2.2 2.2 0 0 1 2.2-2.2H21z" />
     </>
   ),
+  // Low-Level Design — a class box with its members.
+  '/lld': (
+    <>
+      <rect x="4" y="3.5" width="16" height="17" rx="2" />
+      <path d="M4 8.5h16M7.5 12.2h9M7.5 16h5.5" />
+    </>
+  ),
+  // AI Feed — the broadcast arcs of a syndication feed.
+  '/feed': (
+    <>
+      <circle cx="6" cy="18" r="1.9" />
+      <path d="M4.2 12.4a7.4 7.4 0 0 1 7.4 7.4" />
+      <path d="M4.2 6.6A13.2 13.2 0 0 1 17.4 19.8" />
+    </>
+  ),
+  // CS Fundamentals — the die at the bottom of everything.
+  '/cs-fundamentals': (
+    <>
+      <rect x="7" y="7" width="10" height="10" rx="1.8" />
+      <path d="M10 3.2v3.8M14 3.2v3.8M10 17v3.8M14 17v3.8M3.2 10H7M3.2 14H7M17 10h3.8M17 14h3.8" />
+    </>
+  ),
+  // GPU / Hardware — a board with its heat fins.
+  '/hardware': (
+    <>
+      <rect x="4.5" y="6.5" width="15" height="11" rx="2" />
+      <path d="M8.5 10.5v3M12 10.5v3M15.5 10.5v3" />
+      <path d="M8 6.5v-3M16 6.5v-3M8 20.5v-3M16 20.5v-3" />
+    </>
+  ),
+  // Behavioural — a story told to someone.
+  '/behavioural': (
+    <>
+      <path d="M20.5 14.5a2.5 2.5 0 0 1-2.5 2.5H9l-4.5 3.5V6a2.5 2.5 0 0 1 2.5-2.5h11A2.5 2.5 0 0 1 20.5 6z" />
+      <path d="M9 8.5h6M9 12h4" />
+    </>
+  ),
+  // Companies — the loop you interview through.
+  '/companies': (
+    <>
+      <rect x="3.2" y="7.5" width="17.6" height="13" rx="2" />
+      <path d="M8.5 7.5V5.3a1.8 1.8 0 0 1 1.8-1.8h3.4a1.8 1.8 0 0 1 1.8 1.8v2.2" />
+      <path d="M3.2 12.6h17.6M11 12v1.8h2V12" />
+    </>
+  ),
+  // Mock — the clock you run the round against.
+  '/mock': (
+    <>
+      <circle cx="12" cy="13" r="8" />
+      <path d="M12 8.8V13l2.8 1.8" />
+      <path d="M9.2 2.8h5.6" />
+    </>
+  ),
+  // Revise — a card being flipped.
+  '/revise': (
+    <>
+      <rect x="3" y="6.5" width="13" height="13" rx="2" />
+      <path d="M8 3.5h11a2 2 0 0 1 2 2v11" />
+      <path d="M6.5 12.5h6M6.5 15.8h3.5" />
+    </>
+  ),
   // Settings — the three things you can actually change.
   '/settings': (
     <>

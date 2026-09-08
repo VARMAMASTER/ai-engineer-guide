@@ -261,12 +261,8 @@ function PassButton({
       onClick={onClick}
       disabled={disabled}
       aria-pressed={active}
-      className={
-        'readout inline-flex min-h-11 items-center rounded-full px-3 py-1.5 ' +
-        (active
-          ? 'nav-pill'
-          : 'border border-[var(--panel-border)] text-[var(--text-muted)] disabled:opacity-45')
-      }
+      data-active={active ? 'true' : 'false'}
+      className="chip readout"
     >
       {children}
     </button>
@@ -286,12 +282,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={
-        'min-h-11 rounded-[var(--radius-sm)] px-4 text-sm font-medium disabled:opacity-40 ' +
-        (emphasis
-          ? 'bg-[var(--accent)] text-[var(--accent-contrast)]'
-          : 'border border-[var(--panel-border)] text-[var(--text)]')
-      }
+      className={'btn ' + (emphasis ? 'btn-accent' : 'btn-quiet')}
     >
       {children}
     </button>

@@ -78,7 +78,7 @@ export default function TopBar() {
 
         <div className="ml-auto flex items-center gap-3 md:gap-5">
           <span
-            className="readout flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[var(--panel-border)] px-2.5 py-1 text-[var(--text-muted)]"
+            className="tag tag-outline"
             title="Consecutive days with at least one completed item"
           >
             <span className="hidden md:inline">STREAK</span>

@@ -76,7 +76,7 @@ function ProblemCard({ question, completed, hydrated }: ProblemCardProps) {
           {question.companies.map((c) => (
             <span
               key={c}
-              className="readout rounded-full bg-[var(--track)] px-2 py-0.5 text-[var(--text-muted)] capitalize"
+              className="tag capitalize"
             >
               {c}
             </span>

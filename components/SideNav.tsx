@@ -21,7 +21,7 @@ export default function SideNav() {
     <nav
       data-testid="side-nav"
       aria-label="Sections"
-      className="panel sticky top-0 hidden h-dvh w-[var(--rail-w)] shrink-0 flex-col rounded-none border-y-0 border-l-0 md:flex"
+      className="panel panel-flush sticky top-0 hidden h-dvh w-[var(--rail-w)] shrink-0 flex-col rounded-none border-y-0 border-l-0 md:flex"
     >
       <div className="px-5 pt-6 pb-5">
         <p className="eyebrow">180-day program</p>

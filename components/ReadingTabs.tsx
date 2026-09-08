@@ -87,7 +87,7 @@ export default function ReadingTabs() {
                         label={
                           <span className="flex min-w-0 flex-col gap-1">
                             <span className="flex flex-wrap items-center gap-2">
-                              <span className="eyebrow rounded-full border border-[var(--panel-border)] px-2 py-0.5">
+                              <span className="tag tag-outline uppercase">
                                 {KIND_LABEL[r.kind]}
                               </span>
                               <a

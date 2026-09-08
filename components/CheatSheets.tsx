@@ -425,7 +425,7 @@ export default function CheatSheets() {
           <a
             key={s.id}
             href={`#${s.id}`}
-            className="readout inline-flex min-h-11 items-center rounded-full border border-[var(--panel-border)] px-3 py-1.5 text-[var(--text-muted)]"
+            className="chip readout"
           >
             {s.title}
           </a>

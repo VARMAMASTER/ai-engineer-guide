@@ -26,34 +26,27 @@ const COMPANY_LABEL: Record<string, string> = {
 export default function ProblemList({ problems }: { problems: DsaProblem[] }) {
   return (
     <div className="overflow-x-auto">
-      <ul className="flex min-w-0 flex-col gap-2">
+      <ul className="flex min-w-0 flex-col gap-1.5">
         {problems.map((problem) => (
           <li
             key={problem.id}
-            className="panel grid min-w-0 grid-cols-1 gap-2 p-3 md:grid-cols-[1fr_auto] md:items-center md:gap-4"
+            className="panel grid min-w-0 grid-cols-1 gap-1 px-3 py-1.5 md:grid-cols-[1fr_auto] md:items-center md:gap-4"
           >
             <Checkbox itemId={problem.id} label={problem.name} />
 
-            <div className="flex min-w-0 flex-wrap items-center gap-2 md:justify-end">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 md:justify-end">
               <span
-                className="readout shrink-0 capitalize"
+                className="readout shrink-0 font-medium capitalize"
                 style={{ color: DIFFICULTY_COLOR[problem.difficulty] }}
               >
                 {problem.difficulty}
               </span>
               {problem.companies.map((company) => (
-                <span
-                  key={company}
-                  className="rounded-full border border-[var(--panel-border)] px-2 py-0.5 text-xs text-[var(--text-muted)]"
-                >
+                <span key={company} className="tag tag-outline">
                   {COMPANY_LABEL[company] ?? company}
                 </span>
               ))}
-              {problem.core ? (
-                <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-xs text-[var(--accent)]">
-                  Core
-                </span>
-              ) : null}
+              {problem.core ? <span className="tag tag-accent">Core</span> : null}
               <span className="readout shrink-0 text-[var(--text-muted)]">
                 <a
                   href={problem.url}

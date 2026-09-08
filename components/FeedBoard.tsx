@@ -188,11 +188,7 @@ function FilterChip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`flex min-h-11 min-w-0 items-center gap-2 rounded-full border px-3.5 text-sm font-medium transition-colors ${
-        active
-          ? 'nav-pill border-transparent'
-          : 'border-[var(--panel-border)] text-[var(--text-muted)] hover:text-[var(--text)]'
-      }`}
+      className="chip"
     >
       <span className="truncate">{children}</span>
       <span className="readout shrink-0 text-[var(--text-faint)]">{count}</span>
