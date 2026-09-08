@@ -114,8 +114,8 @@ test.describe('installability', () => {
     expect(manifest.start_url).toBe('/today')
     expect(manifest.scope).toBe('/')
     expect(['standalone', 'fullscreen', 'minimal-ui']).toContain(manifest.display)
-    expect(manifest.theme_color).toBe('#121822')
-    expect(manifest.background_color).toBe('#121822')
+    expect(manifest.theme_color).toBe('#0d0f17')
+    expect(manifest.background_color).toBe('#0d0f17')
   })
 
   test('start_url answers 200 directly, with no redirect in the way', async ({ request }) => {
@@ -392,18 +392,18 @@ test.describe('the system bar of the installed app', () => {
 
     const metas = page.locator('meta[name="theme-color"]')
     await expect(metas).toHaveCount(1)
-    await expect(metas).toHaveAttribute('content', '#121822')
+    await expect(metas).toHaveAttribute('content', '#0d0f17')
 
     // Switching to light must move the bar with the page, live — not only on
     // the next reload. An installed app shows this bar on every screen.
     await page.getByTestId('theme-toggle').click()
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
     await expect(metas).toHaveCount(1)
-    await expect(metas).toHaveAttribute('content', '#f3f1ea')
+    await expect(metas).toHaveAttribute('content', '#f7f7fb')
 
     // And it survives a cold load, set by the blocking script before paint.
     await page.reload()
-    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#f3f1ea')
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#f7f7fb')
   })
 
   test('a stored dark choice beats a light OS, which a media-matched tag would not', async ({
@@ -414,7 +414,7 @@ test.describe('the system bar of the installed app', () => {
     await seedDayOne(page, { theme: 'dark' })
     await page.goto('/today')
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#121822')
+    await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#0d0f17')
     await ctx.close()
   })
 })

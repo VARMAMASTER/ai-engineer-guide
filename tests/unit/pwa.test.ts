@@ -104,8 +104,8 @@ describe('web app manifest', () => {
   })
 
   it('uses the dark palette, which is what DEFAULT_THEME paints', () => {
-    expect(m.background_color).toBe('#121822')
-    expect(m.theme_color).toBe('#121822')
+    expect(m.background_color).toBe('#0d0f17')
+    expect(m.theme_color).toBe('#0d0f17')
   })
 
   it('declares a 192 and a 512 for "any" plus a 512 maskable', () => {

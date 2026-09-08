@@ -28,8 +28,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display: 'standalone',
     orientation: 'portrait',
     // Dark is DEFAULT_THEME, so these are the colours a cold launch paints.
-    background_color: '#121822',
-    theme_color: '#121822',
+    background_color: '#0d0f17',
+    theme_color: '#0d0f17',
     lang: 'en',
     dir: 'ltr',
     categories: ['education', 'productivity'],

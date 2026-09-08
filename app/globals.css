@@ -25,55 +25,65 @@
    ========================================================================== */
 
 :root {
-  /* --- dark palette: deep desaturated blue-grey, never black --------------- */
-  --d-ground: #121822;
-  --d-ground-wash-warm: rgba(242, 179, 61, 0.1);
-  --d-ground-wash-cool: rgba(78, 120, 184, 0.14);
+  /* --- dark palette: near-black with a violet cast, never pure black -------
+     Every pair below was checked against the composited surface it actually
+     sits on (glass fill over ground), not against the raw token, and every one
+     clears 4.5:1. The tight one is accent-on-accent-soft — the active nav pill
+     and the selected tab draw accent text on an accent wash, which is why the
+     wash sits at 0.12: the surface underneath is the Panel over the BUSIEST
+     point of the ground (base plus the radial wash at full strength), not the
+     flat ground, and against that stricter backdrop 0.14 measures 4.16:1 and
+     fails. tests/unit/contrast.test.ts composites it exactly that way. */
+  --d-ground: #0d0f17;
+  --d-ground-wash-warm: rgba(167, 156, 255, 0.09);
+  --d-ground-wash-cool: rgba(56, 189, 248, 0.1);
   --d-panel: rgba(255, 255, 255, 0.055);
-  --d-panel-solid: #1c2128;
+  --d-panel-solid: #191c26;
   --d-panel-border: rgba(255, 255, 255, 0.09);
   --d-panel-highlight: rgba(255, 255, 255, 0.1);
   --d-raised: rgba(255, 255, 255, 0.085);
-  --d-raised-solid: #232932;
+  --d-raised-solid: #222634;
   --d-raised-border: rgba(255, 255, 255, 0.16);
-  --d-raised-shadow: 0 18px 46px -14px rgba(0, 0, 0, 0.72);
-  --d-track: #262c35;
-  --d-code: #141a22;
-  --d-text: #e6eaf0;
-  --d-text-muted: #a3aebb;
-  --d-text-faint: #96a1ae;
-  --d-accent: #f2b33d;
-  --d-accent-contrast: #12161c;
-  --d-accent-soft: rgba(242, 179, 61, 0.16);
-  --d-accent-line: rgba(242, 179, 61, 0.5);
-  --d-positive: #6dd3a8;
-  --d-warning: #f0a07a;
-  --d-danger: #ff8b7a;
+  --d-raised-shadow: 0 18px 46px -14px rgba(0, 0, 0, 0.8);
+  --d-track: #262a38;
+  --d-code: #11131c;
+  --d-text: #e8e9f2;
+  --d-text-muted: #a2a8bd;
+  --d-text-faint: #969cb2;
+  --d-accent: #a79cff;
+  --d-accent-contrast: #11101f;
+  --d-accent-soft: rgba(167, 156, 255, 0.12);
+  --d-accent-line: rgba(167, 156, 255, 0.5);
+  --d-positive: #4ade9b;
+  --d-warning: #f5a97f;
+  --d-danger: #ff7a85;
   --d-scheme: dark;
 
-  /* --- light palette: warm off-white, never pure white --------------------- */
-  --l-ground: #f3f1ea;
-  --l-ground-wash-warm: rgba(154, 91, 0, 0.1);
-  --l-ground-wash-cool: rgba(64, 96, 148, 0.1);
+  /* --- light palette: cool off-white, never pure white ---------------------
+     `--l-text-faint` is #5f6479 rather than a lighter grey because faint text
+     also lands on `--track`, the palest surface it meets; at #636980 that pair
+     measures 4.42:1. On panel alone a lighter value would have passed, which is
+     how this class of miss survives a spot check. */
+  --l-ground: #f7f7fb;
+  --l-ground-wash-warm: rgba(91, 75, 214, 0.09);
+  --l-ground-wash-cool: rgba(14, 165, 233, 0.08);
   --l-panel: rgba(255, 255, 255, 0.72);
-  --l-panel-solid: #fcfbf9;
-  --l-panel-border: rgba(26, 32, 42, 0.14);
+  --l-panel-solid: #fdfdff;
+  --l-panel-border: rgba(24, 26, 42, 0.13);
   --l-panel-highlight: rgba(255, 255, 255, 0.9);
-  --l-raised: rgba(255, 255, 255, 0.88);
+  --l-raised: rgba(255, 255, 255, 0.9);
   --l-raised-solid: #ffffff;
-  --l-raised-border: rgba(26, 32, 42, 0.2);
-  --l-raised-shadow: 0 16px 40px -14px rgba(30, 26, 16, 0.28);
-  --l-track: #e5e1d6;
-  --l-code: #efeadd;
-  --l-text: #1b2027;
-  --l-text-muted: #5a6472;
-  --l-text-faint: #666f7b;
-  /* Darkened from #9a5b00: accent-on-accent-soft (the active nav pill and the
-     selected Reading tab) measured 4.46:1 in light mode, just under AA. */
-  --l-accent: #8f5400;
+  --l-raised-border: rgba(24, 26, 42, 0.19);
+  --l-raised-shadow: 0 16px 40px -14px rgba(24, 22, 60, 0.22);
+  --l-track: #e7e7f0;
+  --l-code: #eeeef6;
+  --l-text: #16171f;
+  --l-text-muted: #575d70;
+  --l-text-faint: #5f6479;
+  --l-accent: #5b4bd6;
   --l-accent-contrast: #ffffff;
-  --l-accent-soft: rgba(143, 84, 0, 0.12);
-  --l-accent-line: rgba(143, 84, 0, 0.45);
+  --l-accent-soft: rgba(91, 75, 214, 0.12);
+  --l-accent-line: rgba(91, 75, 214, 0.42);
   --l-positive: #0f6b4a;
   --l-warning: #9a4a16;
   --l-danger: #a3241c;

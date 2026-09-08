@@ -53,8 +53,8 @@ export function readStoredTheme(raw: string | null): ThemeChoice {
  * paints, or the bar reads as a stripe of a different app.
  */
 export const THEME_COLOR: Record<'dark' | 'light', string> = {
-  dark: '#121822',
-  light: '#f3f1ea',
+  dark: '#0d0f17',
+  light: '#f7f7fb',
 }
 
 /** Collapse `system` to what the OS currently prefers. */

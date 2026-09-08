@@ -18,9 +18,9 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /** Dark ground, `--d-ground` in `app/globals.css`. */
-const GROUND: RGB = [0x12, 0x18, 0x22]
+const GROUND: RGB = [0x0d, 0x0f, 0x17]
 /** Accent, `--d-accent` in `app/globals.css`. */
-const ACCENT: RGB = [0xf2, 0xb3, 0x3d]
+const ACCENT: RGB = [0xa7, 0x9c, 0xff]
 
 type RGB = [number, number, number]
 
