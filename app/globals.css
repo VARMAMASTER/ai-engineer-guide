@@ -58,6 +58,12 @@
   --d-warning: #f5a97f;
   --d-danger: #ff7a85;
   --d-scheme: dark;
+  /* Film grain. A flat dark ground reads as a void and makes the glass panels
+     look like they float over nothing; a little noise gives the backdrop-filter
+     something to actually pick up. The alpha is baked into the SVG rather than
+     applied with `opacity`, so it can be a plain background layer — a z-indexed
+     overlay here once hid the ground wash entirely. */
+  --d-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.055'/%3E%3C/svg%3E");
 
   /* --- light palette: cool off-white, never pure white ---------------------
      `--l-text-faint` is #5f6479 rather than a lighter grey because faint text
@@ -88,11 +94,14 @@
   --l-warning: #9a4a16;
   --l-danger: #a3241c;
   --l-scheme: light;
+  /* Lighter: dark noise on a pale ground shows far more readily. */
+  --l-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.035'/%3E%3C/svg%3E");
 
   /* --- semantic tokens, bound to light by default ------------------------- */
   --ground: var(--l-ground);
   --ground-wash-warm: var(--l-ground-wash-warm);
   --ground-wash-cool: var(--l-ground-wash-cool);
+  --grain: var(--l-grain);
   --panel: var(--l-panel);
   --panel-solid: var(--l-panel-solid);
   --panel-border: var(--l-panel-border);
@@ -163,6 +172,7 @@
     --ground: var(--d-ground);
     --ground-wash-warm: var(--d-ground-wash-warm);
     --ground-wash-cool: var(--d-ground-wash-cool);
+    --grain: var(--d-grain);
     --panel: var(--d-panel);
     --panel-solid: var(--d-panel-solid);
     --panel-border: var(--d-panel-border);
@@ -193,6 +203,7 @@
   --ground: var(--d-ground);
   --ground-wash-warm: var(--d-ground-wash-warm);
   --ground-wash-cool: var(--d-ground-wash-cool);
+  --grain: var(--d-grain);
   --panel: var(--d-panel);
   --panel-solid: var(--d-panel-solid);
   --panel-border: var(--d-panel-border);
@@ -271,9 +282,12 @@
   body {
     background-color: var(--ground);
     background-image:
+      var(--grain),
       radial-gradient(58rem 40rem at 14% -6%, var(--ground-wash-warm), transparent 66%),
-      radial-gradient(56rem 44rem at 92% 34%, var(--ground-wash-cool), transparent 64%);
-    background-repeat: no-repeat;
+      radial-gradient(56rem 44rem at 92% 34%, var(--ground-wash-cool), transparent 64%),
+      radial-gradient(44rem 34rem at 50% 108%, var(--ground-wash-warm), transparent 70%);
+    /* The grain tiles; the three washes do not. */
+    background-repeat: repeat, no-repeat, no-repeat, no-repeat;
     background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
@@ -713,6 +727,181 @@
       var(--positive)
     );
   }
+  /* ===== form controls =====================================================
+     None of these existed: the guide only ever read content back, so the one
+     input in the app (the start date) styled itself. Every mini-app coming
+     next is a logging surface, so the vocabulary is defined once here rather
+     than four times by four agents.
+
+     Controls sit on `--track`, the recessed surface the meters already use. A
+     form field reads as a well you type into, not as another raised card, and
+     on glass a translucent input is simply unreadable. */
+  .field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .label {
+    color: var(--text);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .input,
+  .textarea,
+  .select {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--track);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+    transition:
+      border-color var(--dur) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+
+  .input::placeholder,
+  .textarea::placeholder {
+    color: var(--text-faint);
+  }
+
+  .input:hover:not(:disabled),
+  .textarea:hover:not(:disabled),
+  .select:hover:not(:disabled) {
+    border-color: var(--accent-line);
+  }
+
+  .input:disabled,
+  .textarea:disabled,
+  .select:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  /* Invalid is announced, not just painted: the selector keys off the ARIA
+     attribute so a red border cannot appear without a screen reader hearing
+     about it. */
+  .input[aria-invalid="true"],
+  .textarea[aria-invalid="true"],
+  .select[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  .textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+  }
+
+  /* A number you type a lot — grams, reps, kilos — wants tabular figures and
+     no spinner, which is a 12px tap target nobody has ever hit on purpose. */
+  .input-num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .input-num::-webkit-outer-spin-button,
+  .input-num::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .input-num[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  .hint {
+    color: var(--text-faint);
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .field-error {
+    color: var(--danger);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  /* ===== display ===========================================================
+     A stat is a number that is the point of its own block — today's calories,
+     current weight, days to interview. The value is display-sized and tabular
+     so it does not reflow as it counts, and the label sits above it in the
+     same eyebrow voice used across the app. */
+  .stat {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .stat-value {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .stat-unit {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  /* Loading placeholder. The shimmer is decoration, so it is the first thing
+     to go under reduced motion — the block stays, it simply stops moving. */
+  .skeleton {
+    border-radius: var(--radius-sm);
+    background-color: var(--track);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--text) 7%, transparent),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: aeg-shimmer 1.4s linear infinite;
+  }
+
+  @keyframes aeg-shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Empty state. Always says what to do next, never only that there is
+     nothing here. */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  .divider {
+    height: 1px;
+    border: 0;
+    background-color: var(--panel-border);
+  }
 }
 
 /* ===== blur budget ======================================================= */
@@ -787,6 +976,11 @@
 
   /* Forced colours repaint every surface the same; the hairline is then the
      only thing telling one tier from the next, so it has to be a real border. */
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
+
   .tag,
   .chip,
   .btn {
