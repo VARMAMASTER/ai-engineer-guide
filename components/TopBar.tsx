@@ -7,6 +7,7 @@ import { useHydrated } from '@/lib/progress/useHydrated'
 import { dayNumber, streak, weekNumber, weekProgress } from '@/lib/progress/selectors'
 import { addDays, todayIso } from '@/lib/date'
 import { SETTINGS_ITEM, isActive } from '@/lib/nav'
+import AppSwitcher from './AppSwitcher'
 import Meter from './Meter'
 import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
@@ -54,7 +55,12 @@ export default function TopBar() {
 
   return (
     <header className="panel sticky top-0 z-30 rounded-none border-x-0 border-t-0">
-      <div className="flex min-h-[var(--topbar-h)] items-center gap-3 px-4 py-2 md:gap-6 md:px-8">
+      <div className="flex min-h-[var(--topbar-h)] items-center gap-2 px-3 py-2 md:gap-6 md:px-8">
+        {/* The way out of wherever you are. First control in the bar, at every
+            width: installed as a PWA there is no browser back button behind it,
+            so this is the only one. */}
+        <AppSwitcher />
+
         <div className="flex min-w-0 items-baseline gap-3 md:gap-5">
           {startDate === null && hydrated ? (
             <Link
