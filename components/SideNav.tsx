@@ -8,6 +8,7 @@ import { useHydrated } from '@/lib/progress/useHydrated'
 import { weekNumber } from '@/lib/progress/selectors'
 import { todayIso } from '@/lib/date'
 import NavIcon from './NavIcon'
+import { useBareChrome } from './useBareChrome'
 
 const TOTAL_WEEKS = 26
 
@@ -47,11 +48,17 @@ function Tick({ active }: { active: boolean }) {
  * as its first section.
  */
 export default function SideNav() {
+  // The auth pages render their own minimal header; see useBareChrome.
+  const bare = useBareChrome()
   const pathname = usePathname() ?? ''
   const hydrated = useHydrated()
   const startDate = useProgress((s) => s.startDate)
   const week = hydrated ? weekNumber(startDate, todayIso()) : null
 
+  // AFTER every hook. An early return above them would change this
+  // component's hook count when you navigate to /sign-in while it is still
+  // mounted, which is a rules-of-hooks violation and a crash, not a warning.
+  if (bare) return null
   return (
     <nav
       data-testid="side-nav"

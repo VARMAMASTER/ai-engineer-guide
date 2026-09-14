@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NAV_APPS, isAppActive } from '@/lib/nav'
 import NavIcon from './NavIcon'
+import { useBareChrome } from './useBareChrome'
 
 /**
  * The phone tab bar: five apps, permanently, in a fixed order.
@@ -15,8 +16,14 @@ import NavIcon from './NavIcon'
  * again the moment a section is added.
  */
 export default function BottomNav() {
+  // The auth pages render their own minimal header; see useBareChrome.
+  const bare = useBareChrome()
   const pathname = usePathname() ?? ''
 
+  // AFTER every hook. An early return above them would change this
+  // component's hook count when you navigate to /sign-in while it is still
+  // mounted, which is a rules-of-hooks violation and a crash, not a warning.
+  if (bare) return null
   return (
     <nav
       data-testid="bottom-nav"

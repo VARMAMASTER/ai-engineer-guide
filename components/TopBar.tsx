@@ -11,6 +11,7 @@ import AppSwitcher from './AppSwitcher'
 import Meter from './Meter'
 import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
+import { useBareChrome } from './useBareChrome'
 
 const TOTAL_DAYS = 180
 const TOTAL_WEEKS = 26
@@ -21,6 +22,8 @@ function pad(n: number, width: number): string {
 }
 
 export default function TopBar() {
+  // The auth pages render their own minimal header; see useBareChrome.
+  const bare = useBareChrome()
   const pathname = usePathname() ?? ''
   const hydrated = useHydrated()
   const startDate = useProgress((s) => s.startDate)
@@ -53,6 +56,10 @@ export default function TopBar() {
 
   const railPct = day === null ? 0 : Math.min(100, (day / TOTAL_DAYS) * 100)
 
+  // AFTER every hook. An early return above them would change this
+  // component's hook count when you navigate to /sign-in while it is still
+  // mounted, which is a rules-of-hooks violation and a crash, not a warning.
+  if (bare) return null
   return (
     <header className="panel sticky top-0 z-30 rounded-none border-x-0 border-t-0">
       <div className="flex min-h-[var(--topbar-h)] items-center gap-2 px-3 py-2 md:gap-6 md:px-8">

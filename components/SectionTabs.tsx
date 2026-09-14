@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { appFor, sectionFor } from '@/lib/nav'
 import Tabs from './ui/Tabs'
+import { useBareChrome } from './useBareChrome'
 
 /**
  * Level two of the nav: the sections of whichever app you are in, as one
@@ -23,6 +24,8 @@ import Tabs from './ui/Tabs'
  * header is exactly the stacked-glass mush that rule exists to prevent.
  */
 export default function SectionTabs() {
+  // The auth pages render their own minimal header; see useBareChrome.
+  const bare = useBareChrome()
   const pathname = usePathname() ?? ''
   const box = useRef<HTMLDivElement>(null)
   const app = appFor(pathname)
@@ -52,6 +55,10 @@ export default function SectionTabs() {
 
   if (!app || !current || app.sections.length === 0) return null
 
+  // AFTER every hook. An early return above them would change this
+  // component's hook count when you navigate to /sign-in while it is still
+  // mounted, which is a rules-of-hooks violation and a crash, not a warning.
+  if (bare) return null
   return (
     <div
       ref={box}
