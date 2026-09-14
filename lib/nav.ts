@@ -34,12 +34,15 @@ export interface NavApp {
 }
 
 /**
- * The fourteen study sections, in the order they were in the old flat rail.
+ * The study sections, in the order they were in the old flat rail — with
+ * Courses added after Roadmap, where reading material belongs: it is the
+ * long-form half of Learn, not a fifth app, and it shares Learn's progress.
  * Today is not one of them — it is its own app — and neither is Settings,
  * which hangs off the top bar rather than belonging to any app.
  */
 export const LEARN_SECTIONS: NavItem[] = [
   { href: '/roadmap', label: 'Roadmap', short: 'Roadmap' },
+  { href: '/courses', label: 'Courses', short: 'Courses' },
   { href: '/dsa', label: 'DSA', short: 'DSA' },
   { href: '/system-design', label: 'System Design', short: 'Design' },
   { href: '/lld', label: 'Low-Level Design', short: 'LLD' },

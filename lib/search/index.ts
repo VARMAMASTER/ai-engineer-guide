@@ -31,6 +31,9 @@ import * as nav from '@/lib/nav'
  */
 export type SearchKind =
   | 'destination'
+  | 'course'
+  | 'course-part'
+  | 'course-section'
   | 'dsa-pattern'
   | 'dsa-problem'
   | 'sd-pattern'
@@ -55,6 +58,9 @@ export type SearchKind =
 /** Human label for the badge on a result row. */
 export const KIND_LABEL: Record<SearchKind, string> = {
   destination: 'Go to',
+  course: 'Course',
+  'course-part': 'Course part',
+  'course-section': 'Course section',
   'dsa-pattern': 'DSA pattern',
   'dsa-problem': 'DSA problem',
   'sd-pattern': 'Design pattern',
@@ -89,6 +95,8 @@ export const KIND_LABEL: Record<SearchKind, string> = {
  */
 const KIND_WEIGHT: Record<SearchKind, number> = {
   destination: 1.25,
+  course: 1.15,
+  'course-part': 1.1,
   'dsa-pattern': 1.1,
   'sd-pattern': 1.1,
   'lld-pattern': 1.1,
@@ -97,6 +105,7 @@ const KIND_WEIGHT: Record<SearchKind, number> = {
   'hw-topic': 1.1,
   company: 1.1,
   project: 1.1,
+  'course-section': 1,
   'dsa-problem': 1,
   'sd-question': 1,
   'lld-problem': 1,
@@ -277,6 +286,7 @@ export function search(items: SearchItem[], raw: string, limit = DEFAULT_LIMIT):
 const OWN_DESTINATIONS: Array<{ href: string; label: string; subtitle: string }> = [
   { href: '/today', label: 'Today', subtitle: "Today's tasks and the day's plan" },
   { href: '/roadmap', label: 'Roadmap', subtitle: '26 weeks, 30 days, the whole plan' },
+  { href: '/courses', label: 'Courses', subtitle: 'Long-form books, read in the app' },
   { href: '/dsa', label: 'DSA', subtitle: '18 patterns, 150 problems' },
   { href: '/system-design', label: 'System Design', subtitle: '20 patterns, 60 questions' },
   { href: '/lld', label: 'Low-Level Design', subtitle: 'Machine coding patterns and problems' },
@@ -400,6 +410,59 @@ function item(
 }
 
 type ContentModule = typeof import('@/lib/content/index')
+type CoursesModule = typeof import('@/content/courses/outlines.generated')
+
+/** The course half of the index: one row per course, part and section. */
+export function buildCourseItems({ courseOutlines }: Pick<CoursesModule, 'courseOutlines'>): SearchItem[] {
+  const items: SearchItem[] = []
+
+  for (const course of courseOutlines) {
+    const home = `/courses/${course.slug}`
+    items.push(
+      item(
+        `course:${course.slug}`,
+        'course',
+        course.title,
+        home,
+        `Course by ${course.author}`,
+        body(course.author, course.parts.map((p) => p.title)),
+      ),
+    )
+
+    for (const part of course.parts) {
+      const href = `${home}/${part.slug}`
+      items.push(
+        item(
+          `course-part:${course.slug}:${part.slug}`,
+          'course-part',
+          `${part.kicker} — ${part.title}`,
+          href,
+          course.title,
+          // The section titles ride along in the body so "rope" finds Part X
+          // as well as the six sections inside it.
+          body(part.range ?? undefined, part.sections.map((s) => s.label)),
+        ),
+      )
+
+      for (const section of part.sections) {
+        items.push(
+          item(
+            `course-section:${course.slug}:${section.anchor}`,
+            'course-section',
+            section.label,
+            `${href}#${section.anchor}`,
+            section.marker ? `${part.kicker} · ${section.marker}` : part.kicker,
+            // `§33` normalises to `33`, so typing a bare section number finds
+            // the section — which is how the author's own prose refers to it.
+            body(section.marker ?? undefined, part.kicker, part.title, course.title),
+          ),
+        )
+      }
+    }
+  }
+
+  return items
+}
 
 /**
  * Flatten the banks into rows.
@@ -411,8 +474,15 @@ type ContentModule = typeof import('@/lib/content/index')
  * does. `days` has no title at all beyond its number, and the tasks inside a
  * day are all indexed already under their own banks.
  */
-export function buildItems({ content }: Pick<ContentModule, 'content'>): SearchItem[] {
-  const items: SearchItem[] = [...DESTINATIONS]
+export function buildItems(
+  { content }: Pick<ContentModule, 'content'>,
+  /**
+   * The courses, from the generated outline. Defaulted to empty rather than
+   * required so a fixture-driven test can keep calling `buildItems(mod)`.
+   */
+  courses: Pick<CoursesModule, 'courseOutlines'> = { courseOutlines: [] },
+): SearchItem[] {
+  const items: SearchItem[] = [...DESTINATIONS, ...buildCourseItems(courses)]
 
   /* DSA ------------------------------------------------------------------ */
   const dsaHref = new Map<string, string>()
@@ -662,8 +732,15 @@ let buildCount = 0
 export function getSearchIndex(): Promise<SearchItem[]> {
   indexPromise ??= (async () => {
     buildCount += 1
-    const mod = await import('@/lib/content/index')
-    return buildItems(mod)
+    // Two dynamic imports, one await: the content banks, and the course
+    // outline. Neither is in the first-paint bundle — the outline in
+    // particular is 30KB of headings for a 365KB document that is never
+    // shipped at all, and both arrive only when the palette is first opened.
+    const [mod, courses] = await Promise.all([
+      import('@/lib/content/index'),
+      import('@/content/courses/outlines.generated'),
+    ])
+    return buildItems(mod, courses)
   })()
   return indexPromise
 }

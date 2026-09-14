@@ -152,6 +152,13 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M9.2 2.8h5.6" />
     </>
   ),
+  // Courses — an open book. Long-form reading, not a deck and not a plan.
+  '/courses': (
+    <>
+      <path d="M12 6.4C9.8 4.9 7.2 4.2 3.8 4.2v13c3.4 0 6 .7 8.2 2.2 2.2-1.5 4.8-2.2 8.2-2.2v-13c-3.4 0-6 .7-8.2 2.2z" />
+      <path d="M12 6.4v13" />
+    </>
+  ),
   // Revise — a card being flipped.
   '/revise': (
     <>

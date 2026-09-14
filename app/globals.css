@@ -903,6 +903,228 @@
     border: 0;
     background-color: var(--panel-border);
   }
+
+  /* ===== long-form reading =================================================
+     The Courses section renders one author's book: 365KB of prose, 144
+     sections, ~910 table rows, 56 display equations. Everything else in this
+     app is a dashboard or a list of short rows, and dashboard type is the
+     wrong type for reading three thousand words on a phone — so this is the
+     one place in the system with its own measure, size and leading.
+
+     The numbers, and why:
+       measure   68ch. Roughly 70 characters a line, which is where a reader's
+                 eye stops losing the start of the next line.
+       size      16px on a phone, 17px above 768px. The app's 15px body is a
+                 UI size; at 3,000 words it is a squint.
+       leading   1.7. Loose enough that a wrapped clause is easy to track,
+                 tight enough that a paragraph still reads as one block.
+       rhythm    A heading's space-before is four times its space-after, so a
+                 heading belongs to what follows it rather than floating
+                 between two paragraphs.
+
+     Every block that can be wider than the measure — table, code, equation,
+     diagram — gets its OWN scroll container, because the page itself must
+     never scroll sideways at 390px. */
+
+  .course-measure {
+    max-width: 68ch;
+  }
+
+  /* The author sets his part titles in capitals — a book convention, kept as
+     written. The display face's negative tracking is tuned for mixed case and
+     squeezes caps together, so it is relaxed back to neutral here. */
+  .course-title {
+    letter-spacing: 0;
+  }
+
+  .course-prose {
+    min-width: 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    overflow-wrap: break-word;
+  }
+
+  @media (min-width: 48rem) {
+    .course-prose {
+      font-size: 1.0625rem;
+    }
+  }
+
+  .course-prose > :first-child,
+  .course-prose > * > :first-child {
+    margin-top: 0;
+  }
+
+  .course-prose > :last-child,
+  .course-prose > * > :last-child {
+    margin-bottom: 0;
+  }
+
+  .course-prose p,
+  .course-prose ul,
+  .course-prose ol,
+  .course-prose blockquote {
+    margin-block: 0.95em;
+  }
+
+  .course-prose :is(h3, h4, h5, h6) {
+    margin-top: 1.9em;
+    margin-bottom: 0.45em;
+    scroll-margin-top: 6rem;
+  }
+
+  .course-prose :is(ul, ol) {
+    padding-inline-start: 1.35rem;
+  }
+
+  .course-prose ul {
+    list-style: disc;
+  }
+
+  .course-prose ol {
+    list-style: decimal;
+  }
+
+  .course-prose li {
+    margin-block: 0.3em;
+  }
+
+  .course-prose li > :is(ul, ol) {
+    margin-block: 0.3em;
+  }
+
+  .course-prose strong {
+    color: var(--text);
+    font-weight: 620;
+  }
+
+  .course-prose a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: var(--accent-line);
+    text-underline-offset: 2px;
+  }
+
+  .course-prose a:hover {
+    text-decoration-color: var(--accent);
+  }
+
+  /* A `§33` cross-reference. Never wraps: half a reference on the next line
+     reads as a stray number. */
+  .course-ref {
+    white-space: nowrap;
+  }
+
+  .course-prose :not(pre) > code {
+    background-color: var(--code-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 5px;
+    padding: 0.08em 0.3em;
+    overflow-wrap: break-word;
+  }
+
+  .course-prose blockquote {
+    border-inline-start: 2px solid var(--accent-line);
+    padding-inline-start: 1rem;
+    color: var(--text-muted);
+  }
+
+  .course-prose pre {
+    margin-block: 1.25em;
+  }
+
+  .course-prose hr {
+    height: 1px;
+    border: 0;
+    margin-block: 1.75em;
+    background-color: var(--panel-border);
+  }
+
+  /* The author's collapsible self-check blocks. Solid, never glass — they sit
+     inside a Panel — and the summary is a real 44px tap target. */
+  .course-prose details {
+    background-color: var(--panel-solid);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-sm);
+    margin-block: 0.75em;
+    padding: 0 0.875rem;
+  }
+
+  .course-prose summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    cursor: pointer;
+    font-weight: 560;
+  }
+
+  .course-prose details[open] summary {
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .course-prose details > :last-child {
+    margin-bottom: 0.875rem;
+  }
+
+  /* Its own scroll container: a table, an equation or a diagram may be wider
+     than the measure, and only IT may scroll. */
+  .course-scroll {
+    min-width: 0;
+    max-width: 100%;
+    margin-block: 1.35em;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .course-table {
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    width: 100%;
+  }
+
+  /* What makes a wide table scroll instead of squashing: six columns cannot
+     share 390px, so they claim 7rem each and the container scrolls. A two
+     column table still fits and wraps. */
+  .course-table :is(th, td) {
+    border-bottom: 1px solid var(--panel-border);
+    min-width: 7rem;
+    padding: 0.45rem 0.75rem 0.45rem 0;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .course-table th {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .course-table tbody tr:last-child :is(th, td) {
+    border-bottom: 0;
+  }
+
+  .course-math {
+    min-width: 0;
+    max-width: 100%;
+    margin-block: 1.5em;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding-block: 0.25rem;
+  }
+
+  /* KaTeX brings its own margins and its own inline font size. */
+  .course-math .katex-display {
+    margin: 0;
+  }
+
+  .course-math .katex {
+    font-size: 1.05em;
+  }
 }
 
 /* ===== blur budget ======================================================= */
