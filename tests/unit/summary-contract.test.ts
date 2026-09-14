@@ -109,6 +109,15 @@ describe('every app satisfies the AppSummary contract', () => {
     }
   })
 
+  it('reports idle when it has never been used, not ok', () => {
+    // `ok` and `idle` are different claims and conflating them was a real bug:
+    // an empty account read as "on track", and the agent — which uses these
+    // statuses to decide whether it knows enough to speak — saw a brand-new
+    // account as a well-run one. `ok` means used and currently quiet.
+    const empty = opsSummary({ tasks: [], goals: [], now: new Date(`${TODAY}T09:00:00`) })
+    expect(empty.status).toBe('idle')
+  })
+
   it('gives every app a distinct id, so Today cannot key two cards the same', () => {
     const ids = summaries().map((s) => s.appId)
     expect(new Set(ids).size).toBe(ids.length)

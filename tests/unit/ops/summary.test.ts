@@ -5,11 +5,25 @@ import { makeTask } from './helpers'
 describe('lib/ops/summary', () => {
   const now = new Date(2026, 8, 14, 9, 0) // Monday, 2026-09-14
 
-  it('no tasks or goals: idle-but-ok, nothing due', () => {
+  it('no tasks or goals: idle, because nothing is not the same as on track', () => {
+    // This asserted `ok` and the test's own name called it "idle-but-ok", so
+    // the distinction was seen and the wrong side taken. It matters because the
+    // agent reads these statuses to decide whether it knows enough to speak: on
+    // `ok` a brand-new empty account looked exactly like a well-run one, and
+    // the brief spoke when it had nothing to go on.
     const summary = opsSummary({ tasks: [], goals: [], now })
-    expect(summary.status).toBe('ok')
-    expect(summary.headline).toBe('Nothing due today.')
+    expect(summary.status).toBe('idle')
+    expect(summary.headline).toBe('Nothing here yet.')
     expect(summary.metrics.length).toBeLessThanOrEqual(3)
+  })
+
+  it('reports ok — not idle — once there is something, even if nothing is due', () => {
+    const summary = opsSummary({
+      tasks: [makeTask({ dueDate: '2026-12-31' })],
+      goals: [],
+      now,
+    })
+    expect(summary.status).toBe('ok')
   })
 
   it('produces the exact example headline: N due today, one overdue since a named weekday', () => {

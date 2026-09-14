@@ -21,7 +21,25 @@ export interface OpsSummaryInput {
 
 const UPCOMING_WINDOW_DAYS = 7
 
-function statusFor(overdueCount: number, dueTodayCount: number, goalsBehind: number): AppStatus {
+/**
+ * `idle` and `ok` are different claims, and conflating them was a real bug.
+ *
+ * An account with no tasks at all reported `ok` — "on track" — which is not
+ * false so much as unearned: nothing is on track, there is simply nothing. The
+ * agent reads these statuses to decide whether it knows enough to speak, and a
+ * brand-new account looked to it like fourteen days of a well-run Ops app. It
+ * worked around that by inspecting the history for variation; the honest fix is
+ * for Ops to say what it means.
+ *
+ * `idle` = never used. `ok` = used, and nothing wants you right now.
+ */
+function statusFor(
+  overdueCount: number,
+  dueTodayCount: number,
+  goalsBehind: number,
+  hasAnything: boolean,
+): AppStatus {
+  if (!hasAnything) return 'idle'
   if (overdueCount > 0) return 'attention'
   if (dueTodayCount > 0 || goalsBehind > 0) return 'behind'
   return 'ok'
@@ -53,8 +71,14 @@ export function opsSummary(input: OpsSummaryInput): AppSummary {
   // Longest-overdue task, so the headline names the day it first slipped.
   const oldestOverdue = [...overdue].sort((a, b) => daysOverdue(b, now) - daysOverdue(a, now))[0]
 
-  const status = statusFor(overdue.length, dueToday.length, behindGoals.length)
-  const headline = headlineFor(overdue.length, dueToday.length, oldestOverdue)
+  // Never used at all, as opposed to used and currently quiet. Counting goals
+  // too: a user who only tracks goals has still used Ops.
+  const hasAnything = tasks.length > 0 || goals.length > 0
+
+  const status = statusFor(overdue.length, dueToday.length, behindGoals.length, hasAnything)
+  const headline = hasAnything
+    ? headlineFor(overdue.length, dueToday.length, oldestOverdue)
+    : 'Nothing here yet.'
 
   const metrics: SummaryMetric[] = [
     { label: 'Due today', value: String(dueToday.length) },
