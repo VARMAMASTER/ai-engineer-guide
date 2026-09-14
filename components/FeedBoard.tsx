@@ -190,7 +190,14 @@ export default function FeedBoard() {
 
           {textOnly.length > 0 ? (
             <section className="flex min-w-0 flex-col gap-3">
-              <h2 className="eyebrow">Papers and threads</h2>
+              {/*
+                Not "Papers and threads" any more: this section is everything
+                without an image, and since MediaNama ships most of its items
+                without one, it is now mostly Indian policy reporting rather
+                than arXiv and Hacker News. The heading names the split the
+                board actually makes.
+              */}
+              <h2 className="eyebrow">Text only</h2>
               <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
                 {textOnly.map((item) => (
                   <TextCard key={item.id} item={item} />
