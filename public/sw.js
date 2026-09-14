@@ -66,6 +66,35 @@ const PRECACHE_ASSETS = [
 ]
 
 /**
+ * Paths whose responses are personal and must never enter a cache.
+ *
+ * Navigations are served stale-while-revalidate, which is exactly right for
+ * question banks and exactly wrong for an account page: the cached copy would
+ * be replayed from disk after sign-out, and to whoever opens this browser next.
+ * There is no cross-user leak across the network here — the cache is per
+ * profile — but "my data still on screen after I signed out" is the same bug
+ * from where the user stands.
+ *
+ * The bare mini-app landing pages are deliberately absent: they are public
+ * gates that hold no data, which is the same split `lib/auth/routes.ts`
+ * enforces. `tests/unit/pwa.test.ts` asserts the two agree, because this file
+ * cannot import that one — it is a classic script, evaluated in a worker.
+ *
+ * @param {string} path
+ */
+function isPrivatePath(path) {
+  const p = path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path
+  const under = (prefix) => p === prefix || p.startsWith(prefix + '/')
+  if (under('/account') || under('/api/account')) return true
+  if (under('/sign-in') || under('/sign-up') || under('/auth')) return true
+  // Inside a mini-app, but not its landing page.
+  for (const root of ['/diet', '/train', '/ops']) {
+    if (p !== root && under(root)) return true
+  }
+  return false
+}
+
+/**
  * The routing table, as a pure function so it can be asserted directly.
  *
  * Takes a plain descriptor rather than a `Request` so the unit test does not
@@ -87,6 +116,9 @@ function classify(req) {
   if (url.origin !== self.location.origin) return null
 
   const path = url.pathname
+
+  // Before every other rule: nothing personal is ever stored.
+  if (isPrivatePath(path)) return null
 
   if (path.startsWith('/api/feed/')) return { strategy: 'network-first', cache: CACHES.feed }
   // No other API route exists today; if one lands, it opts in deliberately.
@@ -281,5 +313,5 @@ self.addEventListener('fetch', (event) => {
 // Exposed only when this file is evaluated as a module by the unit test;
 // `module` is undefined in a worker, so this is a no-op in the browser.
 if (typeof module !== 'undefined' && module) {
-  module.exports = { classify, cacheKey, CACHES, CACHE_PREFIX, VERSION, OFFLINE_URL, START_URL, PRECACHE_PAGES, PRECACHE_ASSETS }
+  module.exports = { classify, cacheKey, isPrivatePath, CACHES, CACHE_PREFIX, VERSION, OFFLINE_URL, START_URL, PRECACHE_PAGES, PRECACHE_ASSETS }
 }

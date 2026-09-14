@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
 import { addDays, mostRecentMonday, todayIso } from '@/lib/date'
+import AccountSection from './AccountSection'
 
 /**
  * Four independent sections: start date, export, import, reset. Each owns
@@ -76,6 +77,8 @@ export default function Settings() {
           Manage your start date and your progress data.
         </p>
       </header>
+
+      <AccountSection />
 
       <section className="panel flex flex-col gap-3 p-4 md:p-5">
         <h2 className="eyebrow">Start date</h2>
