@@ -321,9 +321,20 @@ export interface OffProduct {
   code?: string
   product_name?: string
   product_name_en?: string
-  brands?: string
+  /**
+   * A comma-joined string on the legacy CGI endpoint and an array on the
+   * search-a-licious one. Both spellings are accepted rather than the caller
+   * being trusted to normalise, because getting it wrong renders the brand as
+   * "[object Object]" next to a calorie figure and nothing else looks amiss.
+   */
+  brands?: string | string[]
   serving_size?: string
   nutriments?: Record<string, unknown>
+}
+
+function firstBrand(brands: string | string[] | undefined): string {
+  if (Array.isArray(brands)) return (brands[0] ?? '').trim()
+  return (brands ?? '').split(',')[0]?.trim() ?? ''
 }
 
 function offNumber(nutriments: Record<string, unknown> | undefined, key: string): number | null {
@@ -358,7 +369,7 @@ export function offProductToFood(product: OffProduct): FoodItem | null {
     ? (offNumber(nutriments, 'proteins_serving') ?? 0)
     : (offNumber(nutriments, 'proteins_100g') ?? 0)
 
-  const brand = (product.brands ?? '').split(',')[0]?.trim()
+  const brand = firstBrand(product.brands)
   return foodItemSchema.parse({
     id: `off-${product.code ?? name.toLowerCase().replace(/\W+/g, '-')}`,
     name: brand ? `${name} (${brand})` : name,

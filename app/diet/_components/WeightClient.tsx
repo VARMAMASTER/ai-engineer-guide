@@ -198,8 +198,8 @@ export default function WeightClient({
               ) : null}
               {!week ? (
                 <p className="hint">
-                  A weekly rate needs two trend points at least a day apart. One reading is a
-                  starting point, not a direction.
+                  No weekly rate yet: that needs a reading from {addDays(today, -7)} or earlier to
+                  compare today against, and the trend is not extrapolated backwards to invent one.
                 </p>
               ) : null}
               {!heightCm ? (

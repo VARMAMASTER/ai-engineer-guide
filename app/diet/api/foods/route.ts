@@ -28,9 +28,18 @@ import { offProductToFood, type OffProduct } from '@/lib/diet/data'
  * this handler is also an open proxy to a third party if it is not.
  */
 
-const OFF_SEARCH = 'https://world.openfoodfacts.org/cgi/search.pl'
+/**
+ * Open Food Facts' search service, not the legacy `/cgi/search.pl`.
+ *
+ * The old CGI endpoint answers a curl and then serves a 503 "page temporarily
+ * unavailable" to the same query from a server runtime — it is throttled, and
+ * Open Food Facts have moved free-text search here. Found by probing both: the
+ * CGI one returned 200 to curl and 503 to the app, which is exactly the kind of
+ * difference that looks like a bug in the app.
+ */
+const OFF_SEARCH = 'https://search.openfoodfacts.org/search'
 const USER_AGENT = 'Unyfide/0.1 (https://github.com/unyfide) diet food lookup'
-const TIMEOUT_MS = 6000
+const TIMEOUT_MS = 8000
 
 export async function GET(request: NextRequest) {
   const user = await getCurrentUser()
@@ -40,11 +49,8 @@ export async function GET(request: NextRequest) {
   if (query.length < 2) return NextResponse.json({ foods: [] })
 
   const url = new URL(OFF_SEARCH)
-  url.searchParams.set('search_terms', query.slice(0, 80))
-  url.searchParams.set('search_simple', '1')
-  url.searchParams.set('action', 'process')
-  url.searchParams.set('json', '1')
-  url.searchParams.set('page_size', '12')
+  url.searchParams.set('q', query.slice(0, 80))
+  url.searchParams.set('page_size', '16')
   url.searchParams.set(
     'fields',
     'code,product_name,product_name_en,brands,serving_size,nutriments',
@@ -64,8 +70,10 @@ export async function GET(request: NextRequest) {
         { status: 200 },
       )
     }
-    const body = (await response.json()) as { products?: OffProduct[] }
-    const foods = (body.products ?? [])
+    const body = (await response.json()) as { hits?: OffProduct[] }
+    // Products with no energy at all are dropped by the mapper, and the
+    // database is full of them — hence asking for more hits than are shown.
+    const foods = (body.hits ?? [])
       .map(offProductToFood)
       .filter((f): f is NonNullable<typeof f> => f !== null)
       .slice(0, 10)

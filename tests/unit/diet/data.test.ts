@@ -229,6 +229,16 @@ describe('open food facts mapping', () => {
     })
   })
 
+  it('accepts brands as an array, which is how the search service returns them', () => {
+    const food = offProductToFood({
+      code: '321',
+      product_name: 'Peanut Butter',
+      brands: ['Peanut Butter & Co'],
+      nutriments: { 'energy-kcal_100g': 562.5, proteins_100g: 21.875 },
+    })
+    expect(food?.name).toBe('Peanut Butter (Peanut Butter & Co)')
+  })
+
   it('falls back to per-100g and labels it as 100 g, not as "1 serving"', () => {
     // Labelling a per-100g figure as one serving is how somebody logs three
     // times what they ate without any way of noticing.
