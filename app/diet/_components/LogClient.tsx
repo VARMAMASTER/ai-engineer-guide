@@ -9,6 +9,13 @@ import Stat from '@/components/ui/Stat'
 import Tag from '@/components/ui/Tag'
 import { useToast } from '@/components/ui/Toast'
 import { dayTotals } from '@/lib/diet/aggregate'
+import {
+  planDayToEntries,
+  resolvePlanDay,
+  weekDayOf,
+  WEEK_DAY_LABEL,
+  type WeeklyPlan,
+} from '@/lib/diet/plan'
 import { addDays, formatSpan } from '@/lib/diet/time'
 import { dailyWindowSummaries, entryWindowStatus } from '@/lib/diet/window'
 import type { DietTargets, EatingWindow, FoodItem, LogEntry } from '@/lib/diet/types'
@@ -48,6 +55,8 @@ export interface LogClientProps {
   initialFoods: FoodItem[]
   targets: DietTargets | undefined
   window: EatingWindow
+  /** The weekly plan, when there is one. `undefined` hides the one-tap day. */
+  plan: WeeklyPlan | undefined
   loadError: string | null
 }
 
@@ -60,6 +69,7 @@ export default function LogClient({
   initialFoods,
   targets,
   window: eatingWindow,
+  plan,
   loadError,
 }: LogClientProps) {
   const toast = useToast()
@@ -93,6 +103,19 @@ export default function LogClient({
   }, [entries, date])
 
   const quickFoods = foods.slice(0, QUICK_LOG_LIMIT)
+
+  /**
+   * The plan for the day being viewed, resolved against the library.
+   *
+   * Resolved here rather than passed in already resolved, because a quantity
+   * the user just edited on the Plan screen has to be reflected the next time
+   * this page loads, and the resolution is the cheap half of that.
+   */
+  const planForDay = useMemo(() => {
+    if (!plan) return null
+    const day = plan[weekDayOf(date)]
+    return day ? resolvePlanDay(day, foods) : null
+  }, [plan, date, foods])
 
   async function commit(
     optimistic: LogEntry[],
@@ -129,6 +152,24 @@ export default function LogClient({
     // by what this person actually eats rather than by what they typed first.
     setFoods((current) => [food, ...current.filter((f) => f.id !== food.id)])
     void upsertFood(userId, food, { used: true })
+  }
+
+  /**
+   * The whole of the day's plan, in one tap.
+   *
+   * On the Log screen and not only on the Plan screen, deliberately: this is
+   * the page the user opens, and a plan whose logging lives one navigation away
+   * is a plan that gets logged by hand. The plan itself is edited elsewhere.
+   */
+  async function logPlannedDay() {
+    if (!planForDay) return
+    const copies = planDayToEntries(planForDay, { date, nextId: newId })
+    await commit(
+      copies,
+      () => addEntries(userId, copies),
+      `${WEEK_DAY_LABEL[planForDay.day]}’s plan logged: ${copies.length} entries, ` +
+        `${kcalText(planForDay.kcal)} kcal, ${Math.round(planForDay.proteinG)} g protein.`,
+    )
   }
 
   async function repeatPreviousDay() {
@@ -249,6 +290,24 @@ export default function LogClient({
                   {describeAgainstTarget(totals.kcal, targets)} Protein and calories are separate
                   numbers; hitting one says nothing about the other.
                 </p>
+                {/* Said in words, not left to a bar that is nearly full. A day
+                    inside its calorie band and under its protein floor is the
+                    commonest way a plan fails, and the bar above renders it as
+                    "almost there". */}
+                {totals.proteinG < targets.proteinG - 0.05 ? (
+                  <p
+                    className="text-sm text-[var(--warning)]"
+                    role="status"
+                    data-testid="log-protein-warning"
+                  >
+                    {Math.round(targets.proteinG - totals.proteinG)} g under your{' '}
+                    {Math.round(targets.proteinG)} g protein floor
+                    {Math.abs(totals.kcal - targets.kcal) <= targets.kcalBand
+                      ? ', with the calories on target'
+                      : ''}
+                    . The Plan screen quantifies what closes it.
+                  </p>
+                ) : null}
               </div>
             ) : (
               <p className="hint">
@@ -279,6 +338,22 @@ export default function LogClient({
               : 'Quick chips log at the current time, so they only apply to today. Use “Add an entry” to set a time on another day.'}
           </p>
         </div>
+
+        {/* First in the section, and full width on a phone. The kitchen at 7am
+            is the whole design brief for this button: one thumb-sized tap from
+            opening the app writes the day. */}
+        {planForDay && planForDay.kcal > 0 ? (
+          <Button
+            variant="accent"
+            className="w-full md:w-auto"
+            onClick={() => void logPlannedDay()}
+            disabled={busy}
+            data-testid="log-planned-day"
+          >
+            {isToday ? 'Log today’s plan' : `Log ${WEEK_DAY_LABEL[planForDay.day]}’s plan`} ·{' '}
+            {kcalText(planForDay.kcal)} kcal, {Math.round(planForDay.proteinG)} g protein
+          </Button>
+        ) : null}
 
         <div className="flex flex-wrap gap-2">
           {quickFoods.map((food) => (

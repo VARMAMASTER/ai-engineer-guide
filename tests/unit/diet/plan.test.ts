@@ -5,6 +5,7 @@ import {
   DEFAULT_MEAL_TIMES,
   emptyPlanMeals,
   gradePlanAgainstTrend,
+  loggedPlanSlots,
   MEAL_SLOTS,
   planDayToEntries,
   planMealToEntries,
@@ -509,6 +510,39 @@ describe('the plan as log entries — one tap for a whole day', () => {
     const entries = planDayToEntries(orphan, { date: '2026-09-14', nextId: idFactory('e') })
     expect(entries).toHaveLength(1)
     expect(entries[0].name).toBe('Tofu')
+  })
+})
+
+describe('which meals are already logged', () => {
+  const monday = BY_DAY.get('mon')!
+  const date = '2026-09-14'
+
+  it('is nothing on a day with no entries', () => {
+    expect(loggedPlanSlots(monday, [], date).size).toBe(0)
+  })
+
+  it('ticks off a meal once every food in it is in the log', () => {
+    const breakfast = monday.meals.find((m) => m.slot === 'breakfast')!
+    const entries = planMealToEntries(breakfast, { date, nextId: idFactory('e') })
+    const logged = loggedPlanSlots(monday, entries, date)
+    expect([...logged]).toEqual(['breakfast'])
+  })
+
+  it('does NOT tick off a meal that is only partly logged', () => {
+    const breakfast = monday.meals.find((m) => m.slot === 'breakfast')!
+    const entries = planMealToEntries(breakfast, { date, nextId: idFactory('e') }).slice(0, 2)
+    expect(loggedPlanSlots(monday, entries, date).size).toBe(0)
+  })
+
+  it('ignores entries on another day', () => {
+    const breakfast = monday.meals.find((m) => m.slot === 'breakfast')!
+    const entries = planMealToEntries(breakfast, { date: '2026-09-13', nextId: idFactory('e') })
+    expect(loggedPlanSlots(monday, entries, date).size).toBe(0)
+  })
+
+  it('ticks off all four once the whole day is logged', () => {
+    const entries = planDayToEntries(monday, { date, nextId: idFactory('e') })
+    expect(loggedPlanSlots(monday, entries, date).size).toBe(4)
   })
 })
 

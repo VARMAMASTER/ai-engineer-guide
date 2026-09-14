@@ -18,6 +18,10 @@ export interface DietSection {
 
 export const DIET_SECTIONS: DietSection[] = [
   { href: '/diet/log', label: 'Log' },
+  // Second, not first. Log is where you land because logging is the thing you
+  // do every day; Plan is where the week is edited, which is a Sunday job. The
+  // one-tap "log today's plan" lives on Log for exactly that reason.
+  { href: '/diet/plan', label: 'Plan' },
   { href: '/diet/weight', label: 'Weight' },
   { href: '/diet/trends', label: 'Trends' },
   { href: '/diet/setup', label: 'Setup' },

@@ -42,6 +42,7 @@ export default async function DietLogPage() {
         initialFoods={snapshot.foods}
         targets={snapshot.targets}
         window={snapshot.window}
+        plan={snapshot.plan}
         loadError={error}
       />
     </div>

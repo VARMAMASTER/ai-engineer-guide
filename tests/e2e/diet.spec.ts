@@ -15,7 +15,7 @@ import { expect, test } from '@playwright/test'
  * suite under `tests/unit/diet`.
  */
 
-const SECTIONS = ['/diet/log', '/diet/weight', '/diet/trends', '/diet/setup']
+const SECTIONS = ['/diet/log', '/diet/plan', '/diet/weight', '/diet/trends', '/diet/setup']
 
 test.describe('the Diet landing page is public', () => {
   test('renders its own heading and every section shortcut', async ({ page }) => {

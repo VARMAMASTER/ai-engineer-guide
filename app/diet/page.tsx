@@ -30,6 +30,12 @@ const SHORTCUTS: { href: string; label: string; blurb: string }[] = [
       'Today’s meals, and one tap to log something you eat all the time. Every entry keeps its own clock time.',
   },
   {
+    href: '/diet/plan',
+    label: 'Plan',
+    blurb:
+      'Your repeating week, with what it actually delivers — and whether it reaches your protein floor, which most plans quietly do not.',
+  },
+  {
     href: '/diet/weight',
     label: 'Weight',
     blurb:

@@ -176,7 +176,17 @@ export interface ResolvedPlanItem {
   name: string
   servings: number
   servingLabel: string
-  /** Grams of this item, when the food is measured by weight at all. */
+  /** Grams in ONE serving, when the food is measured by weight at all. */
+  servingGrams: number | undefined
+  /**
+   * Grams of this item — `servingGrams * servings`.
+   *
+   * Both this and `servingGrams` are here so the quantity editor can offer the
+   * field in the unit a person actually measures in: grams for rice and
+   * chicken, a count for eggs and slices of bread. Deriving one from the other
+   * at the call site would mean dividing by `servings`, which is exactly the
+   * sort of arithmetic that ends up in a component.
+   */
   grams: number | undefined
   /** The state the grams are measured in. See `WEIGHT_BASES` in `types.ts`. */
   weightBasis: WeightBasis | undefined
@@ -275,6 +285,7 @@ export function resolvePlanItem(
     name: food?.name ?? parsed.name,
     servings,
     servingLabel: food?.servingLabel ?? '—',
+    servingGrams: food?.servingGrams,
     grams: food?.servingGrams === undefined ? undefined : round1(food.servingGrams * servings),
     weightBasis: food?.weightBasis,
     quantityLabel: quantityLabelFor(food, servings),
@@ -733,6 +744,37 @@ export function planMealToEntries(
 /** The whole day as log entries — what "Log today's plan" writes. */
 export function planDayToEntries(day: ResolvedDay, options: PlanToEntriesOptions): LogEntry[] {
   return day.meals.flatMap((meal) => planMealToEntries(meal, options))
+}
+
+/**
+ * Which of a day's meals are already in the log for `date`.
+ *
+ * Derived from the entries rather than remembered in component state, so the
+ * tick marks survive a reload — a user who logs breakfast, closes the app and
+ * comes back at lunchtime must not be shown an un-ticked breakfast and invited
+ * to log it twice.
+ *
+ * A meal counts as logged when EVERY food it plans appears among that day's
+ * entries. Not "any": a day where breakfast was logged and then one egg
+ * deleted is a day whose breakfast is no longer what the plan says, and
+ * claiming otherwise would hide the difference. Empty meals are never logged —
+ * there is nothing to have logged.
+ */
+export function loggedPlanSlots(
+  day: ResolvedDay,
+  entries: LogEntry[],
+  date: IsoDate,
+): Set<MealSlot> {
+  const onDate = new Set(
+    entries.filter((e) => e.date === date && e.foodId !== undefined).map((e) => e.foodId as string),
+  )
+  const out = new Set<MealSlot>()
+  for (const meal of day.meals) {
+    const planned = meal.items.filter((i) => i.known).map((i) => i.foodId)
+    if (planned.length === 0) continue
+    if (planned.every((foodId) => onDate.has(foodId))) out.add(meal.slot)
+  }
+  return out
 }
 
 /* ------------------------------------------------------------ honesty -- */
