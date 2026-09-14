@@ -28,6 +28,11 @@ describe('diet module boundaries', () => {
       'energy.ts',
       'forecast.ts',
       'index.ts',
+      // The weekly meal plan: the template logic, and the owner's own plan as
+      // data. Split so the reference values can be read and corrected without
+      // scrolling past the arithmetic that consumes them.
+      'plan-seed.ts',
+      'plan.ts',
       'summary.ts',
       'time.ts',
       'trend.ts',

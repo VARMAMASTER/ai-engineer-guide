@@ -38,6 +38,7 @@ import {
   type WeightReading,
 } from './types'
 import { storedForecastSchema, type StoredForecast } from './forecast'
+import { planDaySchema, type PlanDay, type WeeklyPlan, type WeekDay } from './plan'
 import { dateOf } from './time'
 
 /* ------------------------------------------------------------------ rows -- */
@@ -65,9 +66,35 @@ export interface DietFoodRow {
   serving_grams: number | string | null
   kcal_per_serving: number | string
   protein_g_per_serving: number | string
+  /**
+   * Nullable, and null means UNKNOWN rather than zero. Every food in the
+   * library predating the meal plan has no macro split, and an Open Food Facts
+   * product often has energy and nothing else.
+   */
+  carb_g_per_serving?: number | string | null
+  fat_g_per_serving?: number | string | null
+  /** `dry` | `raw` | `cooked` | `as-served`. Null on rows that never said. */
+  weight_basis?: string | null
   source: string
   use_count?: number | null
   last_used_at?: string | null
+}
+
+/**
+ * `public.diet_plan_day`, as selected — one row per weekday.
+ *
+ * `meals` is `jsonb` rather than a second table of items, and that is a
+ * deliberate trade. A plan day is read and written as a WHOLE: the screen edits
+ * a day, "log today's plan" reads a day, and applying a protein fix rewrites
+ * one meal of one day. Item rows would buy per-item addressing nobody needs and
+ * cost an ordering column, a cascade, and a second set of four RLS policies.
+ * The shape inside is validated by `planDaySchema` on the way out, which is
+ * where a jsonb column's type safety has to live anyway.
+ */
+export interface DietPlanDayRow {
+  day: string
+  meals: unknown
+  note: string | null
 }
 
 /** `public.diet_entry`, as selected. */
@@ -120,6 +147,8 @@ export interface DietSnapshot {
   entries: LogEntry[]
   weights: WeightReading[]
   forecasts: StoredForecast[]
+  /** `undefined` until the weekly plan has been seeded. Never an empty week. */
+  plan: WeeklyPlan | undefined
 }
 
 /* --------------------------------------------------------------- codecs -- */
@@ -142,6 +171,9 @@ export function rowToFood(row: DietFoodRow): FoodItem {
     servingGrams: optionalNum(row.serving_grams),
     kcalPerServing: n(row.kcal_per_serving),
     proteinGPerServing: n(row.protein_g_per_serving),
+    carbGPerServing: optionalNum(row.carb_g_per_serving),
+    fatGPerServing: optionalNum(row.fat_g_per_serving),
+    weightBasis: row.weight_basis ?? undefined,
     source: row.source,
   })
 }
@@ -156,8 +188,57 @@ export function foodToRow(food: FoodItem): Omit<DietFoodRow, 'use_count' | 'last
     serving_grams: f.servingGrams ?? null,
     kcal_per_serving: f.kcalPerServing,
     protein_g_per_serving: f.proteinGPerServing,
+    // Null, not zero. `optionalNum` reads it straight back as `undefined`, so
+    // "unknown" survives the round trip instead of becoming a confident 0 g.
+    carb_g_per_serving: f.carbGPerServing ?? null,
+    fat_g_per_serving: f.fatGPerServing ?? null,
+    weight_basis: f.weightBasis ?? null,
     source: f.source,
   }
+}
+
+/* ------------------------------------------------------------ the plan -- */
+
+export function rowToPlanDay(row: DietPlanDayRow): PlanDay {
+  return planDaySchema.parse({
+    day: row.day,
+    meals: row.meals,
+    note: row.note ?? undefined,
+  })
+}
+
+export function planDayToRow(day: PlanDay): DietPlanDayRow {
+  const parsed = planDaySchema.parse(day)
+  return { day: parsed.day, meals: parsed.meals, note: parsed.note ?? null }
+}
+
+/**
+ * The seven rows as one plan, or `undefined` when there are none.
+ *
+ * `undefined` rather than an empty week, and the distinction is the whole
+ * reason this returns a union: a user who has never seeded the plan and a user
+ * who has deliberately emptied Tuesday are different states, and rendering the
+ * first as a week of zero-calorie days would be the same lie as painting an
+ * unlogged day as zero. The screen offers to seed only in the `undefined` case.
+ *
+ * A row whose `meals` jsonb fails validation is DROPPED rather than throwing.
+ * One bad day must not take the whole plan screen down with it, and a missing
+ * day resolves to an empty one that the user can see and fix.
+ */
+export function rowsToWeeklyPlan(rows: DietPlanDayRow[]): WeeklyPlan | undefined {
+  if (rows.length === 0) return undefined
+  const plan: Partial<Record<WeekDay, PlanDay>> = {}
+  for (const row of rows) {
+    const parsed = planDaySchema.safeParse({
+      day: row.day,
+      meals: row.meals,
+      note: row.note ?? undefined,
+    })
+    if (parsed.success) plan[parsed.data.day] = parsed.data
+  }
+  const days = Object.keys(plan)
+  if (days.length === 0) return undefined
+  return plan as WeeklyPlan
 }
 
 export function rowToEntry(row: DietEntryRow): LogEntry {

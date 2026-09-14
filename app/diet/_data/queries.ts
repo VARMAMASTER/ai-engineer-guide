@@ -8,9 +8,11 @@ import {
   rowToTargets,
   rowToWeight,
   rowToWindow,
+  rowsToWeeklyPlan,
   type DietEntryRow,
   type DietFoodRow,
   type DietForecastRow,
+  type DietPlanDayRow,
   type DietProfileRow,
   type DietSnapshot,
   type DietWeightRow,
@@ -36,7 +38,8 @@ import { weightTrend } from '@/lib/diet/trend'
 const ENTRY_HISTORY_DAYS = 120
 
 const FOOD_COLUMNS =
-  'id, name, serving_label, serving_grams, kcal_per_serving, protein_g_per_serving, source, use_count, last_used_at'
+  'id, name, serving_label, serving_grams, kcal_per_serving, protein_g_per_serving, carb_g_per_serving, fat_g_per_serving, weight_basis, source, use_count, last_used_at'
+const PLAN_COLUMNS = 'day, meals, note'
 const ENTRY_COLUMNS = 'id, food_id, name, servings, kcal, protein_g, at_local, entry_date'
 const WEIGHT_COLUMNS = 'id, reading_date, kg, at_local'
 const FORECAST_COLUMNS =
@@ -72,7 +75,8 @@ export async function loadDietSnapshot(
   // which is fine for a history bound and would not be fine for "today".
   const since = isoDaysAgo(ENTRY_HISTORY_DAYS + 1)
 
-  const [profileResult, foodResult, entryResult, weightResult, forecastResult] = await Promise.all([
+  // prettier-ignore
+  const [profileResult, foodResult, entryResult, weightResult, forecastResult, planResult] = await Promise.all([
     supabase.from('diet_profile').select(PROFILE_COLUMNS).eq('user_id', user.id).maybeSingle(),
     supabase
       .from('diet_food')
@@ -100,6 +104,10 @@ export async function loadDietSnapshot(
       .eq('user_id', user.id)
       .order('for_date', { ascending: true })
       .limit(200),
+    // Seven rows at most. No ordering: the plan is keyed by weekday and
+    // `rowsToWeeklyPlan` builds a record from it, so the order rows arrive in
+    // cannot affect the week that renders.
+    supabase.from('diet_plan_day').select(PLAN_COLUMNS).eq('user_id', user.id).limit(7),
   ])
 
   const error =
@@ -108,6 +116,7 @@ export async function loadDietSnapshot(
     entryResult.error?.message ??
     weightResult.error?.message ??
     forecastResult.error?.message ??
+    planResult.error?.message ??
     null
 
   const profileRow = (profileResult.data ?? null) as DietProfileRow | null
@@ -115,6 +124,10 @@ export async function loadDietSnapshot(
   const entries = ((entryResult.data ?? []) as DietEntryRow[]).map(rowToEntry)
   const weights = ((weightResult.data ?? []) as DietWeightRow[]).map(rowToWeight)
   const forecasts = ((forecastResult.data ?? []) as DietForecastRow[]).map(rowToStoredForecast)
+  // `undefined` when there are no rows, never an empty week. A user who has
+  // never seeded the plan and a user who has emptied a day are different
+  // states, and only the first is offered the seed.
+  const plan = rowsToWeeklyPlan((planResult.data ?? []) as DietPlanDayRow[])
 
   // The formula's weight input is the TREND, not the last thing the scale said.
   // A 1.5 kg water swing through Mifflin-St Jeor is ~20 kcal/day of pure noise
@@ -133,6 +146,7 @@ export async function loadDietSnapshot(
       entries,
       weights,
       forecasts,
+      plan,
     },
   }
 }

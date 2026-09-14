@@ -53,9 +53,48 @@ export const localTimestampSchema = z
   .refine((s) => isRealDate(s.slice(0, 10)), 'not a real calendar date')
 
 /**
+ * **What state the food was weighed in.** This is not a label, it is the
+ * difference between a correct entry and one that is out by a factor of three.
+ *
+ * 100 g of dry brown rice is ~362 kcal. The same rice cooked weighs ~300 g, so
+ * 100 g of *cooked* rice is ~120 kcal. A plan that says "brown rice 100 g" and
+ * a user who weighs it out of the pot disagree by 240 kcal, and nothing on
+ * screen looks wrong — both numbers are plausible, both are in grams, and the
+ * error is invisible in every total it feeds. The same trap sits under raw vs
+ * cooked chicken (~30% water loss) and dry vs boiled chana (~2.2x).
+ *
+ * So the basis travels with the food rather than living in its name, and every
+ * surface that shows a gram quantity is expected to show the basis beside it.
+ *
+ *  - `dry`        — weighed uncooked and unsoaked: rice, dal, whole pulses.
+ *  - `raw`        — weighed raw but not dehydrated: chicken, fresh vegetables.
+ *  - `cooked`     — weighed after cooking: a curry, boiled chana, sprouts.
+ *  - `as-served`  — weight or count is the thing you eat: an egg, a slice of
+ *                   bread, curd, paneer, oil. No conversion applies.
+ */
+export const WEIGHT_BASES = ['dry', 'raw', 'cooked', 'as-served'] as const
+export type WeightBasis = (typeof WEIGHT_BASES)[number]
+export const weightBasisSchema = z.enum(WEIGHT_BASES)
+
+/** How a basis reads next to a quantity. `as-served` adds nothing. */
+export const WEIGHT_BASIS_LABEL: Record<WeightBasis, string> = {
+  dry: 'dry',
+  raw: 'raw',
+  cooked: 'cooked',
+  'as-served': '',
+}
+
+/**
  * A food, as the user's library holds it. Energy and protein are **per
  * serving**, already resolved: the library is the place that knows whether a
  * serving is 100 g or one roti, and no consumer should have to.
+ *
+ * `carbGPerServing` and `fatGPerServing` are OPTIONAL, and that is deliberate
+ * rather than laziness. Every food in the library predating them has none, and
+ * an Open Food Facts product routinely has energy and nothing else; defaulting
+ * the missing ones to zero would render a day as "0 g fat" instead of "not
+ * known", which is the same class of lie as painting an unlogged day as zero.
+ * Consumers that need a macro split must handle `undefined` and say so.
  */
 export const foodItemSchema = z.object({
   id: z.string().min(1),
@@ -65,6 +104,12 @@ export const foodItemSchema = z.object({
   servingGrams: z.number().positive().max(5000).optional(),
   kcalPerServing: z.number().min(0).max(10_000),
   proteinGPerServing: z.number().min(0).max(1000),
+  /** Carbohydrate per serving. `undefined` means unknown, never zero. */
+  carbGPerServing: z.number().min(0).max(1000).optional(),
+  /** Fat per serving. `undefined` means unknown, never zero. */
+  fatGPerServing: z.number().min(0).max(1000).optional(),
+  /** What state the serving was weighed in. See `WEIGHT_BASES`. */
+  weightBasis: weightBasisSchema.optional(),
   source: z.enum(['library', 'openfoodfacts', 'custom']).default('custom'),
 })
 export type FoodItem = z.infer<typeof foodItemSchema>

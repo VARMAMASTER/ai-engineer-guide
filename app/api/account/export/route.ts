@@ -27,8 +27,11 @@ const SOURCES = [
   {
     table: 'diet_food',
     columns:
-      'id, name, serving_label, serving_grams, kcal_per_serving, protein_g_per_serving, source, use_count, last_used_at, created_at',
+      'id, name, serving_label, serving_grams, kcal_per_serving, protein_g_per_serving, carb_g_per_serving, fat_g_per_serving, weight_basis, source, use_count, last_used_at, created_at',
   },
+  // The weekly meal plan. `meals` is the whole day, so the export carries the
+  // plan as it is actually stored rather than a summary of it.
+  { table: 'diet_plan_day', columns: 'day, meals, note, created_at, updated_at' },
   {
     table: 'diet_entry',
     columns: 'id, food_id, name, servings, kcal, protein_g, at_local, entry_date, logged_at',

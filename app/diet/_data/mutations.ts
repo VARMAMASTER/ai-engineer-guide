@@ -4,11 +4,13 @@ import { createClient } from '@/lib/db/client'
 import {
   entryToRow,
   foodToRow,
+  planDayToRow,
   storedForecastToRow,
   weightToRow,
   type DietProfileRow,
 } from '@/lib/diet/data'
 import type { StoredForecast } from '@/lib/diet/forecast'
+import type { PlanDay } from '@/lib/diet/plan'
 import type { FoodItem, LogEntry, WeightReading } from '@/lib/diet/types'
 
 /**
@@ -118,6 +120,57 @@ export async function addWeight(
 export async function removeWeight(userId: string, id: string): Promise<Result> {
   const supabase = createClient()
   const { error } = await supabase.from('diet_weight').delete().eq('user_id', userId).eq('id', id)
+  return { error: error?.message ?? null }
+}
+
+/**
+ * Save the whole food library in one statement — what seeding the meal plan is.
+ *
+ * `upsert` rather than `insert` so a user who seeds twice ends up with one copy
+ * of each food rather than a conflict, and so a future correction to a
+ * reference value can be re-seeded over the top. `use_count` and `last_used_at`
+ * are deliberately NOT written: seeding is not eating, and clearing the
+ * quick-log ordering would push the foods this person actually taps to the back
+ * of their own list.
+ */
+export async function upsertFoods(userId: string, foods: FoodItem[]): Promise<Result> {
+  if (foods.length === 0) return { error: null }
+  const supabase = createClient()
+  const { error } = await supabase
+    .from('diet_food')
+    .upsert(
+      foods.map((food) => ({ user_id: userId, ...foodToRow(food) })),
+      { onConflict: 'user_id,id' },
+    )
+  return { error: error?.message ?? null }
+}
+
+/** One day of the weekly plan. The unit every edit on the plan screen writes. */
+export async function savePlanDay(userId: string, day: PlanDay): Promise<Result> {
+  const supabase = createClient()
+  const { error } = await supabase.from('diet_plan_day').upsert(
+    { user_id: userId, ...planDayToRow(day), updated_at: new Date().toISOString() },
+    { onConflict: 'user_id,day' },
+  )
+  return { error: error?.message ?? null }
+}
+
+/**
+ * The whole week at once — seeding.
+ *
+ * One statement rather than seven, for the reason `addEntries` gives: a partial
+ * seed is worse than a failed one, because the screen then shows a plan with
+ * three days in it and no way to tell whether the other four were never written
+ * or were deliberately emptied.
+ */
+export async function savePlanDays(userId: string, days: PlanDay[]): Promise<Result> {
+  if (days.length === 0) return { error: null }
+  const supabase = createClient()
+  const stamp = new Date().toISOString()
+  const { error } = await supabase.from('diet_plan_day').upsert(
+    days.map((day) => ({ user_id: userId, ...planDayToRow(day), updated_at: stamp })),
+    { onConflict: 'user_id,day' },
+  )
   return { error: error?.message ?? null }
 }
 
