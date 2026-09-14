@@ -88,7 +88,7 @@ test.describe('every route loads', () => {
     for (const route of ALL_ROUTES.filter((r) => r !== '/')) {
       await page.goto(route)
       const title = await page.title()
-      expect(title, `${route} has no title`).toContain('AI Engineer Practice Guide')
+      expect(title, `${route} has no title`).toContain('Unyfide')
       seen.add(title)
     }
     // Derived, not hardcoded. This asserted 12 while the sweep walked 28 URLs —

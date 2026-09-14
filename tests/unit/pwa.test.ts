@@ -98,8 +98,8 @@ describe('web app manifest', () => {
   const m = manifest()
 
   it('carries every field Chrome requires before it offers "Install app"', () => {
-    expect(m.name).toBe('AI Engineer Practice Guide')
-    expect(m.short_name).toBe('AI Guide')
+    expect(m.name).toBe('Unyfide')
+    expect(m.short_name).toBe('Unyfide')
     expect(m.short_name!.length).toBeLessThanOrEqual(12)
     expect(m.description).toBeTruthy()
     expect(m.display).toBe('standalone')

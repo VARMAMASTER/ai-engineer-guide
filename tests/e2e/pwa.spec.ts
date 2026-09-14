@@ -108,8 +108,8 @@ test.describe('installability', () => {
     expect(response.headers()['content-type']).toContain('manifest+json')
 
     const manifest = JSON.parse(await response.text())
-    expect(manifest.name).toBe('AI Engineer Practice Guide')
-    expect(manifest.short_name).toBe('AI Guide')
+    expect(manifest.name).toBe('Unyfide')
+    expect(manifest.short_name).toBe('Unyfide')
     expect(manifest.id).toBe('/')
     expect(manifest.start_url).toBe('/today')
     expect(manifest.scope).toBe('/')

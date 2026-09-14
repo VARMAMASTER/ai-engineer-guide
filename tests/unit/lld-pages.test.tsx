@@ -193,9 +193,9 @@ describe('/lld/[slug] routing', () => {
 
   it('titles each page after its item', async () => {
     const pattern = await generateMetadata({ params: Promise.resolve({ slug: 'solid' }) })
-    expect(pattern.title).toBe('SOLID Principles | LLD | AI Engineer Practice Guide')
+    expect(pattern.title).toBe('SOLID Principles | LLD | Unyfide')
     const problem = await generateMetadata({ params: Promise.resolve({ slug: 'parking-lot' }) })
-    expect(problem.title).toBe('Parking Lot | LLD | AI Engineer Practice Guide')
+    expect(problem.title).toBe('Parking Lot | LLD | Unyfide')
   })
 
   it('404s an unknown slug rather than rendering an empty page', async () => {

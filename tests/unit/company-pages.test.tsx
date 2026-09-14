@@ -103,7 +103,7 @@ describe('the companies route', () => {
 
   it('titles each detail page after its company', async () => {
     const meta = await generateMetadata({ params: Promise.resolve({ slug: 'meta' }) })
-    expect(meta.title).toBe('Meta | Companies | AI Engineer Practice Guide')
+    expect(meta.title).toBe('Meta | Companies | Unyfide')
   })
 
   it('calls notFound() for a slug that is not a guide', async () => {

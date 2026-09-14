@@ -31,7 +31,7 @@ test.describe('export, import and reset', () => {
       page.getByRole('button', { name: 'Export progress' }).click(),
     ])
 
-    expect(download.suggestedFilename()).toBe(`ai-engineer-guide-progress-${todayIso()}.json`)
+    expect(download.suggestedFilename()).toBe(`unyfide-progress-${todayIso()}.json`)
 
     const file = testInfo.outputPath('exported.json')
     await download.saveAs(file)
