@@ -79,6 +79,11 @@ export default function AuthForm({ mode, next }: AuthFormProps) {
         {signingIn ? 'No account yet? ' : 'Already have an account? '}
         <Link
           href={signingIn ? SIGN_UP_PATH : SIGN_IN_PATH}
+          // Both auth pages read `searchParams`, so they are server-rendered on
+          // demand and a prefetch is a real request for a page most visitors
+          // will never open. Worse, it is still in flight when the tab moves
+          // on, which surfaces as an aborted request in the console.
+          prefetch={false}
           className="underline underline-offset-2"
         >
           {signingIn ? 'Create one' : 'Sign in'}

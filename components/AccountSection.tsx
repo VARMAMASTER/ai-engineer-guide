@@ -34,7 +34,7 @@ export default function AccountSection() {
             progress is saved to this account.
           </p>
           <p>
-            <Link href={ACCOUNT_PATH} className="chip" data-testid="account-link">
+            <Link href={ACCOUNT_PATH} prefetch={false} className="chip" data-testid="account-link">
               Manage account
             </Link>
           </p>
@@ -46,7 +46,10 @@ export default function AccountSection() {
             unlocks Diet, Train and Ops — the study sections keep working either way.
           </p>
           <p>
-            <Link href={SIGN_IN_PATH} className="chip" data-testid="sign-in-link">
+            {/* Not prefetched: the auth pages are server-rendered on demand,
+                so a prefetch is a real request for a page most visitors never
+                open — and one still in flight when the tab moves on. */}
+            <Link href={SIGN_IN_PATH} prefetch={false} className="chip" data-testid="sign-in-link">
               Sign in or create an account
             </Link>
           </p>
