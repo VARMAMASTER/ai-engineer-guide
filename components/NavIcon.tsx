@@ -1,9 +1,43 @@
 /**
- * One 20px stroke glyph per section, drawn from the same 24-unit grid with the
- * same 1.6 stroke so the rail and the tab bar read as a set. `currentColor`
- * throughout, so the active accent flows through without a second token.
+ * One 20px stroke glyph per nav destination, drawn from the same 24-unit grid
+ * with the same 1.6 stroke so the rail and the tab bar read as a set.
+ * `currentColor` throughout, so the active accent flows through without a
+ * second token.
+ *
+ * Keys are route paths for sections, and the app id for the five apps — the
+ * Learn tab points at `/roadmap` but must not wear the Roadmap glyph.
  */
 const PATHS: Record<string, React.ReactNode> = {
+  // Learn — a mortarboard: the app the whole study guide lives in.
+  learn: (
+    <>
+      <path d="M12 4.2 2.8 8.6 12 13l9.2-4.4z" />
+      <path d="M6.4 10.6v4.6c0 1.5 2.5 2.8 5.6 2.8s5.6-1.3 5.6-2.8v-4.6" />
+      <path d="M21.2 8.8v4.4" />
+    </>
+  ),
+  // Diet — a leaf. Food, not a food pyramid.
+  diet: (
+    <>
+      <path d="M20.4 3.6C9.8 3.6 4.2 8 4.2 14.2a6.2 6.2 0 0 0 6.2 6.2c6.2 0 10-5.6 10-16.8z" />
+      <path d="M6.6 20.4C8.8 14.6 12.6 10.6 17.8 8.4" />
+    </>
+  ),
+  // Train — a dumbbell.
+  train: (
+    <>
+      <path d="M4.5 9.2v5.6M7.6 7.2v9.6M16.4 7.2v9.6M19.5 9.2v5.6" />
+      <path d="M7.6 12h8.8" />
+    </>
+  ),
+  // Ops — a gauge: everything else, read at a glance.
+  ops: (
+    <>
+      <path d="M3.4 18.2a8.6 8.6 0 1 1 17.2 0" />
+      <path d="M12 18.2l4.1-5.4" />
+      <circle cx="12" cy="18.2" r="1.5" />
+    </>
+  ),
   // Today — a day cell inside the calendar month.
   '/today': (
     <>
@@ -132,14 +166,6 @@ const PATHS: Record<string, React.ReactNode> = {
       <circle cx="9" cy="7" r="2.1" />
       <circle cx="15" cy="12" r="2.1" />
       <circle cx="8" cy="17" r="2.1" />
-    </>
-  ),
-  // More — the overflow sheet.
-  more: (
-    <>
-      <circle cx="5" cy="12" r="1.6" />
-      <circle cx="12" cy="12" r="1.6" />
-      <circle cx="19" cy="12" r="1.6" />
     </>
   ),
 }
