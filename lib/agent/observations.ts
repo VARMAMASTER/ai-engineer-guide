@@ -20,6 +20,7 @@
  *    a model that invents a number.
  */
 import type { AppSummary } from '@/lib/summary'
+import { figuresIn } from './prompt'
 import type { AppTimeline, Observation } from './types'
 import {
   activeDays,
@@ -124,7 +125,11 @@ function weightStall(timelines: AppTimeline[]): Observation | null {
     apps: ['diet'],
     severity: 'act',
     text: `Your weight trend has been flat for ${run} days running.${reading}`,
-    figures: [String(run), ...(current ? [current.value] : [])],
+    // Diet's own formatted value carries a unit ("79.4 kg"), and `figures` is a
+    // set of NUMBERS — the thing a model could invent. Quoting the unit here
+    // would put "79.4 kg" in the allowed set and leave the bare 79.4 a model
+    // writes looking invented, which would reject an honest sentence.
+    figures: [String(run), ...(current ? figuresIn(current.value) : [])],
   }
 }
 

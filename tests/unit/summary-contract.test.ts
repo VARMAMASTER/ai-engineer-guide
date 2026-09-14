@@ -3,6 +3,7 @@ import { isStale, orderSummaries, type AppSummary } from '@/lib/summary'
 import { dietSummary } from '@/lib/diet/summary'
 import { trainSummary } from '@/lib/train/summary'
 import { opsSummary } from '@/lib/ops/summary'
+import { learnSummary } from '@/lib/learn/summary'
 import type { Plan, TrainingProfile } from '@/lib/train/types'
 
 /**
@@ -53,6 +54,12 @@ function summaries(): AppSummary[] {
       today: TODAY,
     }),
     opsSummary({ tasks: [], goals: [], now: new Date(`${TODAY}T09:00:00`) }),
+    // Learn joined this file late: it was the one app with no provider, which
+    // meant the half of the product the other three are arranged around was
+    // invisible to both of the seam's legitimate consumers. Added here rather
+    // than only in its own suite, because this is the only place the four are
+    // checked as agreeing with each other.
+    learnSummary({ startDate: null, completed: {}, today: TODAY }),
   ]
 }
 
@@ -61,7 +68,7 @@ describe('every app satisfies the AppSummary contract', () => {
     // A brand-new account has nothing in any app. If a provider throws on empty
     // input, Today is blank on the one day a user is most likely to look at it.
     expect(() => summaries()).not.toThrow()
-    expect(summaries()).toHaveLength(3)
+    expect(summaries()).toHaveLength(4)
   })
 
   it('fills every required field with something usable', () => {

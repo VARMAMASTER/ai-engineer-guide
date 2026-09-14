@@ -39,10 +39,23 @@ const CAUSAL_CLAIMS = [
   /\bdiagnos/i,
 ]
 
-/** Advice the agent is structurally not allowed to give. */
+/**
+ * Advice the agent is structurally not allowed to give.
+ *
+ * The target is narrow and specific: anything that suggests the 180-day plan
+ * should move. Verbs are matched as whole words rather than as stems, because
+ * a stem match on "mov" turns the perfectly honest "your weight has not moved,
+ * and the plan is on track" into a rejection.
+ */
+const PLAN_NOUNS = '(?:study|studies|plan|learn|dsa)'
 const FORBIDDEN_ADVICE = [
-  /\b(?:reschedul|re-schedul|push back|move|skip|drop|pause)\w*\b[^.]{0,40}\b(?:study|plan|learn|dsa)\b/i,
-  /\b(?:study|plan|learn|dsa)\b[^.]{0,40}\b(?:reschedul|re-schedul|push back|skipp?|drop)\w*\b/i,
+  new RegExp(`\\b(?:reschedul|re-schedul|postpon|defer)\\w*\\b[^.]{0,40}\\b${PLAN_NOUNS}\\b`, 'i'),
+  new RegExp(`\\bpush\\w*\\s+back\\b[^.]{0,40}\\b${PLAN_NOUNS}\\b`, 'i'),
+  new RegExp(
+    `\\b(?:skip|skipping|drop|dropping|move|moving|shift|shifting)\\b[^.]{0,30}\\b${PLAN_NOUNS}\\b`,
+    'i',
+  ),
+  new RegExp(`\\b${PLAN_NOUNS}\\b[^.]{0,40}\\b(?:reschedul|postpon|defer)\\w*\\b`, 'i'),
 ]
 
 /**
