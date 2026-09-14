@@ -19,6 +19,45 @@ const SOURCES = [
   { table: 'learn_completion', columns: 'item_id, completed_on' },
   { table: 'learn_revision', columns: 'card_id, rating, rated_at' },
   { table: 'learn_hours', columns: 'day, hours' },
+  {
+    table: 'diet_profile',
+    columns:
+      'sex, age_years, height_cm, activity, goal, target_kcal, target_protein_g, kcal_band, window_start, window_end, window_enabled, created_at',
+  },
+  {
+    table: 'diet_food',
+    columns:
+      'id, name, serving_label, serving_grams, kcal_per_serving, protein_g_per_serving, source, use_count, last_used_at, created_at',
+  },
+  {
+    table: 'diet_entry',
+    columns: 'id, food_id, name, servings, kcal, protein_g, at_local, entry_date, logged_at',
+  },
+  { table: 'diet_weight', columns: 'id, reading_date, kg, at_local, created_at' },
+  {
+    table: 'diet_forecast',
+    columns: 'id, made_on, for_date, horizon_days, kg, low_kg, high_kg, basis, confidence, created_at',
+  },
+  {
+    table: 'train_profile',
+    columns: 'goal, experience, available_days, equipment, injuries, plan, created_at, updated_at',
+  },
+  { table: 'train_session', columns: 'session_id, session_date, day_label, created_at' },
+  {
+    table: 'train_set',
+    columns: 'set_id, session_id, exercise_id, reps, load_kg, rpe, performed_at',
+  },
+  {
+    table: 'ops_task',
+    columns:
+      'id, title, notes, due_date, due_time, priority, tags, completed, completed_on, recurrence, created_on, created_at',
+  },
+  {
+    table: 'ops_goal',
+    columns:
+      'id, title, target, unit, current_value, start_date, deadline, linked_task_ids, created_at',
+  },
+  { table: 'ops_reminder', columns: 'id, task_id, offset_minutes, created_at' },
 ] as const
 
 export async function GET() {
