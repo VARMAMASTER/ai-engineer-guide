@@ -425,14 +425,31 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     (async () => {
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+
+      // Already showing the right screen: bring it forward and stop.
       for (const client of windows) {
-        if (client.url === target) return client.focus()
+        if (client.url === target) {
+          await client.focus().catch(() => undefined)
+          return
+        }
       }
+
+      // NAVIGATE BEFORE FOCUS, and never let a failed focus cancel the
+      // navigation. `WindowClient#focus()` rejects without user activation —
+      // which a real notification click has and a programmatic dispatch does
+      // not — and doing it first meant the rejection threw away the navigate()
+      // that was the whole point. The user ends up on the right page either
+      // way; whether the window also comes forward is the part the browser may
+      // refuse.
       const existing = windows[0]
       if (existing && 'navigate' in existing) {
-        await existing.focus()
-        return existing.navigate(target)
+        const navigated = await existing.navigate(target).catch(() => null)
+        if (navigated) {
+          await navigated.focus().catch(() => undefined)
+          return
+        }
       }
+
       return self.clients.openWindow(target)
     })(),
   )
