@@ -1,22 +1,31 @@
-# AI Engineer Practice Guide
+# Unyfide
 
-A 180-day, interview-first practice program for AI engineers, and a daily tracker that keeps you honest
-about it. Six months, 26 weeks, one shipped project per month, and a DSA / system design / AI-ML rotation
-that runs underneath all of it.
+One daily system, not a pile of separate trackers. Unyfide holds four mini-apps — **Learn**, **Diet**,
+**Train** and **Ops** — under a single shell with one streak, one settings surface, and (eventually) one AI
+that reads across all four and says the thing none of them would say alone: whether you're actually on
+track. The name is a deliberate stylisation of "unified," because that is what this became — a 180-day AI
+engineering interview program that grew a diet tracker, a training log, and a catch-all for the admin that
+belongs to none of them.
 
-It is not a course and it does not teach. It is a **schedule with checkboxes**: it decides what you do
-today, it counts what you have actually finished, and it tells you when you are behind.
+**Learn** is the original mini-app, and the only one with real content today: it is not a course and it does
+not teach, it is a **schedule with checkboxes** that decides what you do today, counts what you have actually
+finished, and tells you when you are behind. **Diet**, **Train** and **Ops** exist as routes and are visibly
+part of the shell, but they are placeholders — scoped, not built. Each mini-app is independent: Diet does not
+import Train, and any one of them could be deleted without touching the rest. The only thing meant to cross
+the boundary between them is the AI, not yet built either.
 
-## Who it is for
+## Who Learn is for
 
 Someone with working engineering skill who wants an AI/ML engineering role at a company that runs a real
 interview loop — coding, system design, ML depth, and a project you have to defend. It assumes you can
 already write code and that the missing pieces are structure, breadth, and evidence.
 
-If you are looking for tutorials, this is the wrong repository. Every item here is a thing to *do*, and the
-guide only records whether you did it.
+If you are looking for tutorials, this is the wrong repository. Every item here is a thing to *do*, and Learn
+only records whether you did it.
 
-## What is in it
+## What is built so far
+
+Today (the shared daily dashboard), Learn's sections, and Settings (shared across the whole app):
 
 | Section | What it holds |
 |---|---|
@@ -81,7 +90,7 @@ the key `aeg.progress.v1`, on the device you checked it on.
 
 Consequences worth knowing before you start:
 
-- **Nothing syncs.** A different browser, a different machine, or a private window is a different, empty guide.
+- **Nothing syncs.** A different browser, a different machine, or a private window is a different, empty copy of Learn.
 - **Clearing site data erases it.** Use **Settings → Export progress** for a dated JSON file, and **Import**
   to restore it or to carry it to another machine. Import validates and migrates the file, and a bad file is
   rejected with a message rather than half-applied.
@@ -217,10 +226,12 @@ Vitest, Playwright, pnpm. Deployed on Vercel; the only server code is the two fe
 
 ## Design spec
 
-The full specification — architecture, every page, the whole curriculum, the progress model, the testing
-plan, and the visual direction — is at
+The full specification for Learn — architecture, every page, the whole curriculum, the progress model, the
+testing plan, and the visual direction — is at
 [`docs/superpowers/specs/2026-09-06-ai-engineer-guide-design.md`](docs/superpowers/specs/2026-09-06-ai-engineer-guide-design.md).
-It is the binding document; when this README and the spec disagree, the spec wins.
+The shape of the wider app — Today, Diet, Train, Ops, and the AI that is meant to cross between them — is at
+[`docs/superpowers/specs/2026-09-14-unified-app-design.md`](docs/superpowers/specs/2026-09-14-unified-app-design.md).
+These are the binding documents; when this README and a spec disagree, the spec wins.
 
 ## Licence
 
