@@ -39,7 +39,7 @@ describe('nav apps', () => {
 describe('nav sections', () => {
   it('has every study section, in strip order', () => {
     expect(LEARN_SECTIONS.map((i) => i.href)).toEqual([
-      '/roadmap', '/dsa', '/system-design', '/lld', '/ai-ml', '/projects',
+      '/roadmap', '/courses', '/dsa', '/system-design', '/lld', '/ai-ml', '/projects',
       '/reading', '/feed', '/cs-fundamentals', '/hardware', '/behavioural',
       '/companies', '/mock', '/revise',
     ])

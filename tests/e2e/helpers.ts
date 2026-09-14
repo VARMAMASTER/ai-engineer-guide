@@ -18,6 +18,7 @@ export const STATIC_ROUTES = [
   '/train',
   '/ops',
   '/roadmap',
+  '/courses',
   '/dsa',
   '/system-design',
   '/lld',
@@ -47,6 +48,11 @@ export const STATIC_ROUTES = [
 ] as const
 
 export const DYNAMIC_ROUTES = [
+  // A course's contents, and a part of it. Part VI is the one with the DPO
+  // loss in it — display maths, a Mermaid diagram and several wide tables on
+  // one page, which makes it the most load-bearing single page in the sweep.
+  '/courses/neural-networks-end-to-end',
+  '/courses/neural-networks-end-to-end/part-vi',
   '/cs-fundamentals/networking',
   '/hardware/memory-hierarchy',
   '/dsa/arrays-hashing',

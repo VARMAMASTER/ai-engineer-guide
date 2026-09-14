@@ -6,6 +6,12 @@ const PAGES = [
   { name: 'Today', url: '/today' },
   { name: 'DSA pattern', url: '/dsa/arrays-hashing' },
   { name: 'Reading', url: '/reading' },
+  // The densest page in the app by a distance: nine sections of prose, wide
+  // tables, code, a Mermaid diagram and typeset maths, all from one Markdown
+  // document. Everything axe checks — heading order, table headers, contrast,
+  // the accessible name on a completion row — is generated here rather than
+  // hand-written, so a regression would hit 29 pages at once.
+  { name: 'Course part', url: '/courses/neural-networks-end-to-end/part-vi' },
 ]
 
 const THEMES: ThemeChoice[] = ['dark', 'light']
