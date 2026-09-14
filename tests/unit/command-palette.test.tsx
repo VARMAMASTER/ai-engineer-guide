@@ -8,6 +8,7 @@ vi.mock('next/navigation', () => ({
 }))
 
 import CommandPalette, {
+  shouldYieldToField,
   openCommandPalette,
   resetCommandPalette,
 } from '@/components/CommandPalette'
@@ -137,12 +138,36 @@ describe('not hijacking the keyboard', () => {
     expect((notes as HTMLInputElement).value).toBe('knapsack')
   })
 
-  it('stands aside for the chord too while the caret is in a text field', async () => {
+  it('DOES open from inside a text field where the chord means nothing else', async () => {
+    // This replaces an earlier test asserting the opposite. Blanket-yielding
+    // inside fields was over-honouring "don't hijack typing": on Windows and
+    // Linux, Ctrl+K in an input has no native meaning, so refusing there buys
+    // nothing and costs a shortcut that stops working exactly when you are
+    // typing the thing you want to search for. jsdom reports a non-Apple
+    // platform, which is the case under test.
     const user = userEvent.setup()
     render(<Harness />)
     await user.click(screen.getByLabelText('Notes'))
     await user.keyboard('{Control>}k{/Control}')
-    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(screen.queryByRole('combobox')).not.toBeNull()
+  })
+
+  it('stands aside for Ctrl+K in a field on an Apple platform, where it is kill-line', async () => {
+    const original = Object.getOwnPropertyDescriptor(window.navigator, 'platform')
+    Object.defineProperty(window.navigator, 'platform', {
+      value: 'MacIntel',
+      configurable: true,
+    })
+    try {
+      const user = userEvent.setup()
+      render(<Harness />)
+      await user.click(screen.getByLabelText('Notes'))
+      await user.keyboard('{Control>}k{/Control}')
+      // Swallowing this would delete the rest of the user's line.
+      expect(screen.queryByRole('combobox')).toBeNull()
+    } finally {
+      if (original) Object.defineProperty(window.navigator, 'platform', original)
+    }
   })
 
   it('does not open on a bare "k" pressed on the page body', async () => {
@@ -326,5 +351,48 @@ describe('the index', () => {
     // of the content banks is parsed on first paint.
     await waitFor(() => expect(screen.getByRole('button', { name: 'Open search' })).toBeTruthy())
     expect(searchIndexBuildCount()).toBe(0)
+  })
+})
+
+describe('Ctrl+K inside a text field', () => {
+  // The narrow case: on an Apple platform, Ctrl+K in a text field is kill-line
+  // from the system's emacs bindings, and swallowing it loses the rest of the
+  // user's sentence. Cmd+K is not an editing command, and on Windows and Linux
+  // neither is Ctrl+K — every tool people expect this shortcut from opens from
+  // inside a field, so refusing to is a shortcut that mysteriously stops
+  // working while you type the thing you want to search for.
+  function field(): HTMLElement {
+    const el = document.createElement('input')
+    document.body.appendChild(el)
+    return el
+  }
+
+  it('yields to kill-line: Ctrl+K, in a field, on an Apple platform', () => {
+    expect(shouldYieldToField(field(), true, true)).toBe(true)
+  })
+
+  it('opens anyway for Cmd+K in a field on an Apple platform', () => {
+    // usedCtrlNotMeta is false for the Cmd chord.
+    expect(shouldYieldToField(field(), false, true)).toBe(false)
+  })
+
+  it('opens for Ctrl+K in a field off Apple, where it means nothing else', () => {
+    expect(shouldYieldToField(field(), true, false)).toBe(false)
+  })
+
+  it('never yields outside an editable element', () => {
+    const div = document.createElement('div')
+    document.body.appendChild(div)
+    expect(shouldYieldToField(div, true, true)).toBe(false)
+    expect(shouldYieldToField(null, true, true)).toBe(false)
+  })
+
+  it('treats contenteditable as a field too', () => {
+    const el = document.createElement('div')
+    el.contentEditable = 'true'
+    // jsdom does not derive isContentEditable from the attribute.
+    Object.defineProperty(el, 'isContentEditable', { value: true })
+    document.body.appendChild(el)
+    expect(shouldYieldToField(el, true, true)).toBe(true)
   })
 })

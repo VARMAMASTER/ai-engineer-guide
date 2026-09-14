@@ -113,17 +113,45 @@ export function resetCommandPalette(): void {
 /**
  * True when `target` is somewhere the user is typing prose.
  *
- * The shortcut steps aside for these. A modifier chord is not typing, so this
- * is stricter than it strictly has to be — but "must not hijack typing inside
- * an input or textarea" is a rule worth over-honouring: the cost of getting it
- * wrong is a user losing a keystroke mid-sentence, and the cost of getting it
- * right is one extra click to leave the field first.
+ * Whether the shortcut steps aside for these depends on which chord was used,
+ * and the distinction is not pedantry:
+ *
+ * - **Ctrl+K inside a text field on macOS is kill-line**, a real editing
+ *   command from the system's emacs bindings. Swallowing it loses the rest of
+ *   the user's sentence. It is always yielded there.
+ * - **Cmd+K is not an editing command**, and on Windows and Linux neither is
+ *   Ctrl+K. Every tool people expect this shortcut from — Linear, GitHub,
+ *   Notion — opens from inside a field, and refusing to is a shortcut that
+ *   mysteriously stops working while you are typing the very thing you want to
+ *   search for.
+ *
+ * So the rule is narrow: yield only where the keystroke means something else.
  */
 function isEditable(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
   if (target.isContentEditable) return true
   const tag = target.tagName
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+}
+
+/** True on an Apple platform, where Ctrl+K in a text field is kill-line. */
+function isApplePlatform(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent)
+}
+
+/**
+ * Should this keystroke be left alone for the field it landed in?
+ *
+ * Only the one case that is genuinely ambiguous: Ctrl (not Cmd) inside an
+ * editable element on an Apple platform.
+ */
+export function shouldYieldToField(
+  target: EventTarget | null,
+  usedCtrlNotMeta: boolean,
+  applePlatform = isApplePlatform(),
+): boolean {
+  return usedCtrlNotMeta && applePlatform && isEditable(target)
 }
 
 /* --- results -------------------------------------------------------------- */
@@ -157,7 +185,7 @@ export default function CommandPalette() {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key !== 'k' && event.key !== 'K') return
       if (!(event.metaKey || event.ctrlKey) || event.altKey) return
-      if (isEditable(event.target)) return
+      if (shouldYieldToField(event.target, event.ctrlKey && !event.metaKey)) return
       event.preventDefault()
       openCommandPalette()
     }

@@ -4,6 +4,7 @@ import BottomNav from './BottomNav'
 import SectionTabs from './SectionTabs'
 import TopBar from './TopBar'
 import StorageBanner from './StorageBanner'
+import CommandPalette from './CommandPalette'
 
 /**
  * The app frame, in two levels.
@@ -29,6 +30,11 @@ export default function Shell({ children }: { children: ReactNode }) {
         </div>
       </div>
       <BottomNav />
+      {/* Mounted once, renders null until opened, and portals onto the body.
+          It takes no props: it is opened from the top bar, from Ctrl/Cmd+K, and
+          from nothing in particular, which have no common ancestor to hold the
+          state. */}
+      <CommandPalette />
     </div>
   )
 }
