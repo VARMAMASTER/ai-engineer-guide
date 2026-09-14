@@ -65,9 +65,16 @@ export default function TopBar() {
           {startDate === null && hydrated ? (
             <Link
               href="/settings"
-              className="readout -mx-2 inline-flex min-h-11 items-center rounded-[var(--radius-sm)] px-2 text-[var(--accent)] underline underline-offset-4 hover:bg-[var(--accent-soft)]"
+              className="readout -mx-2 inline-flex min-h-11 items-center whitespace-nowrap rounded-[var(--radius-sm)] px-2 text-[var(--accent)] underline underline-offset-4 hover:bg-[var(--accent-soft)]"
             >
-              SET START DATE
+              {/* Two spellings, because the bar has one control more than it
+                  used to. Adding the app switcher pushed the contents to ~438px
+                  inside a 390px bar, and this link was the piece that lost:
+                  118px of text in a 102px box, wrapping onto a second line and
+                  making the whole bar look broken. `whitespace-nowrap` keeps it
+                  on one line; the short spelling is what makes that fit. */}
+              <span className="md:hidden">SET DATE</span>
+              <span className="hidden md:inline">SET START DATE</span>
             </Link>
           ) : (
             <span className="readout whitespace-nowrap text-[var(--text-muted)]">
@@ -88,7 +95,7 @@ export default function TopBar() {
 
         <div className="ml-auto flex items-center gap-3 md:gap-5">
           <span
-            className="tag tag-outline"
+            className="tag tag-outline hidden md:inline-flex"
             title="Consecutive days with at least one completed item"
           >
             <span className="hidden md:inline">STREAK</span>
