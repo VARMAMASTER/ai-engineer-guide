@@ -17,6 +17,7 @@ import { parseReminderRule, type ReminderRule, type Task } from '@/lib/ops/types
 import { OpsErrorBanner, OpsPending } from '../OpsState'
 import { formatInstant, formatOffset } from '../format'
 import { useOps } from '../useOps'
+import PushSetup from './PushSetup'
 
 /** The offsets people actually ask for, plus an escape hatch. */
 const PRESETS = [0, 10, 30, 60, 120, 1440, 2880]
@@ -63,22 +64,14 @@ function RemindersSectionInner() {
       <OpsErrorBanner error={ops.error} onDismiss={ops.dismissError} />
 
       {/*
-        Said first, said plainly, and not softened. The rules below are real —
-        they are stored, and `dueReminders` decides which of them would fire
-        right now — but NOTHING IS SENT. Delivery needs VAPID keys, a push
-        subscription store and a scheduled sender, none of which exists.
-        A half-built notification is worse than none: the user stops watching
-        the list because they believe they will be told.
+        First, and before the list, because it is the answer to the question a
+        page of reminder rules raises: will I actually be told? Delivery is real
+        now — web push, a per-device subscription and a scheduled sender — but
+        it is OFF until this device is registered, and a rule with no device to
+        reach is still only a rule. Saying which of the two you are looking at
+        is the whole job of this block.
       */}
-      <Panel className="flex min-w-0 flex-col gap-1 p-4" data-testid="ops-reminders-notice">
-        <p className="text-sm font-medium text-[var(--warning)]">Nothing is delivered yet.</p>
-        <p className="text-sm text-[var(--text-muted)]">
-          These are rules, not notifications. Ops works out exactly when each one would fire and
-          shows it here — no push, no email, no sound, and nothing that arrives while the app is
-          closed. Sending needs a push subscription store and a scheduled sender, which is a later
-          stage.
-        </p>
-      </Panel>
+      <PushSetup />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2>Rules</h2>
@@ -95,7 +88,7 @@ function RemindersSectionInner() {
 
       {firingNow.length > 0 ? (
         <Panel className="flex min-w-0 flex-col gap-2 p-4">
-          <p className="text-sm font-medium">Would be firing now</p>
+          <p className="text-sm font-medium">Firing now</p>
           <ul className="flex flex-col gap-1 text-sm text-[var(--text-muted)]">
             {firingNow.map((due) => (
               <li key={due.rule.id}>
@@ -146,7 +139,7 @@ function RemindersSectionInner() {
 
                   {firesAt ? (
                     <p className="text-xs text-[var(--text-faint)]">
-                      Would fire at {formatInstant(firesAt)}.
+                      Fires at {formatInstant(firesAt)}.
                     </p>
                   ) : (
                     // Not an error and not hidden: a date-only task has no
@@ -156,7 +149,7 @@ function RemindersSectionInner() {
                     // user thinks is on.
                     <p className="text-xs text-[var(--warning)]">
                       This task has no due time, so this rule has nothing to count back from and
-                      would never fire.
+                      will never fire.
                     </p>
                   )}
 
@@ -220,7 +213,7 @@ function ReminderEditor({
       open
       onClose={onClose}
       title="New reminder rule"
-      description="Stored and evaluated. Not delivered."
+      description="Delivered by notification, once, to every device you have turned them on for."
       data-testid="ops-reminder-editor"
       footer={
         <>
@@ -278,13 +271,13 @@ function ReminderEditor({
         <Panel tier="solid" className="p-3">
           {preview ? (
             <p className="text-sm">
-              Would fire at <span className="tnum">{formatInstant(preview)}</span>.
+              Fires at <span className="tnum">{formatInstant(preview)}</span>.
             </p>
           ) : (
             <p className="text-sm text-[var(--warning)]">
               {task?.dueDate
                 ? 'This task has a date but no time, so there is no instant to count back from. Give it a due time in Tasks and this rule will have something to fire against.'
-                : 'This task has no due date, so this rule would never fire.'}
+                : 'This task has no due date, so this rule would never have anything to fire against.'}
             </p>
           )}
         </Panel>

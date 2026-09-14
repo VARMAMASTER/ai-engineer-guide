@@ -36,6 +36,16 @@
  *
  * Bump VERSION when the cache layout or a strategy changes. It does not need
  * bumping per deploy: nothing that can go stale is served cache-first.
+ *
+ * ---------------------------------------------------------------------------
+ * PUSH lives at the bottom of this file and shares nothing with the caching
+ * above — no cache, no strategy, no route. It is here because a service worker
+ * is the only place a browser will run code for a page that is closed, which is
+ * the entire point of a reminder. The three handlers are `push` (draw the
+ * notification), `notificationclick` (open the right screen) and
+ * `pushsubscriptionchange` (re-register when a push service rotates an
+ * endpoint). None of them touches `classify`, the caches or the fetch handler.
+ * ---------------------------------------------------------------------------
  */
 
 const VERSION = 'v1'
@@ -310,8 +320,176 @@ self.addEventListener('fetch', (event) => {
   }
 })
 
+/* -------------------------------------------------------------------------- */
+/* Push notifications                                                          */
+/* -------------------------------------------------------------------------- */
+
+/** Shown when the payload is missing or unreadable. See `notificationFrom`. */
+const FALLBACK_NOTIFICATION = {
+  title: 'Unyfide',
+  body: 'You have a reminder.',
+  url: '/ops/today',
+  tag: 'unyfide-reminder',
+}
+
+const NOTIFICATION_ICON = '/icons/icon-192.png'
+const SUBSCRIBE_URL = '/api/push/subscribe'
+
+/**
+ * The payload, parsed defensively, as a pure function so the unit test can
+ * assert it without a browser.
+ *
+ * IT ALWAYS RETURNS SOMETHING. The subscription was created with
+ * `userVisibleOnly: true`, which is a promise to the browser that every push
+ * results in a visible notification; break it and Chrome shows its own "This
+ * site has been updated in the background" notice instead, and repeated
+ * offences can cost the site its push permission entirely. So a truncated body,
+ * an empty push (some services send one to verify an endpoint) and a payload
+ * from a future version of the sender all degrade to a real notification rather
+ * than to nothing.
+ *
+ * `url` is validated rather than trusted. It is a same-origin PATH; anything
+ * else — an absolute URL, a protocol-relative `//host`, a `javascript:` — falls
+ * back. The payload is authored from the user's own task titles today, but a
+ * notification handler that will open any URL it is handed is a redirect
+ * primitive sitting in the one place that runs while the app is closed.
+ *
+ * @param {string | null | undefined} raw
+ */
+function notificationFrom(raw) {
+  let data = null
+  if (typeof raw === 'string' && raw !== '') {
+    try {
+      data = JSON.parse(raw)
+    } catch {
+      data = null
+    }
+  }
+  if (!data || typeof data !== 'object') return { ...FALLBACK_NOTIFICATION }
+
+  const text = (value, fallback) =>
+    typeof value === 'string' && value.trim() !== '' ? value : fallback
+
+  const url = typeof data.url === 'string' && /^\/(?!\/)/.test(data.url) ? data.url : FALLBACK_NOTIFICATION.url
+
+  return {
+    title: text(data.title, FALLBACK_NOTIFICATION.title),
+    body: text(data.body, ''),
+    url,
+    tag: text(data.tag, FALLBACK_NOTIFICATION.tag),
+  }
+}
+
+self.addEventListener('push', (event) => {
+  const payload = notificationFrom(event.data ? event.data.text() : null)
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: NOTIFICATION_ICON,
+      badge: NOTIFICATION_ICON,
+      // The tag is the delivery key, so a redelivery of the same reminder
+      // replaces the one already on screen instead of stacking beside it. This
+      // is the second line of defence; `push_delivery` is the first.
+      tag: payload.tag,
+      // Do not re-alert for a replacement: the point of the tag is that this is
+      // the same reminder, and buzzing twice for it is the bug it prevents.
+      renotify: false,
+      // Carried through to `notificationclick`, which is a separate event with
+      // no access to this scope's variables.
+      data: { url: payload.url },
+    }),
+  )
+})
+
+/**
+ * Open what the notification was about.
+ *
+ * Focus-then-navigate rather than always opening a window: a reminder tapped
+ * while the app is already open in a tab should bring that tab forward, not
+ * strand the user with two copies of the app. `openWindow` is the fallback for
+ * the case the whole point of push exists to serve — nothing is running.
+ *
+ * Both branches are inside `waitUntil`, because the worker may have been woken
+ * only to deliver this notification and would otherwise be free to die
+ * mid-navigation.
+ */
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+
+  const target = new URL(
+    (event.notification.data && event.notification.data.url) || FALLBACK_NOTIFICATION.url,
+    self.location.origin,
+  ).href
+
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      for (const client of windows) {
+        if (client.url === target) return client.focus()
+      }
+      const existing = windows[0]
+      if (existing && 'navigate' in existing) {
+        await existing.focus()
+        return existing.navigate(target)
+      }
+      return self.clients.openWindow(target)
+    })(),
+  )
+})
+
+/**
+ * A push service may retire a subscription and issue a new one — Chrome does it
+ * when its own registration rotates, Firefox on some upgrades. The old endpoint
+ * then answers 410 forever and the device silently stops receiving anything.
+ *
+ * This is the only notice we get. Re-subscribe with the same application server
+ * key and tell the server, so the row is replaced rather than left to be
+ * garbage-collected on a 410 with nothing to take its place.
+ *
+ * `event.oldSubscription` carries the key on the browsers that fire this, which
+ * is why the new subscription can be created without the page's help — there
+ * may not be a page.
+ */
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const previous = event.oldSubscription
+        const applicationServerKey = previous && previous.options && previous.options.applicationServerKey
+        if (!applicationServerKey) return
+
+        const subscription =
+          event.newSubscription ??
+          (await self.registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey,
+          }))
+
+        const json = subscription.toJSON()
+        await fetch(SUBSCRIBE_URL, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          // The session cookie is what identifies the account; without it the
+          // route answers 401 and the device stays unreachable.
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            endpoint: subscription.endpoint,
+            keys: { p256dh: json.keys && json.keys.p256dh, auth: json.keys && json.keys.auth },
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+          }),
+        })
+      } catch {
+        // Nothing useful to do from here. The next time the user opens the app,
+        // the Reminders screen sees no subscription and offers to turn it back
+        // on, which is the recovery path a person can actually act on.
+      }
+    })(),
+  )
+})
+
 // Exposed only when this file is evaluated as a module by the unit test;
 // `module` is undefined in a worker, so this is a no-op in the browser.
 if (typeof module !== 'undefined' && module) {
-  module.exports = { classify, cacheKey, isPrivatePath, CACHES, CACHE_PREFIX, VERSION, OFFLINE_URL, START_URL, PRECACHE_PAGES, PRECACHE_ASSETS }
+  module.exports = { classify, cacheKey, isPrivatePath, notificationFrom, CACHES, CACHE_PREFIX, VERSION, OFFLINE_URL, START_URL, PRECACHE_PAGES, PRECACHE_ASSETS, FALLBACK_NOTIFICATION }
 }

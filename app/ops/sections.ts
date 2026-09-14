@@ -40,7 +40,7 @@ export const OPS_SECTIONS: OpsSection[] = [
   {
     href: '/ops/reminders',
     label: 'Reminders',
-    intro: 'Rules for when you would be reminded. Nothing is delivered yet.',
+    intro: 'When to be told, and the devices that get told. Each reminder is sent once.',
   },
 ]
 
