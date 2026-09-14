@@ -150,7 +150,16 @@ export default async function TrainHistoryPage() {
                       {best.heaviestLoad.reps} &times; {formatLoad(best.heaviestLoad.load)}
                       <span className="ml-2 text-[var(--text-faint)]">{best.heaviestLoad.date}</span>
                     </p>
-                    {best.bestEstimatedOneRepMax ? (
+                    {best.heaviestLoad.load === 0 ? (
+                      // Epley on a 0 kg set returns 0 kg, which is arithmetically
+                      // right and reads as a claim about strength. Every set of
+                      // this exercise has been bodyweight, so there is no load
+                      // for a load-based estimate to be about — said plainly,
+                      // rather than printed as "Est. 1RM 0 kg".
+                      <p className="hint">
+                        Bodyweight only so far — a load-based 1RM has nothing to estimate from.
+                      </p>
+                    ) : best.bestEstimatedOneRepMax ? (
                       <p className="flex flex-wrap items-center gap-2 text-sm">
                         <Tag variant="outline">Est. 1RM</Tag>
                         <span className="readout">{formatKg(best.bestEstimatedOneRepMax.value)}</span>

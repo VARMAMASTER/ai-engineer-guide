@@ -126,6 +126,17 @@ describe('SessionBoard — logging a set', () => {
     expect(screen.getByTestId(`train-next-${BENCH}`).textContent).toMatch(/10 reps at 40 kg/)
   })
 
+  it('stops answering "what is next" once a session is underway', async () => {
+    board(priorSessions)
+    // Before anything is logged, the Today-card sentence is the right one.
+    expect(screen.getByText(/due today|up next|since your last session/i)).toBeDefined()
+
+    await userEvent.click(screen.getByTestId(`train-log-${BENCH}`))
+
+    // After: naming tomorrow's day above today's exercises is just wrong.
+    expect(screen.getByText(/in progress — 1 set logged today/i)).toBeDefined()
+  })
+
   it('takes the set back off the screen when the write fails, and says so', async () => {
     failWrites = true
     board(priorSessions)

@@ -120,12 +120,23 @@ export default function SessionBoard({
   }, [chosenIndex, todaySession, dayLabels, plan.days, dueIndex])
   const day = plan.days[activeIndex] ?? plan.days[0]
 
+  const setsToday = todaySession?.sets.length ?? 0
+
+  /**
+   * The one-line sentence above the stats.
+   *
+   * `trainSummary` answers "what is next", which is the Today card's question
+   * and the wrong one once a session is underway — it names TOMORROW's day
+   * while this page is showing today's. So it is used only before the first set
+   * lands; after that the page says what is actually true, which is that you
+   * are in the middle of something.
+   */
   const headline = useMemo(() => {
+    if (setsToday > 0) return `In progress — ${setsToday} set${setsToday === 1 ? '' : 's'} logged today.`
     if (!profile) return null
     return trainSummary({ profile, plan, sessions, today }).headline
-  }, [profile, plan, sessions, today])
+  }, [setsToday, profile, plan, sessions, today])
 
-  const setsToday = todaySession?.sets.length ?? 0
   const tonnageToday = todaySession ? sessionTonnage(todaySession) : 0
 
   function entriesFor(exerciseId: string): { set: LoggedSet; id: string }[] {
@@ -235,7 +246,7 @@ export default function SessionBoard({
     <div className="flex flex-col gap-5">
       <section className="panel flex flex-col gap-4 p-4" aria-labelledby="train-due">
         <div className="flex min-w-0 flex-col gap-1">
-          <p className="eyebrow">Due next</p>
+          <p className="eyebrow">{setsToday > 0 ? 'Today' : 'Due next'}</p>
           <h2 id="train-due" className="font-[family-name:var(--font-display)] text-lg">
             {day?.label ?? 'Your session'}
           </h2>
