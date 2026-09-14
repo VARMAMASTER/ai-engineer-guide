@@ -10,7 +10,17 @@ import { expectChecked, rowFor, seedDayOne } from './helpers'
  * plane and in a CI runner with no egress, and a test whose result depends on
  * a third party's uptime is not a test. `assertNoUpstreamCalls` proves it
  * rather than trusting it.
+ *
+ * Service workers are blocked for this file, which is what makes the sentence
+ * above actually true. `page.route` does not see a request issued BY a service
+ * worker, and this app's worker calls `clients.claim()` — so whenever it won
+ * the race against the feed fetch, the stub was bypassed, `/api/feed/*` went
+ * to the real route handler, and whichever live-feed test happened to lose
+ * showed "Feed unavailable" with a wall-clock refresh stamp instead of the
+ * stub's. That is the only reason these tests were ever flaky under load.
+ * Nothing here exercises the worker; `pwa.spec.ts` is where it is tested.
  */
+test.use({ serviceWorkers: 'block' })
 
 const ARXIV_ITEMS = [
   {
