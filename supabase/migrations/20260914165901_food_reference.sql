@@ -384,8 +384,6 @@ language sql
 stable
 security invoker
 set search_path = ''
-set "pg_trgm.similarity_threshold" = '0.3'
-set "pg_trgm.word_similarity_threshold" = '0.3'
 as $$
 with norm as (
   select
@@ -424,7 +422,6 @@ ingredients as (
       case when i.search_text = t.nq then 1.00 else 0 end,
       case when lower(i.name) like t.nq || '%' then 0.94 else 0 end,
       case when t.query is not null and i.search_doc @@ t.query then 0.80 else 0 end,
-      extensions.word_similarity(t.nq, i.search_text) * 0.75,
       extensions.similarity(t.nq, i.search_text) * 0.55
     )::real as score,
     i.prominence,
@@ -437,7 +434,6 @@ ingredients as (
   where t.nq <> ''
     and (
       (t.query is not null and i.search_doc @@ t.query)
-      or i.search_text operator(extensions.%>) t.nq
       or i.search_text operator(extensions.%) t.nq
     )
 ),
@@ -452,7 +448,6 @@ recipes as (
       case when r.search_text = t.nq then 1.00 else 0 end,
       case when lower(r.name) like t.nq || '%' then 0.94 else 0 end,
       case when t.query is not null and r.search_doc @@ t.query then 0.80 else 0 end,
-      extensions.word_similarity(t.nq, r.search_text) * 0.75,
       extensions.similarity(t.nq, r.search_text) * 0.55
     )::real as score,
     r.prominence,
@@ -466,7 +461,6 @@ recipes as (
   where t.nq <> ''
     and (
       (t.query is not null and r.search_doc @@ t.query)
-      or r.search_text operator(extensions.%>) t.nq
       or r.search_text operator(extensions.%) t.nq
     )
 ),
