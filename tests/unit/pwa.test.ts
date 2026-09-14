@@ -243,8 +243,13 @@ function loadServiceWorker(): SwModule {
   runInNewContext(source, context)
 
   // The worker is only useful — and Chrome only counts it as installable — if
-  // it actually wires up a fetch handler.
-  expect(listeners).toEqual(expect.arrayContaining(['install', 'activate', 'fetch', 'message']))
+  // it actually wires up a fetch handler. `push` and `notificationclick` were
+  // added alongside; a worker that subscribes to push but never listens for it
+  // earns Chrome's own "site updated in the background" notice instead of a
+  // reminder.
+  expect(listeners).toEqual(
+    expect.arrayContaining(['install', 'activate', 'fetch', 'message', 'push', 'notificationclick']),
+  )
   return box.exports
 }
 
@@ -309,6 +314,16 @@ describe('service worker routing', () => {
   it('never intercepts cross-origin requests', () => {
     expect(route(`${OTHER}/wp-content/2026/01/hero.jpg`)).toBeNull()
     expect(route('https://platform.theverge.com/wp-content/hero.jpg')).toBeNull()
+  })
+
+  it('does not cache the push routes it gained, or anything else personal', () => {
+    // Adding push handlers must not add cache routes. `/api/push/*` carries a
+    // device registration and a send; a cached copy of either would be both
+    // useless and personal.
+    for (const path of ['/api/push/subscribe', '/api/push/unsubscribe', '/api/push/send', '/api/push/test']) {
+      expect(route(`${ORIGIN}${path}`, { method: 'POST' }), path).toBeNull()
+      expect(route(`${ORIGIN}${path}`), path).toBeNull()
+    }
   })
 
   it('leaves the image proxy and any future API route alone', () => {
