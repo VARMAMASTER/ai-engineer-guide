@@ -103,3 +103,37 @@ export function appFor(pathname: string): NavApp | undefined {
 export function sectionFor(pathname: string, app: NavApp): NavItem | undefined {
   return app.sections.find((section) => isActive(pathname, section.href))
 }
+
+/** One step of a trail: enough to link to it, nothing that names the leaf. */
+export interface Crumb {
+  href: string
+  label: string
+}
+
+/**
+ * The ancestors of `pathname`, outermost first — never the page itself.
+ *
+ * `/dsa/arrays-hashing` is the Learn app and the DSA section: `[Learn, DSA]`.
+ * `/dsa` is the DSA section's own landing page, so DSA is the leaf, not an
+ * ancestor of itself: just `[Learn]`. An app's own landing page (`/today`,
+ * `/roadmap`) has nothing above it, so it gets `[]`, and so does any route
+ * `appFor` cannot place — Settings, `/kit`, `/offline`, a 404.
+ *
+ * This is deliberately the full ancestor chain, not a "should this render"
+ * verdict — `trailFor('/dsa')` is `[Learn]` even though a page at `/dsa`
+ * itself has nowhere to put it (the section strip already says where it is).
+ * That decision belongs to whoever renders the trail, using `NAV_DESTINATIONS`
+ * to tell a section/app root from a page one level deeper than the nav model
+ * knows about — see `components/Breadcrumb.tsx`.
+ */
+export function trailFor(pathname: string): Crumb[] {
+  const app = appFor(pathname)
+  if (!app || pathname === app.href) return []
+
+  const trail: Crumb[] = [{ href: app.href, label: app.label }]
+  const section = sectionFor(pathname, app)
+  if (section && pathname !== section.href) {
+    trail.push({ href: section.href, label: section.label })
+  }
+  return trail
+}

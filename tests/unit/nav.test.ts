@@ -8,6 +8,7 @@ import {
   isActive,
   isAppActive,
   sectionFor,
+  trailFor,
 } from '@/lib/nav'
 import { NAV_ICON_NAMES } from '@/components/NavIcon'
 
@@ -139,5 +140,40 @@ describe('appFor', () => {
     expect(sectionFor('/dsa/arrays-hashing', learn)?.href).toBe('/dsa')
     expect(sectionFor('/revise/sheets', learn)?.href).toBe('/revise')
     expect(sectionFor('/today', learn)).toBeUndefined()
+  })
+})
+
+describe('trailFor', () => {
+  it('gives a deep path both its ancestors, outermost first', () => {
+    expect(trailFor('/dsa/arrays-hashing')).toEqual([
+      { href: '/roadmap', label: 'Learn' },
+      { href: '/dsa', label: 'DSA' },
+    ])
+  })
+
+  it('gives a section root just the app above it — the section is the leaf here, not an ancestor of itself', () => {
+    expect(trailFor('/dsa')).toEqual([{ href: '/roadmap', label: 'Learn' }])
+  })
+
+  it('gives an app root nothing — there is no level above an app', () => {
+    expect(trailFor('/today')).toEqual([])
+    // Learn's own landing page is both the app root and a section root;
+    // either way it is a root, so it gets no trail either.
+    expect(trailFor('/roadmap')).toEqual([])
+  })
+
+  it('gives an unknown path nothing', () => {
+    expect(trailFor('/no-such-route')).toEqual([])
+  })
+
+  it('gives Settings nothing — it belongs to no app', () => {
+    expect(trailFor('/settings')).toEqual([])
+  })
+
+  it('never puts the current page in its own trail', () => {
+    for (const route of ['/dsa/arrays-hashing', '/revise/sheets', '/companies/google']) {
+      const hrefs = trailFor(route).map((c) => c.href)
+      expect(hrefs).not.toContain(route)
+    }
   })
 })
