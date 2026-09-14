@@ -44,12 +44,38 @@ export async function GET() {
   // Concurrent, so a slow or dead publisher cannot stall or sink the others.
   // Two global mastheads and two Indian ones; `mergeNews` caps each publisher
   // so the merge stays balanced whichever of them answers.
-  const settled = await Promise.allSettled([
-    load(ARS_URL, parseArs),
-    load(VERGE_URL, parseVerge),
-    load(MEDIANAMA_URL, parseMedianama),
-    load(INDIAN_EXPRESS_URL, parseIndianExpress),
-  ])
+  const sources = [
+    { name: 'ars', url: ARS_URL, parse: parseArs },
+    { name: 'verge', url: VERGE_URL, parse: parseVerge },
+    { name: 'medianama', url: MEDIANAMA_URL, parse: parseMedianama },
+    { name: 'indianexpress', url: INDIAN_EXPRESS_URL, parse: parseIndianExpress },
+  ] as const
+
+  const settled = await Promise.allSettled(sources.map((s) => load(s.url, s.parse)))
+
+  // A rejected source used to be dropped in silence, and that is how MediaNama
+  // died unnoticed in production: it answers fine from a laptop and not at all
+  // from Vercel's servers, the route degraded exactly as designed, and there was
+  // nothing in the runtime logs to find because nothing ever wrote one. Partial
+  // success is still the right RESPONSE — a reader wants three publishers rather
+  // than an error page — but it must not be a silent one. A source that has
+  // stopped working permanently is indistinguishable from one that never ran.
+  settled.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      const reason = result.reason instanceof Error ? result.reason.message : String(result.reason)
+      console.warn(`[feed/news] source "${sources[i].name}" failed: ${reason}`)
+    }
+  })
+
+  // An empty-but-successful parse is its own failure mode, and a quieter one:
+  // the fetch succeeded, so nothing rejected, but a changed feed format yields
+  // zero items forever.
+  settled.forEach((result, i) => {
+    if (result.status === 'fulfilled' && result.value.length === 0) {
+      console.warn(`[feed/news] source "${sources[i].name}" parsed 0 items`)
+    }
+  })
+
   const lists = settled
     .filter((r): r is PromiseFulfilledResult<FeedItem[]> => r.status === 'fulfilled')
     .map((r) => r.value)
