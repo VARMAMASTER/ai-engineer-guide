@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import './globals.css'
 import Shell from '@/components/Shell'
 import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
+import ProgressSync from '@/components/ProgressSync'
 import { DEFAULT_THEME, THEME_INIT_SCRIPT } from '@/lib/theme'
 
 const body = Inter({
@@ -76,6 +77,10 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       <body className="min-h-full">
         <Shell>{children}</Shell>
         <ServiceWorkerRegistrar />
+        {/* Renders nothing, and does nothing at all while signed out. Mounted
+            here rather than in Shell so the store/account handshake outlives
+            every navigation — see components/ProgressSync.tsx. */}
+        <ProgressSync />
       </body>
     </html>
   )

@@ -33,6 +33,11 @@ export const STATIC_ROUTES = [
   '/revise',
   '/revise/sheets',
   '/settings',
+  // The two auth pages. Public by definition, so they belong in the sweep like
+  // anything else — they are the highest-risk surface for a missing label or a
+  // heading that only appears after hydration.
+  '/sign-in',
+  '/sign-up',
   // The component gallery. Not in the nav — it is a reference surface — but a
   // real route, so it is held to the same bar as every other page.
   '/kit',
