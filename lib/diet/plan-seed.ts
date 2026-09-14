@@ -453,10 +453,13 @@ const DINNER_PROTEIN: Record<WeekDay, { foodId: string; name: string; servings: 
 
 const DAY_NOTES: Record<WeekDay, string> = {
   mon: 'Paneer day. One cook in the morning; half the pot at lunch, half at dinner.',
-  tue: 'Tofu day — the lowest-protein day of the week, 44 g under the floor.',
+  // Deliberately no figure in the prose. The protein column beside it carries
+  // the live shortfall, and a note that said "44 g under" would still say it
+  // after the tofu was raised to 450 g.
+  tue: 'Tofu day — the lowest-protein day of the week as written.',
   wed: 'Chicken day. Chicken only ever at dinner, and only Wednesday and Sunday.',
   thu: 'Paneer day. Identical to Monday.',
-  fri: 'Tofu day — the lowest-protein day of the week, 44 g under the floor.',
+  fri: 'Tofu day — the lowest-protein day of the week as written.',
   sat: 'Paneer 200 g as planned, or swap in 300 g of tofu if you would rather.',
   sun: 'Chicken day. Chicken only ever at dinner, and only Wednesday and Sunday.',
 }

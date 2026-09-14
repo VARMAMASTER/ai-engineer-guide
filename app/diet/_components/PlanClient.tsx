@@ -405,10 +405,10 @@ export default function PlanClient({
         <p className="text-sm text-[var(--text-muted)]" data-testid="plan-band-verdict">
           {bandSentence(summary.kcalVerdict, summary.meanKcal, scoringTargets)}
           {summary.daysAboveBand.length > 0
-            ? ` ${namedDays(summary.daysAboveBand)} ${summary.daysAboveBand.length === 1 ? 'sits' : 'sit'} above the band on its own.`
+            ? ` ${namedDays(summary.daysAboveBand)} ${summary.daysAboveBand.length === 1 ? 'is' : 'are'} above it on ${summary.daysAboveBand.length === 1 ? 'its' : 'their'} own — an average inside a band is not the same as seven days inside it.`
             : ''}
           {summary.daysBelowBand.length > 0
-            ? ` ${namedDays(summary.daysBelowBand)} ${summary.daysBelowBand.length === 1 ? 'sits' : 'sit'} below it.`
+            ? ` ${namedDays(summary.daysBelowBand)} ${summary.daysBelowBand.length === 1 ? 'is' : 'are'} below it.`
             : ''}
         </p>
 
@@ -426,8 +426,8 @@ export default function PlanClient({
 
         {usingPlanTargets ? (
           <p className="hint">
-            Scored against the plan&rsquo;s own {scoringTargets.kcal - scoringTargets.kcalBand}
-            &ndash;{scoringTargets.kcal + scoringTargets.kcalBand} kcal band and a{' '}
+            Scored against the plan&rsquo;s own {kcalText(scoringTargets.kcal - scoringTargets.kcalBand)}
+            &ndash;{kcalText(scoringTargets.kcal + scoringTargets.kcalBand)} kcal band and a{' '}
             {Math.round(scoringTargets.proteinG)}&ndash;{PLAN_PROTEIN_CEILING_G} g protein range,
             because you have not set your own targets in Setup yet.
           </p>
