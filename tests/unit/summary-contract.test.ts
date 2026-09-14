@@ -3,6 +3,7 @@ import { isStale, orderSummaries, type AppSummary } from '@/lib/summary'
 import { dietSummary } from '@/lib/diet/summary'
 import { trainSummary } from '@/lib/train/summary'
 import { opsSummary } from '@/lib/ops/summary'
+import type { Plan, TrainingProfile } from '@/lib/train/types'
 
 /**
  * The seam, tested across every app at once.
@@ -23,18 +24,31 @@ import { opsSummary } from '@/lib/ops/summary'
 
 const TODAY = '2026-09-14'
 
+/*
+ * The fixtures are annotated rather than inferred on purpose.
+ *
+ * This file was committed with `plan` missing `daysPerWeek`. Every runtime test
+ * passed — a missing property throws nothing when no code path reads it — and
+ * `pnpm test` was green, so the defect reached the branch and only surfaced in
+ * `pnpm build`. Naming the types makes the compiler check the fixture against
+ * the schema it is standing in for, which is the whole reason a fixture exists.
+ */
+const PROFILE: TrainingProfile = {
+  goal: 'hypertrophy',
+  experience: 'intermediate',
+  availableDays: 3,
+  equipment: ['dumbbell'],
+  injuries: [],
+}
+
+const PLAN: Plan = { daysPerWeek: 3, split: 'full_body', days: [], notes: [] }
+
 function summaries(): AppSummary[] {
   return [
     dietSummary({ date: TODAY, entries: [] }),
     trainSummary({
-      profile: {
-        goal: 'hypertrophy',
-        experience: 'intermediate',
-        availableDays: 3,
-        equipment: ['dumbbell'],
-        injuries: [],
-      },
-      plan: { days: [], split: 'full_body', notes: [] },
+      profile: PROFILE,
+      plan: PLAN,
       sessions: [],
       today: TODAY,
     }),
