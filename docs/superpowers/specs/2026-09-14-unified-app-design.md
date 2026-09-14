@@ -166,6 +166,88 @@ Tracked: weight, BMI, daily calories and protein against target, trend, forecast
 coverage — poor payoff early) and micronutrients (calories and protein are 90%
 of the value).
 
+#### 5.1.1 Eating window
+
+Added 2026-09-14 at the owner's request: nothing before 12:00, nothing after
+18:00, and the window configurable.
+
+This is not a display preference — it makes the **timestamp of every entry
+load-bearing**, which is why it is specified now rather than retrofitted. A log
+row without a reliable local time cannot answer any question below, and
+back-dating an entry at 23:00 for "yesterday lunch" must record the meal's time,
+not the entry's.
+
+- `eating_window` is per user: `{ start: "12:00", end: "18:00" }`, editable, and
+  may be disabled entirely. Defaults to the owner's 12:00–18:00.
+- Every entry stores a local timestamp and the resolved local date. Storing UTC
+  alone is wrong here: an 18:30 meal is outside the window regardless of where
+  the user was standing, and a day boundary in UTC would split an evening.
+- An entry outside the window is **marked, never blocked or scolded**. A tracker
+  that nags gets deleted. The mark is a fact, not a judgement.
+- Derived per day: first entry, last entry, **eating span** (first → last) and
+  **fasting span** (previous day's last → today's first). The fast is the number
+  people actually care about and it crosses midnight, so it cannot be computed
+  from a single day's rows.
+- Adherence is the share of days whose entries all fell inside the window, over
+  7 and 28 days.
+
+A late meal that stays inside the calorie target is not a failure, and the UI
+must not imply otherwise — window adherence and calorie adherence are reported
+as two separate facts.
+
+#### 5.1.2 Analytics
+
+Diet analytics stay **inside Diet** (section 4.2). Anything that relates food to
+training or to study is the agent's, not this section's.
+
+**Weight trend — an exponentially weighted moving average, not a raw line.**
+Daily weight swings by 1–2 kg on water alone, which reads as failure and is the
+single most common reason people stop weighing. The EWMA (the Hacker's Diet
+approach) responds faster than a simple 14-day mean while still absorbing the
+noise. Both the raw points and the trend line are shown; the trend is what any
+number elsewhere in the app is computed from.
+
+**Measured TDEE, which beats the formula.** Mifflin-St Jeor is a population
+estimate carrying roughly ±15% error for an individual — on 2,400 kcal that is
+±360, enough to make a deficit imaginary. With two or more weeks of logged
+intake and weights, actual expenditure can be solved for directly:
+
+```
+TDEE ≈ mean daily intake − (Δ trend weight in kg × 7700 ÷ days)
+```
+
+This is arithmetic over data already being collected, and it is honest in a way
+the formula cannot be. Rules:
+
+- Use the formula only until there are **14 days** of both intake and weight,
+  then switch to measured and say plainly which is in use.
+- Recompute over a rolling 14–28 day window so it tracks a changing metabolism.
+- Widen to a range, not a point, when logging is patchy — and **say the logging
+  is patchy** rather than quietly producing a confident wrong number. Under 70%
+  of days logged, report a range and a warning.
+
+**The rest, all deterministic:**
+
+- Calories and protein against target: today, 7-day mean, 28-day mean.
+- Adherence: share of days logged at all, and share inside the calorie target.
+  The first matters more — an unlogged day is invisible, not zero.
+- Weight forecast from the measured TDEE and the current deficit, **shown
+  against the previous forecast** so the projection is scored rather than merely
+  redrawn. A forecast that is never checked is decoration.
+- Muscle projection at honest rates (0.25–0.5 kg/month trained), bounded and
+  labelled as a ceiling rather than an expectation.
+- Eating-window adherence and fasting span, per 5.1.1.
+
+**What analytics must not do.** No correlation claims from this section. With
+one person and a few weeks of data, "your weight drops on days you eat before
+14:00" is overwhelmingly noise, and a health app that reports noise as insight
+does real harm. Cross-domain pattern-finding is the agent's job, it is phrased
+as observation rather than causation, and it stays silent below a stated minimum
+of data.
+
+**Charts** follow the project's visualisation conventions and must be legible in
+both themes, readable at 390px, and never encode meaning in colour alone.
+
 ### 5.2 Train
 
 A plan derived from goal, available days, equipment and injuries. Logs sets,
