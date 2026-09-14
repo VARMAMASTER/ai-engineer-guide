@@ -112,3 +112,39 @@ export function coincidingDays(
 export function timelineFor(timelines: AppTimeline[], appId: string): AppTimeline | undefined {
   return timelines.find((t) => t.appId === appId)
 }
+
+/** Everything a summary says, minus the date. Two equal shapes are the same day twice. */
+function shapeOf(summary: AppSummary): string {
+  const metrics = summary.metrics.map((m) => `${m.label}=${m.value}${m.of ?? ''}${m.trend ?? ''}`)
+  return [summary.status, summary.headline, ...metrics].join('|')
+}
+
+/**
+ * Whether an app's fortnight contains more than one day repeated fourteen times.
+ *
+ * This exists because of a genuine gap in `AppSummary`, found by running the
+ * agent against a real three-day-old account rather than a fixture.
+ *
+ * `AppStatus` has an `idle` for "nothing happened here", and Diet, Train and
+ * Learn all use it. Ops never emits it: an account with no tasks at all and an
+ * account that is simply on top of everything both produce `ok` and the
+ * headline "Nothing due today." So `status !== 'idle'` — the obvious reading of
+ * "has this app been used" — counted fourteen active days for an app the user
+ * had never opened, which let the readiness gate approve a brief built on one
+ * app and three days of food. That is precisely the confident-voice-on-thin-
+ * evidence failure the gate exists to prevent.
+ *
+ * Identity across the whole window is the strongest signal the seam actually
+ * carries, so it is the one used. It is conservative by construction: it can
+ * only make the agent quieter, never louder, and an app in genuine use varies
+ * at least once in a fortnight.
+ *
+ * The real fix belongs in the seam, not here, and is in the report: either Ops
+ * emits `idle` when it holds no tasks, or `AppSummary` grows an explicit
+ * "this app holds nothing yet" flag that no app has to infer.
+ */
+export function hasVariation(timeline: AppTimeline): boolean {
+  if (timeline.days.length < 2) return false
+  const first = shapeOf(timeline.days[0])
+  return timeline.days.some((day) => shapeOf(day) !== first)
+}

@@ -28,6 +28,7 @@ import {
   countDays,
   currentRun,
   directionalMetric,
+  hasVariation,
   isActive,
   isOffTrack,
   isQuiet,
@@ -62,9 +63,20 @@ function plural(n: number, one: string, many: string): string {
   return n === 1 ? one : many
 }
 
-/** A timeline worth drawing conclusions about at all. */
+/**
+ * A timeline worth drawing conclusions about at all.
+ *
+ * Two conditions, not one. `activeDays` catches the app that has never been
+ * used; `hasVariation` catches the app that CANNOT SAY it has never been used —
+ * Ops publishes `ok` and "Nothing due today." whether you have no tasks or are
+ * simply on top of them. See the note on `hasVariation`.
+ */
 function judgeable(timeline: AppTimeline | undefined): timeline is AppTimeline {
-  return timeline !== undefined && activeDays(timeline) >= THRESHOLDS.minActiveDaysToJudge
+  return (
+    timeline !== undefined &&
+    activeDays(timeline) >= THRESHOLDS.minActiveDaysToJudge &&
+    hasVariation(timeline)
+  )
 }
 
 /* ----------------------------------------------------------------- rules -- */

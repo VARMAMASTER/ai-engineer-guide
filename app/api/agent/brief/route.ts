@@ -6,7 +6,7 @@ import { buildBrief } from '@/lib/agent/brief'
 import { collectTimelines } from '@/lib/agent/collect'
 import { synthesise } from '@/lib/agent/model'
 import { checkRateLimit } from '@/lib/agent/rate-limit'
-import { insertProposals, readBrief, readProposals, writeBrief } from '@/lib/agent/store'
+import { insertProposals, proposalsFor, readBrief, writeBrief } from '@/lib/agent/store'
 
 /**
  * The brief: GET reads today's, POST writes a new one.
@@ -68,11 +68,10 @@ export async function GET(request: Request) {
   const supabase = await createClient()
 
   try {
-    const [stored, proposals] = await Promise.all([
-      readBrief(supabase, date),
-      readProposals(supabase, date),
-    ])
-    const brief = stored.brief ? { ...stored.brief, proposals } : null
+    const stored = await readBrief(supabase, date)
+    const brief = stored.brief
+      ? { ...stored.brief, proposals: await proposalsFor(supabase, stored.brief) }
+      : null
     return NextResponse.json({ date, brief }, { headers: PRIVATE })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500, headers: PRIVATE })
@@ -142,7 +141,7 @@ export async function POST(request: Request) {
 
     // Re-read the inbox so a proposal decided earlier today comes back decided
     // rather than reset to pending by the object we just built in memory.
-    const proposals = await readProposals(supabase, date)
+    const proposals = await proposalsFor(supabase, brief)
 
     return NextResponse.json({ date, brief: { ...brief, proposals } }, { headers: PRIVATE })
   } catch (error) {

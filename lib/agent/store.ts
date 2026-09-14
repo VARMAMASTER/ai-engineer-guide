@@ -12,6 +12,7 @@
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Brief, Proposal, ProposalState } from './types'
+// `Brief` is used by `proposalsFor` below as well as by `writeBrief`.
 import { parseStoredBrief } from './schema'
 import type { RateLimitState } from './rate-limit'
 
@@ -106,6 +107,25 @@ export async function insertProposals(args: {
     { onConflict: 'user_id,id', ignoreDuplicates: true },
   )
   if (error) throw new Error(`Could not save the proposals: ${error.message}`)
+}
+
+/**
+ * The inbox for a brief — empty when the brief has decided to stay quiet.
+ *
+ * A proposal raised earlier today outlives the brief that raised it, which is
+ * right: an undecided suggestion should not vanish because you pressed the
+ * button again. But a brief whose answer is "there is not enough here to say
+ * anything true" must not then show a suggestion underneath that sentence, and
+ * a real three-day-old account did exactly that — declining to speak, and then
+ * advising. The row stays; it is simply not attached until the brief has
+ * something to say, at which point it reappears with its decision intact.
+ */
+export async function proposalsFor(
+  supabase: SupabaseClient,
+  brief: Pick<Brief, 'date' | 'status'>,
+): Promise<Proposal[]> {
+  if (brief.status === 'not-enough-data') return []
+  return readProposals(supabase, brief.date)
 }
 
 /** The inbox: every proposal from this date, whatever was decided about it. */

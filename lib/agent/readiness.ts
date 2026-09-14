@@ -14,7 +14,7 @@
  *    sentence to write and the honest output is the app's own card.
  */
 import type { AppTimeline } from './types'
-import { activeDays } from './timeline'
+import { activeDays, hasVariation } from './timeline'
 
 /** Days on which at least one app recorded something, across the window. */
 export const MIN_ACTIVE_DAYS = 5
@@ -34,10 +34,18 @@ export interface Readiness {
 }
 
 export function assessReadiness(timelines: AppTimeline[]): Readiness {
-  const contributing = timelines.filter((t) => activeDays(t) >= MIN_DAYS_PER_APP)
+  // `hasVariation` as well as `activeDays`, because one app cannot say it is
+  // empty: Ops publishes `ok` and "Nothing due today." whether it holds no
+  // tasks or you are simply on top of them. Counting its fourteen identical
+  // days as history let this gate approve a brief built on one app and three
+  // days of food, which a real three-day-old account demonstrated. See the note
+  // on `hasVariation` in `timeline.ts`, and the seam fix in the report.
+  const contributing = timelines.filter(
+    (t) => activeDays(t) >= MIN_DAYS_PER_APP && hasVariation(t),
+  )
 
   const days = new Set<string>()
-  for (const timeline of timelines) {
+  for (const timeline of contributing) {
     for (const day of timeline.days) {
       if (day.status !== 'idle') days.add(day.date)
     }

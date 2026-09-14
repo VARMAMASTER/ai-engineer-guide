@@ -51,16 +51,30 @@ describe('silence below the minimum', () => {
   })
 
   it('needs two apps, because one app has no cross-app sentence to write', () => {
-    const oneApp = assessReadiness([timelineOf('diet', 'oooooooooooooo')])
+    const oneApp = assessReadiness([timelineOf('diet', 'iooooooooooooo')])
     expect(oneApp.ready).toBe(false)
     expect(oneApp.activeApps).toBeLessThan(MIN_ACTIVE_APPS)
 
     const twoApps = assessReadiness([
-      timelineOf('diet', 'oooooooooooooo'),
-      timelineOf('ops', 'oooooooooooooo'),
+      timelineOf('diet', 'iooooooooooooo'),
+      timelineOf('ops', 'ooooooooooooob'),
     ])
     expect(twoApps.ready).toBe(true)
     expect(twoApps.activeDays).toBeGreaterThanOrEqual(MIN_ACTIVE_DAYS)
+  })
+
+  it('does not count an app whose fortnight is one day repeated fourteen times', () => {
+    // Found by running against a real three-day-old account, not by a fixture.
+    // Ops publishes `ok` and "Nothing due today." whether it holds no tasks at
+    // all or you are simply on top of them, so `status !== 'idle'` credited
+    // fourteen days of history to an app that had never been opened — and the
+    // gate then approved a brief built on one app and three days of food.
+    const untouched = assessReadiness([
+      timelineOf('diet', 'iiiiiiiiiiiooo'),
+      timelineOf('ops', 'oooooooooooooo'),
+    ])
+    expect(untouched.ready).toBe(false)
+    expect(untouched.activeApps).toBe(1)
   })
 })
 
@@ -153,9 +167,9 @@ describe('when a token is worth spending', () => {
   it('does not buy a sentence when only one app had anything to say', async () => {
     const synthesise = ok('unnecessary')
     const brief = await buildBrief({
-      // Ops is active enough to pass the readiness gate but boringly on track,
-      // so the only observations come from Diet.
-      timelines: [timelineOf('diet', 'iiiiiooooooooo'), timelineOf('ops', 'oooooooooooooo')],
+      // Ops is used and passes the readiness gate, but nothing in it crossed a
+      // threshold, so every observation comes from Diet alone.
+      timelines: [timelineOf('diet', 'iiiiiooooooooo'), timelineOf('ops', 'ooooooooooooob')],
       today: TODAY,
       synthesise,
     })
@@ -166,7 +180,7 @@ describe('when a token is worth spending', () => {
 
   it('says so plainly when nothing crossed a threshold', async () => {
     const brief = await buildBrief({
-      timelines: [timelineOf('diet', 'oooooooooooooo'), timelineOf('ops', 'oooooooooooooo')],
+      timelines: [timelineOf('diet', 'ooooooooooooob'), timelineOf('ops', 'booooooooooooo')],
       today: TODAY,
       synthesise: ok('unnecessary'),
     })
