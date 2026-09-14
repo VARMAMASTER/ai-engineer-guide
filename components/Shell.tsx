@@ -4,6 +4,7 @@ import BottomNav from './BottomNav'
 import SectionTabs from './SectionTabs'
 import TopBar from './TopBar'
 import StorageBanner from './StorageBanner'
+import UpdatePrompt from './UpdatePrompt'
 import CommandPalette from './CommandPalette'
 import Breadcrumb from './Breadcrumb'
 
@@ -42,6 +43,10 @@ export default function Shell({ children }: { children: ReactNode }) {
           from nothing in particular, which have no common ancestor to hold the
           state. */}
       <CommandPalette />
+      {/* Says so when a newer build has taken over this page. Navigations are
+          served stale-while-revalidate, so without this a deploy is invisible
+          until the next full load. */}
+      <UpdatePrompt />
     </div>
   )
 }
