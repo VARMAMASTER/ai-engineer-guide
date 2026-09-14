@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server'
-import { ARS_URL, VERGE_URL, mergeNews, parseArs, parseVerge } from '@/lib/feed/news'
+import {
+  ARS_URL,
+  INDIAN_EXPRESS_URL,
+  MEDIANAMA_URL,
+  VERGE_URL,
+  mergeNews,
+  parseArs,
+  parseIndianExpress,
+  parseMedianama,
+  parseVerge,
+} from '@/lib/feed/news'
 import type { FeedItem, FeedResponse } from '@/lib/feed/types'
 
 // Caching comes from the fetch() call's `next.revalidate` option below (the
@@ -10,9 +20,9 @@ import type { FeedItem, FeedResponse } from '@/lib/feed/types'
 // dynamic by default and a plain `revalidate` segment config does nothing for a
 // handler that isn't `force-static`.
 //
-// Unlike the HN route, neither URL here needs a bucketed timestamp: both are
-// fixed publisher endpoints with no query string, so the fetch cache key is
-// already byte-identical on every request inside the 6-hour window.
+// Unlike the HN route, none of the URLs here needs a bucketed timestamp: all
+// four are fixed publisher endpoints with no query string, so the fetch cache
+// key is already byte-identical on every request inside the 6-hour window.
 const CACHE_CONTROL = 'public, s-maxage=10800, stale-while-revalidate=3600'
 const REVALIDATE_SECONDS = 10800
 const TIMEOUT_MS = 8000
@@ -21,7 +31,7 @@ async function load(url: string, parse: (xml: string) => FeedItem[]): Promise<Fe
   const res = await fetch(url, {
     next: { revalidate: REVALIDATE_SECONDS },
     signal: AbortSignal.timeout(TIMEOUT_MS),
-    // Both publishers serve a plain 403 to the default fetch UA.
+    // Ars and The Verge serve a plain 403 to the default fetch UA.
     headers: { 'User-Agent': 'ai-engineer-guide/1.0 (+feed reader)', Accept: 'application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8' },
   })
   if (!res.ok) throw new Error(`${url} responded ${res.status}`)
@@ -31,10 +41,14 @@ async function load(url: string, parse: (xml: string) => FeedItem[]): Promise<Fe
 export async function GET() {
   const fetchedAt = new Date().toISOString()
 
-  // Concurrent, so a slow or dead publisher cannot stall or sink the other.
+  // Concurrent, so a slow or dead publisher cannot stall or sink the others.
+  // Two global mastheads and two Indian ones; `mergeNews` caps each publisher
+  // so the merge stays balanced whichever of them answers.
   const settled = await Promise.allSettled([
     load(ARS_URL, parseArs),
     load(VERGE_URL, parseVerge),
+    load(MEDIANAMA_URL, parseMedianama),
+    load(INDIAN_EXPRESS_URL, parseIndianExpress),
   ])
   const lists = settled
     .filter((r): r is PromiseFulfilledResult<FeedItem[]> => r.status === 'fulfilled')

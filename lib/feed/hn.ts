@@ -1,3 +1,4 @@
+import { SOURCE_REGION } from './sources'
 import type { FeedItem } from './types'
 
 /**
@@ -78,6 +79,7 @@ export function parseHn(payload: unknown): FeedItem[] {
       title,
       url: raw.url ?? `https://news.ycombinator.com/item?id=${id}`,
       source: 'hn',
+      region: SOURCE_REGION.hn,
       date,
       meta: typeof raw.points === 'number' ? `${raw.points} points` : undefined,
     })

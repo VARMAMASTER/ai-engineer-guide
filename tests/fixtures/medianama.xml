@@ -1,0 +1,1288 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+	>
+
+<channel>
+	<title>Artificial Intelligence Archives - MEDIANAMA</title>
+	<atom:link href="https://www.medianama.com/tag/artificial-intelligence/feed/" rel="self" type="application/rss+xml" />
+	<link>https://www.medianama.com/tag/artificial-intelligence/</link>
+	<description>Technology and policy in India</description>
+	<lastBuildDate>Fri, 11 Sep 2026 13:59:21 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>
+	hourly	</sy:updatePeriod>
+	<sy:updateFrequency>
+	1	</sy:updateFrequency>
+	<generator>https://wordpress.org/?v=7.1</generator>
+
+<image>
+	<url>https://www.medianama.com/wp-content/uploads/2024/04/cropped-favicon-32x32.png</url>
+	<title>Artificial Intelligence Archives - MEDIANAMA</title>
+	<link>https://www.medianama.com/tag/artificial-intelligence/</link>
+	<width>32</width>
+	<height>32</height>
+</image> 
+	<item>
+		<title>PayU rolls out AI fraud protection tool for cross-border card payments</title>
+		<link>https://www.medianama.com/2026/09/223-payu-ai-fraud-protection-cross-border-card-payments/</link>
+		
+		<dc:creator><![CDATA[Amit Singh]]></dc:creator>
+		<pubDate>Fri, 11 Sep 2026 12:12:33 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Cross Border Payments]]></category>
+		<category><![CDATA[Fintech Lending]]></category>
+		<category><![CDATA[Payments]]></category>
+		<category><![CDATA[PayU]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336740</guid>
+
+					<description><![CDATA[<p>PayU’s Fraud Liability Protect combines AI risk assessment, dynamic authentication and fraud liability protection.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-payu-ai-fraud-protection-cross-border-card-payments/">PayU rolls out AI fraud protection tool for cross-border card payments</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">PayU on Friday launched an AI-powered fraud protection solution for Indian merchants accepting international card payments, as the fintech company looks to shield businesses from rising AI-enabled scams, including fraudulent chargebacks.</p>
+
+
+
+<p class="wp-block-paragraph">Unveiled at the Global Fintech Fest, PayU’s <strong>Fraud Liability Protect (FLP)</strong> uses AI and risk-based profiling to assess cross-border card payments, identify suspicious international transactions and protect Indian merchants against international card fraud.</p>
+
+
+
+<p class="wp-block-paragraph">According to PayU, Indian merchants are currently in a predicament: tighter fraud controls can add friction at the authentication level, while lighter controls can leave them exposed to fraud and revenue losses.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>How PayU&#8217;s fraud protection solution works</strong></p>
+
+
+
+<p class="wp-block-paragraph">PayU’s Fraud Liability Protect combines three core capabilities:</p>
+
+
+
+<ul class="wp-block-list">
+<li><strong>AI/ML-powered risk assessment</strong> evaluates every international card payment against multiple transaction and behavioural signals.</li>
+
+
+
+<li><strong>Dynamic risk-based authentication</strong> determines the appropriate level of authentication needed. Low-risk transactions are generally processed without friction, while higher-risk transactions are routed through stricter authentication.</li>
+
+
+
+<li><strong>Fraud liability protection</strong> covers merchants against unwarranted fraud chargebacks, protecting their revenues from international card fraud.</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"><strong>What they&#8217;re saying</strong></p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">“Fraud protection should not come at the cost of payment acceptance, especially as Indian merchants scale across geographies,&#8221; said Manas Mishra, chief product officer at PayU and Wibmo.</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph">Mishra said the solution is designed to protect Indian merchants against both human-initiated and AI-enabled scams while improving the success rate of genuine international transactions.</p>
+
+
+
+<p class="wp-block-paragraph">PayU said its merchants are already seeing a 4-5% improvement in international card payment success rates, alongside a reduction in fraud exposure.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>How are online travel and food delivery platforms benefiting?</strong></p>
+
+
+
+<p class="wp-block-paragraph">The fintech company said its fraud protection solution is targeted at Indian small and medium businesses in sectors such as travel, online travel agencies, airlines, e-commerce, quick commerce and foodtech, where failed cross-border payments can directly affect revenue and erode customer trust.</p>
+
+
+
+<p class="wp-block-paragraph">In one case, <strong>an online travel merchant that adopted FLP saw a 14% improvement in payment success rates, alongside an 83% reduction in its fraud-to-sales ratio</strong>, PayU said.</p>
+
+
+
+<p class="wp-block-paragraph">PayU said FLP integrates with its Checkout platform. Foodtech company <strong>Zomato is among the merchants using the solution</strong> to offer customers a more reliable payment experience while maintaining appropriate controls for higher-risk international transactions.</p>
+
+
+
+<p class="wp-block-paragraph">The launch comes as a number of homegrown fintech companies have received cross-border payment aggregator licences from the Reserve Bank of India. The list includes <a href="https://www.medianama.com/2025/11/223-payu-rbi-approval-cross-border-payment-aggregator/">PayU</a>, <a href="https://www.medianama.com/2025/12/223-rbi-paytm-payments-offline-cross-border-payments/">Paytm</a>, Razorpay, Juspay and Skydo, among others.</p>
+
+
+
+<p class="wp-block-paragraph">On the one hand, the licences are enabling Indian merchants to accept payments from customers overseas. On the other, criminals are increasingly using AI to create believable IDs, clone faces and voices, and target businesses, further expanding fraud risks.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2025/11/223-payu-rbi-approval-cross-border-payment-aggregator/">PayU Gets RBI Nod To Operate As Online, Offline &amp; Cross Border Payment Aggregator</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/07/223-prosus-flags-ai-agentic-ai-potential-business-risks-payu-turns-profitable/">Prosus flags AI and agentic AI as potential business risks as PayU turns profitable</a></li>
+</ul>
+<p>The post <a href="https://www.medianama.com/2026/09/223-payu-ai-fraud-protection-cross-border-card-payments/">PayU rolls out AI fraud protection tool for cross-border card payments</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>RBI Innovation Hub developing payments risk platform for ‘continuous KYC’: Maharashtra official at GFF 2026</title>
+		<link>https://www.medianama.com/2026/09/223-ai-deepfakes-bypass-video-kyc-gff/</link>
+		
+		<dc:creator><![CDATA[Azdhan]]></dc:creator>
+		<pubDate>Fri, 11 Sep 2026 11:41:09 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Cybersecurity and Data Breaches]]></category>
+		<category><![CDATA[Deepfakes]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[KYC]]></category>
+		<category><![CDATA[RBI]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336723</guid>
+
+					<description><![CDATA[<p>Deepfakes can now impersonate people in real-time video calls, raising concerns about whether existing KYC and liveness checks can keep up.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-ai-deepfakes-bypass-video-kyc-gff/">RBI Innovation Hub developing payments risk platform for ‘continuous KYC’: Maharashtra official at GFF 2026</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">“I think the Reserve Bank of India’s Innovation Hub is doing a great job on that [cybercrime &amp; fraud]. And they are coming up with a <a href="https://rbihub.in/projects/digital-payments-intelligence-platform">digital payments intelligence platform</a>… which would be looking at all of these signals and doing a risk-based analysis and doing a kind of continuous KYC,” <a href="https://www.youtube.com/watch?v=xOaBih91KkM">claimed</a> Brijesh Singh, Principal Secretary, Directorate of Information &amp; Public Relations, Government of Maharashtra, on a panel on agentic AI and cybersecurity at the Global Fintech 2026.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>To challenge the risk of &#8216;good accounts&#8217; turning mule accounts later:&nbsp;</strong></p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">“Because I was talking to bankers yesterday, and they said that, you know, in terms of mule accounts, good accounts turn into mules after some time. So all the KYC is correct. Everything is correct. It&#8217;s a genuine customer. Three months later, this guy is becoming a mule. So we are facing a challenge, and it&#8217;s upon us as regulators and as protectors and defenders to create a trustworthy system in which technology and policies both are important.” — Brijesh Singh, Directorate of Information &amp; Public Relations, Government of Maharashtra.</p>
+</blockquote>
+
+
+
+<figure class="wp-block-image size-large"><img fetchpriority="high" decoding="async" width="829" height="1024" src="https://www.medianama.com/wp-content/uploads/2026/09/image-3-829x1024.png" alt="" class="wp-image-336726" srcset="https://www.medianama.com/wp-content/uploads/2026/09/image-3-829x1024.png 829w, https://www.medianama.com/wp-content/uploads/2026/09/image-3-243x300.png 243w, https://www.medianama.com/wp-content/uploads/2026/09/image-3-768x948.png 768w, https://www.medianama.com/wp-content/uploads/2026/09/image-3-1244x1536.png 1244w, https://www.medianama.com/wp-content/uploads/2026/09/image-3.png 1380w" sizes="(max-width: 829px) 100vw, 829px" /><figcaption class="wp-element-caption">Source: <a href="https://rbihub.in/projects/digital-payments-intelligence-platform">RBI&#8217;s Innovation hub </a></figcaption></figure>
+
+
+
+<p class="wp-block-paragraph"><strong>Lack of provenance is creating a law enforcement problem:</strong> “So, for a digital evidence system to establish provenance, you would require having policies which would be enforced by everybody. For example, there is a piece of evidence in which, let&#8217;s say, there is some cryptographic signature. But the moment you are sending it on WhatsApp or on social media, that guy is again compressing it, changing the codec, removing metadata, stripping everything. How do I use it as evidence? Because tomorrow, the moot question would be whether this is AI-generated, machine-generated, or not. And increasingly, it is getting difficult because the gangs are learning signals,” said Singh.</p>
+
+
+
+<p class="wp-block-paragraph">“Social engineering has become very, very easy, while proving evidence with provenance in courts is becoming very difficult,” he further said. He also said that scammers are “learning signals each day and becoming closer to original.” “So, earlier, let&#8217;s say you used to say that there is jitter or, let&#8217;s say, eye blink rate or microexpressions. All of this is being fed back, and the models are becoming better and better and better at runtime,” he added.</p>
+
+
+
+<p class="wp-block-paragraph">“This has created another problem for law enforcement, which is called the liar&#8217;s dividend, where anyone can claim that a genuine video is AI-generated, because there is no provenance,” Singh said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Deepfakes can bypass KYC in real time:</strong> “A friend of mine showed me a technology demo. He said, ‘Give me a WhatsApp video call,’ so I did, and he said, ‘Tell me whom you want to talk to.’ And he could become anybody,” Singh said, describing a demo in which the caller impersonated multiple people, including a Bollywood actor, on a live video call. “In real time today, you can have video deepfakes which can bypass KYC. Even for liveness detection, if you ask someone to wave their hand or raise a finger, the video stream being fed into the authentication framework can bypass it.”</p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">&#8220;There are 4-5 billion-parameter models which you can run on your phone. The cost and time required to carry out an attack has come down.&#8221; &#8211; Brijesh Singh</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph"><strong>“[Cyber] security should be like a public infrastructure,”</strong> Singh said, rather than something every organisation protects only within its own perimeter, since fraud networks operate “across telecom, apps, and social media platforms” and cannot be fought the way a single institution defends its own perimeter.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>The accountability question for AI agentic actions:</strong> On the limits of full automation, Thapar said, “If you leave it to the agent to do something, and it does something not in line with the regulations or the law of the land, who do you hold accountable? Would you hold the developer? Would you hold the organisation? Would you hold the individual? That still has to evolve.”</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Certainty around AI-generated content and actions:</strong> Mithilesh Singh, Managing Director, Protiviti, said, “Any system tagged to AI has to be 100% accurate, all the time. And you can&#8217;t just say this was done by AI or a model; some human has to be accountable for its execution,” he said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Attackers are chaining vulnerabilities; the need to act faster:</strong> Rajesh Thapar, CISO, NSE India, said the scale of modern attacks has outpaced human response capacity. “How will you be able to handle it when your events per second is going into six digits?” he asked, adding that “exploits are built on the fly” today, and attackers are “chaining vulnerabilities” rather than targeting a single exposure.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>You should be able to reverse agentic actions and keep all logs:</strong> “You should have a permissible agent. You know what agent has been deployed, for what objective, and what work it is delivering. At any moment, you should be able to pause it and, if possible, reverse the actions it has performed. The UK&#8217;s and the European Union&#8217;s AI regulations also talk about this. You should have logs for everything.”</p>
+
+
+
+<p class="wp-block-paragraph">Mithilesh Singh also said, “Anthropic released an <a href="https://www.anthropic.com/threat-intelligence-report-september-2026">AI misuse report</a> today. North Korean military officers are posing as IT professionals to get into corporates and act as an insider threat, sending money back to North Korea, and they are doing this with agentic AI, from preparing for interviews to solving the actual assignments.”</p>
+
+
+
+<p class="wp-block-paragraph"><strong>PM Modi’s Mann ki Baat reduced digital arrests by 67% but shifted the focus:</strong> “You saw there was a spate of digital arrest cases, and none other than Prime Minister Modi himself spoke about this in Mann Ki Baat. Once he spoke, there was a huge spate of awareness campaigns about digital arrest, and actually, digital arrests have fallen by 67%,” claimed Brijesh Singh.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also Read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li>&nbsp;<a href="https://www.medianama.com/2023/03/223-fraud-stack-lucrative-than-fintech-nama/">Why is a scammer the best fintech founder in the world?</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/07/223-india-cybersecurity-problems/">Ten things wrong with India’s cybersecurity system: what the experts say</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+
+
+
+<p class="wp-block-paragraph"></p>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-ai-deepfakes-bypass-video-kyc-gff/">RBI Innovation Hub developing payments risk platform for ‘continuous KYC’: Maharashtra official at GFF 2026</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>GFF 2026: An AI model can influence elections without voters sensing it, says Nirmala Sitharaman</title>
+		<link>https://www.medianama.com/2026/09/223-ai-influence-elections-nirmala-sitharaman/</link>
+		
+		<dc:creator><![CDATA[Anjali Tripathi]]></dc:creator>
+		<pubDate>Fri, 11 Sep 2026 11:39:30 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[elections]]></category>
+		<category><![CDATA[Fintech]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[Nirmala Sitaraman]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336744</guid>
+
+					<description><![CDATA[<p>Finance Minister Nirmala Sitharaman said she has asked the RBI about light-touch AI regulation, while warning that advanced AI models could influence elections without voters realising it.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-ai-influence-elections-nirmala-sitharaman/">GFF 2026: An AI model can influence elections without voters sensing it, says Nirmala Sitharaman</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">Union Finance Minister Nirmala Sitharaman said she has asked the Reserve Bank of India (RBI) whether artificial intelligence (AI) can be regulated with a light touch, after telling a Mumbai audience that a leading AI model is capable of influencing elections without voters realising they are being influenced.</p>
+
+
+
+<p class="wp-block-paragraph">&#8220;There are times that I&#8217;ve checked up with RBI. Is there a way in which we can do a soft touch regulation? Is there a way in which, without affecting the innovative threshold, is there a way in which we can do something?&#8221; she said in the valedictory address at the <strong>Global Fintech Fest 2026.</strong></p>
+
+
+
+<p class="wp-block-paragraph"><strong>What she said about the model</strong></p>
+
+
+
+<p class="wp-block-paragraph">Sitharaman described a large language model she declined to name as being &#8220;fully capable of influencing the opinion in the ground without the ground even sensing that they are being influenced.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph">She then framed the concern in her own capacity. &#8220;To the extent that me being a minister, being in politics, I&#8217;m clearly seeing it capable of influencing elections,&#8221; she said.</p>
+
+
+
+<p class="wp-block-paragraph">She was describing a capability rather than alleging an incident, and did not say any election had been affected. Separately in the same passage, she referred to a country being attacked by &#8220;several agentic groups together with one group of rogue operators&#8221;, which she said had compromised an entire national system. She did not name the country and gave no further detail.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>The resignation she pointed to</strong></p>
+
+
+
+<p class="wp-block-paragraph">Sitharaman said public attention had been drawn this week when a researcher resigned from one of the world&#8217;s leading AI laboratories, quoting him as saying commercial frontier labs are &#8220;racing straight to self-improving superintelligence and gambling with our lives.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph">She named neither the researcher nor the laboratory. The quotation matches remarks reported on September 9 by <a href="https://techcrunch.com/2026/09/09/gambling-with-our-lives-anthropic-researcher-quits-warns-against-self-improving-ai/" data-type="link" data-id="https://techcrunch.com/2026/09/09/gambling-with-our-lives-anthropic-researcher-quits-warns-against-self-improving-ai/">TechCrunch</a>, by a researcher who resigned from Anthropic.</p>
+
+
+
+<p class="wp-block-paragraph">What gave the resignation weight, she said, was not the post itself but the fact that senior figures within the frontier AI ecosystem acknowledged the substance of the warning without naming themselves.</p>
+
+
+
+<p class="wp-block-paragraph">She turned that into a demand. &#8220;Who from the global AI industry will stand up and reassure the public? Who will demonstrate that safeguards are actually keeping pace with the speed? Where is the structured collective effort to provide credible and transparent answers?&#8221;</p>
+
+
+
+<p class="wp-block-paragraph">Leaving the question of AI going rogue for society at large to answer, she said, is &#8220;an unsustainable distribution of risk.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph"><strong>The precedent she cited</strong></p>
+
+
+
+<p class="wp-block-paragraph">Sitharaman pointed to the European Union&#8217;s transparency rules as an example of a jurisdiction acting. She said<a href="https://www.medianama.com/2026/06/223-eu-ai-act-deepfake-labeling-rules/"> Article 50 of the EU&#8217;s AI Act </a>took effect on August 2 this year, requiring providers to tell people when they are interacting with an AI system, to mark synthetic text, image, audio and video in machine-readable form, and to disclose deepfakes.</p>
+
+
+
+<p class="wp-block-paragraph">She said the penalty is 3% of annual global turnover, and stressed that it applies to worldwide revenue rather than revenue earned in the EU. The Act in fact provides for fines of <em>up to</em> 3% of total worldwide annual turnover, or €15 million, whichever is higher, for breaches of obligations other than the prohibited practices in Article 5.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Where she said industry&#8217;s own duty begins</strong></p>
+
+
+
+<p class="wp-block-paragraph">Sitharaman drew a line between what the RBI covers and what it does not. The governor&#8217;s assurances on the regulatory sandbox and the innovation hub address the regulated perimeter well, she said. Her remarks were aimed at those operating beyond it — fintechs and broader technology companies.</p>
+
+
+
+<p class="wp-block-paragraph">&#8220;Where the regulator&#8217;s writ ends, your own standards must begin,&#8221; she said.</p>
+
+
+
+<p class="wp-block-paragraph">She also proposed what she called a federated industry platform to bring the Indian technology ecosystem together, not to speak for individual companies but to give the sector a collective voice with foreign regulators &#8220;before regulatory positions harden and barriers are erected.&#8221; She said it could work on interoperable standards, shared cybersecurity practices and licensing, and help Indian firms commercialise intellectual property across jurisdictions.</p>
+
+
+
+<p class="wp-block-paragraph">In the same breath, she set a reciprocal obligation. Technology companies, she said, &#8220;need to be fair to the jurisdictions where they earn their profits&#8221;, meeting tax obligations that arise there and giving something back.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>On tokenisation, she pushed the RBI on the digital rupee</strong></p>
+
+
+
+<p class="wp-block-paragraph">Sitharaman said REC Limited completed India&#8217;s first tokenised corporate bond pilot under the SEBI regulatory sandbox on Monday, with the bond and the digital rupee moving &#8220;at the exact same instant.&#8221; The pilot was <a href="https://aninews.in/news/business/rec-limited-successfully-issues-india8217s-first-pilot-issue-on-tokenized-corporate-bonds-under-sebi-regulatory-sandbox-framework20260908164320/">announced on September 8</a>.</p>
+
+
+
+<p class="wp-block-paragraph">What made it possible, she said, was the presence of a central bank digital currency to settle the money leg. &#8220;Every tokenisation architecture being tested across the world eventually returns to the foundational question: what is the money leg made of?&#8221;</p>
+
+
+
+<p class="wp-block-paragraph">On that basis, she urged the RBI to take its wholesale and retail CBDC pilots further and to &#8220;continue to sharpen its capabilities with the digital rupee&#8221; — a public prompt from the finance ministry to the central bank on a programme on which the RBI has so far proceeded cautiously.</p>
+
+
+
+<p class="wp-block-paragraph">She also confirmed that the RBI recognised the Unified Fintech Forum as a second self-regulatory organisation for the fintech sector on September 10, as <a href="https://www.medianama.com/2026/09/223-rbi-unified-fintech-forum-regulator/">MediaNama reported</a> this week.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Questions MediaNama has sent to the Ministry of Finance and the RBI</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li>What form of soft-touch AI regulation has been discussed between the ministry and the RBI, and does it extend beyond the financial sector?</li>
+
+
+
+<li>Which authority does the government consider responsible for AI-driven manipulation of electoral opinion?</li>
+
+
+
+<li>Is the government examining transparency and labelling obligations along the lines of Article 50 of the EU&#8217;s AI Act?</li>
+
+
+
+<li>Has any proposal for a federated industry platform been put to industry bodies, and who would convene it?</li>
+
+
+
+<li>Following the finance minister&#8217;s remarks, does the RBI intend to expand the scope or timeline of its CBDC pilots?</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">MediaNama has written to the Ministry of Finance and the Reserve Bank of India and will update this story if they respond.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/09/223-rbi-unified-fintech-forum-regulator/">RBI recognises Unified Fintech Forum as second fintech SRO</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-singapore-safr-agentic-ai-payments-india-gff/">GFF 2026: Singapore has an AI agent framework. India is still examining one</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-scindia-trust-grid-telecom-aadhaar-upi/">GFF 2026: Scindia calls for a “Trust Grid” joining telecom, Aadhaar, UPI and bank systems</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-ai-influence-elections-nirmala-sitharaman/">GFF 2026: An AI model can influence elections without voters sensing it, says Nirmala Sitharaman</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>Nitin Gadkari skips AI agentic payments; launches FASTag bank portability feature</title>
+		<link>https://www.medianama.com/2026/09/223-nitin-gadkari-agentic-payments-onetag/</link>
+		
+		<dc:creator><![CDATA[Azdhan]]></dc:creator>
+		<pubDate>Fri, 11 Sep 2026 10:54:13 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Agentic Payments]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[FASTag]]></category>
+		<category><![CDATA[Fintech]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[Nitin Gadkari]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336686</guid>
+
+					<description><![CDATA[<p>Instead of announcing agentic payments as described in his session at GFF 2026, Transport Minister Nitin Gadkari launched OneTag which lets existing FASTag users switch their banks like porting phone numbers. </p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-nitin-gadkari-agentic-payments-onetag/">Nitin Gadkari skips AI agentic payments; launches FASTag bank portability feature</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">Skipping everything related to AI and automated agentic payments, Union Minister for Road Transport and Highways Nitin Gadkari launched OneTag, a bank-portability feature for the existing NETC FASTag system at the Global Fintech Fest (2026). He <a href="https://www.youtube.com/watch?v=8WaH56SspmI">announced </a>a timeline for barrier-free tolling nationwide. OneTag lets users keep their FASTag while switching to their preferred bank. This is similar to how same phone numbers are ported to a preferred telecom service provider.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>What was missing from Nitin Gadkari’s session?</strong> According to the <a href="https://www.globalfintechfest.com/agenda">proposed agenda</a>, his session at the Global Fintech Fest 2026, titled <strong>&#8220;India&#8217;s Intelligent Highway: Tolling and the Agentic Future of Mobility Finance,&#8221;</strong> promised a discussion:</p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">“AI-driven, autonomous systems are transforming tolling and mobility payments into seamless, real-time financial experiences. This session highlights the convergence of infrastructure, payments, and intelligence to enable frictionless transit, smarter revenue models, and scalable mobility ecosystems for the future. A public-policy lens will frame the discussion around execution, ecosystem development, and wider economic impact,” &#8211; <a href="https://www.globalfintechfest.com/agenda" data-type="link" data-id="https://www.globalfintechfest.com/agenda">reads</a> the description of the session.</p>
+</blockquote>
+
+
+
+<figure class="wp-block-image size-large"><img decoding="async" width="1024" height="573" src="https://www.medianama.com/wp-content/uploads/2026/09/image-1024x573.png" alt="" class="wp-image-336690" srcset="https://www.medianama.com/wp-content/uploads/2026/09/image-1024x573.png 1024w, https://www.medianama.com/wp-content/uploads/2026/09/image-300x168.png 300w, https://www.medianama.com/wp-content/uploads/2026/09/image-767x429.png 767w, https://www.medianama.com/wp-content/uploads/2026/09/image-1536x859.png 1536w, https://www.medianama.com/wp-content/uploads/2026/09/image-2048x1145.png 2048w" sizes="(max-width: 1024px) 100vw, 1024px" /><figcaption class="wp-element-caption">Source &#8211; <a href="https://www.globalfintechfest.com/agenda">GFF 2026</a>.</figcaption></figure>
+
+
+
+<p class="wp-block-paragraph"><strong>NPCI’s silence on agentic payments</strong>: While Gadkari never mentioned anything about AI or automated payments or agentic payments, it is important to note that NPCI was expected (according to sources <a href="https://www.reuters.com/world/india/india-preparing-rollout-agentic-payments-upi-sources-say-2026-09-01/">Reuters</a> spoke with) to launch its Unified Agent Protocol (UAP) at the GFF. Until now, the final day of the GFF, NPCI didn’t make any announcements or launches related to agentic payments.</p>
+
+
+
+<p class="wp-block-paragraph">On the first two consecutive days of GFF, the agenda had an unnamed invite-only session related to the NPCI product launch. However, no announcement was made and no explanation was given for this particular session. We are not sure if these were related to UAP or other products. &nbsp;&nbsp;</p>
+
+
+
+<figure class="wp-block-image size-large"><img decoding="async" width="1024" height="187" src="https://www.medianama.com/wp-content/uploads/2026/09/image-2-1024x187.png" alt="" class="wp-image-336693" srcset="https://www.medianama.com/wp-content/uploads/2026/09/image-2-1024x187.png 1024w, https://www.medianama.com/wp-content/uploads/2026/09/image-2-300x55.png 300w, https://www.medianama.com/wp-content/uploads/2026/09/image-2-767x140.png 767w, https://www.medianama.com/wp-content/uploads/2026/09/image-2-1536x280.png 1536w, https://www.medianama.com/wp-content/uploads/2026/09/image-2.png 1600w" sizes="(max-width: 1024px) 100vw, 1024px" /></figure>
+
+
+
+<figure class="wp-block-image size-large"><img loading="lazy" decoding="async" width="1024" height="226" src="https://www.medianama.com/wp-content/uploads/2026/09/image-1-1024x226.png" alt="" class="wp-image-336692" srcset="https://www.medianama.com/wp-content/uploads/2026/09/image-1-1024x226.png 1024w, https://www.medianama.com/wp-content/uploads/2026/09/image-1-300x66.png 300w, https://www.medianama.com/wp-content/uploads/2026/09/image-1-766x169.png 766w, https://www.medianama.com/wp-content/uploads/2026/09/image-1-1536x339.png 1536w, https://www.medianama.com/wp-content/uploads/2026/09/image-1-2048x452.png 2048w" sizes="auto, (max-width: 1024px) 100vw, 1024px" /><figcaption class="wp-element-caption">Source &#8211; <a href="https://www.globalfintechfest.com/agenda">GFF 2026</a> </figcaption></figure>
+
+
+
+<p class="wp-block-paragraph"></p>
+
+
+
+<p class="wp-block-paragraph"><strong>What is OneTag and how does it work</strong>: &#8220;Introducing OneTag, the new NETC Fastag portability feature. Keep the same NETC Fastag sticker on your car and switch to your preferred issuing bank anytime. The process is 100% digital and secure,&#8221; the launch film shown at the event said. According to the short film, which looked like AI-generated, porting can be done through the Rajmarg Yatra app, with mobile verification, digital KYC, and wallet setup.  The existing FASTag continues to work, and future toll payments are processed by the newly ported bank.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>No-toll-gate system and Multi-Lane Free Flow (MLFF):</strong> &#8220;Our next goal is to do away with stopping at toll plazas. In one year, we want all our tolls to move to Multi-Lane Free Flow (MLFF)&#8230; I feel 60–70% of the work will be done by December. By February-March, the entire country will have this [toll gate] barrier-free system,&#8221; Gadkari said.</p>
+
+
+
+<p class="wp-block-paragraph">&#8220;This barrier-free system will work at 80 km per hour. No one will have to stop. Naturally, zero waiting time,&#8221; he added</p>
+
+
+
+<p class="wp-block-paragraph">“In May 2026, highway mobility took its biggest leap with multi-lane free flow using automatic number plate recognition cameras and RFID. MLFF delivers barrierless tolling at highway speeds without stopping, and the evolution goes beyond the toll plazas,” read the voice over of an AI-generated-like clip on the 10-year journey of National Electronic Toll Collection (NETC). </p>
+
+
+
+<p class="wp-block-paragraph">&nbsp;<strong>The savings from Fastag:</strong> &#8220;The annual saving in time at toll plazas is 71 crore hours. Annual fuel saving is 56 crore liters, which is Rs. 5,250 crore. And the economic value of time saved is Rs 68,500 crore per year,&#8221; Gadkari said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Throwback</strong>: <a href="https://www.medianama.com/2025/04/223-govt-gps-satellite-fastag-toll-india-privacy-concerns/">Govt’s Surveillance-based Tolling Raises Major Privacy Concerns</a></p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also Read: </strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/07/223-npci-agentic-payments-upi/">How NPCI should approach agentic payments</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/02/223-agentic-commerce-india-ai-impact-summit/">Why AI Agents Needs Digital IDs in Agentic Commerce</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-nitin-gadkari-agentic-payments-onetag/">Nitin Gadkari skips AI agentic payments; launches FASTag bank portability feature</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>GFF 2026: Singapore has an AI agent framework. India is still examining one</title>
+		<link>https://www.medianama.com/2026/09/223-singapore-safr-agentic-ai-payments-india-gff/</link>
+		
+		<dc:creator><![CDATA[Anjali Tripathi]]></dc:creator>
+		<pubDate>Fri, 11 Sep 2026 10:08:38 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Fintech Lending]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[NPCI]]></category>
+		<category><![CDATA[Payments]]></category>
+		<category><![CDATA[Singapore]]></category>
+		<category><![CDATA[UPI]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336689</guid>
+
+					<description><![CDATA[<p>India's payments body is examining safeguards for AI agents that Singapore's central bank has already published as a voluntary framework.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-singapore-safr-agentic-ai-payments-india-gff/">GFF 2026: Singapore has an AI agent framework. India is still examining one</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">Singapore&#8217;s central bank <a href="https://www.bakermckenzie.com/en/insight/publications/2026/07/singapore-mas-publishes-agentic-ai-safeguards-for-financial-institutions">has already published</a> the framework for AI agents in finance that India&#8217;s payments body said, at the same conference this week, it is still examining.</p>
+
+
+
+<p class="wp-block-paragraph">Chia Der Jiun, Managing Director of the Monetary Authority of Singapore (MAS), told the Global Fintech Fest in Mumbai on September 11, 2026, that MAS and the financial industry had published <strong><a href="https://www.mas.gov.sg/publications/monographs-or-information-paper/2026/safeguards-for-agentic-finance-at-runtime">SAFR — Safeguards for Agentic Finance at Runtime</a></strong> as a white paper in July. It sets out runtime safeguards including, in his words, &#8220;establishing an agent&#8217;s identity and authority, evaluating agent actions against controls before execution, and maintaining a clear audit record.&#8221; He spoke by video, saying he had fallen unwell before travelling.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Why it matters:</strong> Those three things are almost exactly what the <a href="https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/">National Payments Corporation of India (NPCI)</a> described as necessary a day earlier at the same event, when its non-executive chairman said the corporation was <a href="https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/">examining protocols to identify and authorise digital agents</a> on the <a href="https://www.medianama.com/2026/08/223-npci-upi-autopay-interoperability/">Unified Payments Interface (UPI)</a>. <strong>India has the position. Singapore has the document.</strong></p>
+
+
+
+<p class="wp-block-paragraph">That gap matters more than it normally would because the two countries are wiring their payment systems together.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>What SAFR actually does, and what it does not</strong></p>
+
+
+
+<p class="wp-block-paragraph"><a href="https://www.mas.gov.sg/publications/monographs-or-information-paper/2026/safeguards-for-agentic-finance-at-runtime">SAFR was published on July 3, 2026</a>. Its central idea is a governance checkpoint sitting between an agent&#8217;s decision and the execution of that decision, so that no agentic action is carried out without first being declared, authorised and assessed.</p>
+
+
+
+<p class="wp-block-paragraph">It is <strong>not binding</strong>. The paper states that the framework does not constitute regulatory guidance or supervisory expectations, and does not prescribe or anticipate future directions for either. It is a voluntary reference developed with industry.</p>
+
+
+
+<p class="wp-block-paragraph">So this is not a case of Singapore having regulated where India has not. Neither jurisdiction has a rule. What Singapore has is a published, citable artefact that firms can build against, and that a regulator can later harden into guidance if it chooses.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>What India has instead</strong></p>
+
+
+
+<p class="wp-block-paragraph">India&#8217;s position on agents in payments is currently spread across statements and drafts rather than a single document.</p>
+
+
+
+<p class="wp-block-paragraph">NPCI&#8217;s chairman set out the architectural principle — that an agent may interpret intent, but authorisation and settlement must remain deterministic and auditable — without publishing a specification. Business Standard <a href="https://www.business-standard.com/finance/news/india-may-allow-agentic-ai-led-upi-transactions-under-new-npci-protocol-126070801343_1.html">reported in July</a> that NPCI was developing a Unified Agent Protocol, citing four people aware of the work. NPCI did not respond to that publication at the time.</p>
+
+
+
+<p class="wp-block-paragraph">Separately, CERT-In has <a href="https://www.medianama.com/2026/07/223-meity-proposes-mandatory-human-interventions-agentic-ai-payments/">proposed human-in-the-loop controls</a> for agentic AI actions above defined financial thresholds in its Digital Threat Report 2025-26. The Reserve Bank of India&#8217;s (RBI) model risk management document is out as draft guidance, which RBI Governor Sanjay Malhotra took care to point out this week is guidance and not regulation.</p>
+
+
+
+<p class="wp-block-paragraph">Chia was complimentary about one Indian document. He said <a href="https://rbidocs.rbi.org.in/rdocs/PublicationReport/Pdfs/FREEAIR130820250A24FF2D4578453F824C72ED9F5D5851.PDF">RBI&#8217;s Framework for Responsible and Ethical Enablement of Artificial Intelligence (FREE-AI)</a> places accountability, fairness, resilience and trust at the centre, and called it an important contribution to safe and responsible adoption of AI in the global financial system.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>The question nobody has asked yet</strong></p>
+
+
+
+<p class="wp-block-paragraph">India and Singapore are not two unconnected markets. Their Prime Ministers launched the <a href="https://www.medianama.com/2023/02/223-explained-upi-paynow-linkage-india-singapore/">UPI-PayNow linkage in 2023</a> — India&#8217;s first cross-border real-time payments link and Singapore&#8217;s second — and Chia said transaction volumes have more than doubled every year since.</p>
+
+
+
+<p class="wp-block-paragraph">Both countries are also founding members of Nexus, the multilateral initiative that lets a payment system connect once to a common framework and reach several jurisdictions rather than building bilateral links each time. The two central banks signed a memorandum of understanding on digital asset cooperation in 2025.</p>
+
+
+
+<p class="wp-block-paragraph">This raises a question neither regulator has publicly answered: if an AI agent can be authorised to transact on UPI under one set of conditions and on PayNow under another, what governs an agent-initiated payment that crosses between them? Whose authorisation rules apply, whose audit record counts, and who is accountable when an agent acting within its mandate in one jurisdiction causes a loss in the other?</p>
+
+
+
+<p class="wp-block-paragraph">For a corridor whose volumes are doubling annually, and that both sides intend to multiply through Nexus, that is not a distant problem.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>The cyber numbers he put on the record</strong></p>
+
+
+
+<p class="wp-block-paragraph">Chia called this a watershed year for cybersecurity. He said high-severity Common Vulnerabilities and Exposures rose sixfold this year to 2,200, against the average of the preceding three years, and <a href="https://www.crowdstrike.com/en-us/press-releases/2026-crowdstrike-global-threat-report/">cited CrowdStrike reporting</a> an 89% increase in what he described as AI-enabled cyberattacks.</p>
+
+
+
+<p class="wp-block-paragraph">CrowdStrike&#8217;s own framing of that figure, in its 2026 Global Threat Report, is an 89% increase in attacks by AI-enabled adversaries, a narrower claim about who is attacking rather than what the attacks are.</p>
+
+
+
+<p class="wp-block-paragraph">Successful breaches have not risen at the same rate, he said, which he attributed partly to model guardrails and partly to multilayered cyber defences still working. He described that as time bought rather than a problem solved.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Questions MediaNama has sent</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li>Does NPCI intend to publish its agent protocol specification, and will it be open for public comment before it goes live?</li>
+
+
+
+<li>Has NPCI or the RBI examined SAFR, and is India&#8217;s approach expected to align with it?</li>
+
+
+
+<li>What governs an agent-initiated payment routed across the UPI-PayNow linkage, and has the question been taken up bilaterally?</li>
+
+
+
+<li>Does either central bank consider an agent&#8217;s identity credential issued in one jurisdiction valid in the other?</li>
+
+
+
+<li>Will Nexus participants be required to adopt a common position on agent-initiated payments?</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">MediaNama has written to NPCI, the RBI and MAS, and will update this story if they respond.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/09/223-scindia-trust-grid-telecom-aadhaar-upi/">GFF 2026: Scindia calls for a “Trust Grid” joining telecom, Aadhaar, UPI and bank systems</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-rbi-unified-fintech-forum-regulator/">RBI recognises Unified Fintech Forum as second fintech self-regulator at GFF 2026</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/">AI agents can read intent, not approve payments: NPCI chairman at GFF 2026</a></li>
+</ul>
+<p>The post <a href="https://www.medianama.com/2026/09/223-singapore-safr-agentic-ai-payments-india-gff/">GFF 2026: Singapore has an AI agent framework. India is still examining one</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>SEBI chairman on AI at GFF 2026: ‘Enforcement and adjudication cannot be delegated to the black box’</title>
+		<link>https://www.medianama.com/2026/09/223-sebi-ai-enforcement-adjudication/</link>
+		
+		<dc:creator><![CDATA[Prabhanu Kumar Das]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 11:55:26 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Fintech Lending]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[Payments]]></category>
+		<category><![CDATA[SEBI]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336615</guid>
+
+					<description><![CDATA[<p>SEBI is using AI to make supervision more predictive, but Chairman Tuhin Kanta Pandey says AI alerts cannot become regulatory findings.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-sebi-ai-enforcement-adjudication/">SEBI chairman on AI at GFF 2026: ‘Enforcement and adjudication cannot be delegated to the black box’</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">“An AI-generated alert is not a finding,” SEBI Chairman Tuhin Kanta Pandey said, drawing a line between using AI to identify potential risks and<strong> allowing machines to make regulatory decisions</strong>. Pandey was speaking during a panel discussion at the <strong>Global Fintech Fest 2026</strong>, moderated by <strong>Dilip Asbe</strong>, MD and CEO of NPCI. The panel also featured <strong>Tajinder Singh</strong>, Deputy Secretary General of the International Organization of Securities Commissions (IOSCO), and <strong>Hanso van Wurssum</strong>, executive board member of the Dutch Authority for the Financial Markets.</p>
+
+
+
+<p class="wp-block-paragraph">The discussion focused on how regulators can use AI while managing the risks created by increasingly technology-dependent financial markets. Pandey said SEBI was already <strong>using AI for cybersecurity compliance, social media monitoring and surveillance</strong>, but warned that regulatory decisions must remain <strong>subject to human oversight</strong>.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>SEBI is using AI to make supervision more predictive:</strong> Pandey said SEBI is moving supervision from periodic checks to <strong>proactive monitoring</strong>. “AI can process large data sets, detect patterns, direct supervisory attention to emerging risks,” he said. This could make supervision “<strong>more off-site than on-site</strong>, and <strong>near real-time</strong>, rather than periodic”.</p>
+
+
+
+<p class="wp-block-paragraph">He pointed to SEBI’s <strong>Cyber Security Audit Compliance Portal</strong>, or CSAC, which analyses cybersecurity controls under SEBI’s framework across market participants and flags gaps and non-compliance. “It can move very much faster; it can indicate gaps, and it can pose them to the regulated entities. They can plug it,” he said.</p>
+
+
+
+<p class="wp-block-paragraph">Similarly, Pandey said <strong>SEBI uses Sudarshan to monitor social media</strong> for unregistered advisers and Radar to scan for <strong>potentially misleading advertisements</strong> and social media content. He said there had been more than <strong>150,000 takedowns </strong>from social media platforms following the use of these systems.</p>
+
+
+
+<p class="wp-block-paragraph">However, Pandey stressed that an AI-generated alert cannot itself establish a violation. “An AI-generated alert is not a finding,” he said. “<strong>Enforcement and adjudication cannot be delegated to the black box</strong>.”</p>
+
+
+
+<p class="wp-block-paragraph"><strong>‘Humans can also overtrust machines’:</strong> Pandey said simply keeping a person in the decision-making process would not be enough. “Humans can also overtrust machines,” he said. “Oversight must be <strong>competent, empowered and accountable</strong>.”</p>
+
+
+
+<p class="wp-block-paragraph">He said safeguards must cover the AI model as well as its deployment, including “human oversight, explainability, validation, continuous testing, data quality, bias controls, model drift monitoring and cybersecurity”. Every production AI system, he added, needs “a stop mechanism, auditable usage, change logs”.</p>
+
+
+
+<p class="wp-block-paragraph">The requirements <strong>become stricter with agentic AI</strong>, which can autonomously or near-autonomously perform complicated tasks. Pandey said regulators must define “access, autonomy, permissible actions, and reversibility”. “Agentic AI also <strong>needs hard boundaries on what it may do</strong>,” he said.</p>
+
+
+
+<p class="wp-block-paragraph">Van Wurssum similarly said <strong>firms using agentic AI needed clear governance</strong> around who was deploying it, why and how. “You need to make sure that you can see what’s been done, when, where and how,” he said, calling for immutable record-keeping. He added that there was no ban on agentic AI in financial markets, but said <strong>regulators would continue to hold firms responsible for its use</strong>.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>AI could create its own concentration risk:</strong> While AI can improve supervision, Pandey also warned that the technology could create risks across financial markets. “AI can create its own concentration risk,” he said, pointing to “<strong>common models</strong>, cloud infrastructure of providers” that could become “<strong>shared points of failure</strong>”.</p>
+
+
+
+<p class="wp-block-paragraph">This concern also shaped Pandey’s approach to technology providers serving regulated financial institutions. “Technology may be outsourced but <strong>regulatory responsibility cannot</strong>,” he said. A financial institution, he added, “cannot transfer responsibility for compliance, resilience or market integrity to a technology provider, or a vendor”.</p>
+
+
+
+<p class="wp-block-paragraph">He said oversight should be “<strong>risk-based and proportionate</strong>”, with scrutiny increasing according to a provider’s proximity to trading, settlement, sensitive data and investor outcomes. “Criticality matters more than labels,” Pandey said. <strong>Cloud, AI and hosted service providers could become part of critical market infrastructure</strong>, with concentration, substitutability and the impact of failure determining the level of concern.</p>
+
+
+
+<p class="wp-block-paragraph">Pandey said a provider serving several institutions could turn an individual failure into a wider problem. “When one provider serves several institutions, an <strong>entity-level failure can become a market-wide risk</strong>,” he said. He called for vendor audits, continuous monitoring, recovery arrangements and concentration-risk assessments. “Critical technological dependencies must not become regulatory blind spots,” he said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Regulators are using SupTech to keep pace with financial markets:</strong> IOSCO’s Tajinder Singh said supervisory technology, or SupTech, could help regulators identify risks earlier, use resources more efficiently and strengthen cooperation between regulators. “AI, advanced analytics can <strong>process enormous volumes of data</strong>, identify patterns, and detect anomalies that traditional supervision may miss,” he said.</p>
+
+
+
+<p class="wp-block-paragraph">Singh recalled his time at SEBI, when the introduction of an integrated market-surveillance system caused the number of alerts received by supervisors to rise sharply. “Clearly, there were things that we were not seeing that we started seeing, maybe too much of them,” he added.</p>
+
+
+
+<p class="wp-block-paragraph">He said SupTech could help regulators move “from <strong>sampling to broader data analysis</strong>” and “from more retroactive supervision to more forward-looking, <strong>targeted, risk-based supervision</strong>”. It could also help regulators share experience rather than requiring every jurisdiction to develop its own systems independently.</p>
+
+
+
+<p class="wp-block-paragraph">Pandey also stressed that regulators themselves needed sufficient expertise to challenge the systems they deploy. “Supervisors must have people who can understand, challenge and override AI outputs,” he said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also read:&nbsp;</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/">AI agents can read intent, not approve payments: NPCI chairman at GFF 2026</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-india-fintech-exports-trade-agreements-gff-2026/">India is using trade deals to clear fintech export hurdles, commerce secretary says at GFF 2026</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-sebi-ai-enforcement-adjudication/">SEBI chairman on AI at GFF 2026: ‘Enforcement and adjudication cannot be delegated to the black box’</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>Bajaj Finance buys 5% stake in AI video platform TrueFan AI</title>
+		<link>https://www.medianama.com/2026/09/223-bajaj-finance-truefan-ai-investment/</link>
+		
+		<dc:creator><![CDATA[Amit Singh]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 08:53:20 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Bajaj Finance]]></category>
+		<category><![CDATA[Finance]]></category>
+		<category><![CDATA[Truefan Artificial Intelligence]]></category>
+		<category><![CDATA[Video]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336577</guid>
+
+					<description><![CDATA[<p>Bajaj Finance has acquired a 5% stake in AI video generation startup TrueFan AI as Bajaj Finserv expands its AI investment strategy.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-bajaj-finance-truefan-ai-investment/">Bajaj Finance buys 5% stake in AI video platform TrueFan AI</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">Bajaj Finance, the NBFC arm of Bajaj Finserv, has <a href="https://www.prnewswire.com/in/news-releases/bajaj-finance-acquires-5-stake-in-truefan-ai-as-part-of-finserv-intelligence-302872248.html">bought</a> a 5% stake in AI video generation startup TrueFan AI. The financial terms of the deal were not disclosed.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>What is TrueFan AI?</strong> Founded in 2019, TrueFan AI initially started as a celebrity engagement platform. In 2024, it pivoted to enterprise AI. The platform enables companies to create personalised videos using celebrities and AI avatars.</p>
+
+
+
+<ul class="wp-block-list">
+<li>TrueFan AI claims to cater to more than 100 enterprise clients across sectors including finance, healthcare, consumer goods and media. Its clients include HDFC Bank, Cipla, BharatPe and Goibibo.</li>
+</ul>
+
+
+
+<ul class="wp-block-list">
+<li>The Delhi NCR-based startup is also developing real-time AI video agents for tasks such as customer support, sales, onboarding and product discovery. It has more than <strong>800,000 paid users</strong> and says its infrastructure can generate up to 5 lakh videos per minute.</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"><strong>What Bajaj Finance stands to gain from the deal:</strong> Bajaj Finance is an existing customer of TrueFan AI. The deposit-taking NBFC has deployed the startup&#8217;s platform at scale to generate &#8220;millions&#8221; of personalised videos for customer engagement and dealer enablement initiatives.</p>
+
+
+
+<p class="wp-block-paragraph">The acquisition also aligns with Bajaj Finance&#8217;s broader strategy of deploying AI-led automation and personalisation across its digital ecosystem.</p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">&#8220;As a FINAI company, we are deploying AI at scale across the company. Our investment in TrueFan AI follows sustained, production-scale use of its technology, giving us first-hand experience of the platform&#8217;s capabilities and its execution,&#8221; said Rajeev Jain, vice chairman &amp; managing director at Bajaj Finance.</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph">Under the partnership, Bajaj Finance will tap TrueFan&#8217;s AI video capabilities across marketing, videos, multilingual communication, employee training and customer onboarding.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Bajaj Intelligence startup push:</strong> To be sure, the investment in TrueFan is part of Bajaj Finserv group&#8217;s new AI- and deeptech-focused venture, Bajaj Intelligence.</p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finserv-launches-finserv-intelligence-partners-iit?scl=1&amp;fmt=pdf">Launched in May</a> in partnership with IIT Bombay, the venture aims to back startups in their early-growth stages, from seed to Series B. Its focus areas include AI, cybersecurity, quantum technologies, fintech and consumer tech.</li>
+</ul>
+
+
+
+<ul class="wp-block-list">
+<li>Over the next five years, Bajaj Intelligence plans to invest Rs 1,500 crore to Rs 2,000 crore in AI startups, Bajaj Finserv said in a statement.</li>
+</ul>
+
+
+
+<ul class="wp-block-list">
+<li>Finserv Intelligence operates through academic partnerships, investments in the startup ecosystem and in-house research, with plans for R&amp;D labs, centres of excellence, venture-led models and a Scholars-in-Residence programme.</li>
+</ul>
+
+
+
+<ul class="wp-block-list">
+<li>Earlier this year, Bajaj Finserv chairman Sanjiv Bajaj <a href="https://economictimes.indiatimes.com/tech/newsletters/tech-top-5/bajaj-finservs-ai-push-govts-upi-fix/articleshow/129902264.cms?from=mdr">told the Economic Times</a> that the group had earmarked an investment of Rs 400 crore to Rs 450 crore for AI-focused ventures in FY27. For its AI bets, Bajaj Finserv planned to launch a dedicated fund. In parallel, it backs AI startups directly through its balance sheet.</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"><strong>Bajaj Finance AI-led growth:</strong> Bajaj Finance <a href="https://www.medianama.com/2025/08/223-bajaj-finance-finai-ai-growth-msme-lending-q1fy26/">entered the execution phase of its FinAI </a>(financial artificial intelligence) strategy last year. At the time, management said the company was embedding AI across revenue, cost, customer engagement, and underwriting workflows.</p>
+
+
+
+<p class="wp-block-paragraph">In Q3 FY26, Bajaj Finance <a href="https://www.medianama.com/2026/02/223-bajaj-finance-800-ai-agents-lending-operations/">revealed</a> that its AI systems were transcribing customer calls at scale and converting conversations into structured data.</p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">“AI listened to 20 million calls, converted voice to text, and gave us data,” Jain said then.</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph">More importantly, the company said it was using this data to generate commercial outcomes.</p>
+
+
+
+<p class="wp-block-paragraph">“Text to data conversion happened for 5.2 lakh customers. And as a result of that, we generated 100,000 new offers,” Jain said. The company expects this capability to expand further. “We’ll be able to listen to 100 million calls next year.” </p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2025/08/223-bajaj-finance-finai-ai-growth-msme-lending-q1fy26/">Bajaj Finance Turns on FinAI, Balances AI Growth With Slower MSME Lending in Q1FY26</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/02/223-bajaj-finance-800-ai-agents-lending-operations/">Bajaj Finance Plans 800+ Autonomous AI Agents Across Lending &amp; Operations: Q3 FY26 Earnings Call</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-bajaj-finance-truefan-ai-investment/">Bajaj Finance buys 5% stake in AI video platform TrueFan AI</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>AI agents can read intent, not approve payments: NPCI chairman at GFF 2026</title>
+		<link>https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/</link>
+		
+		<dc:creator><![CDATA[Anjali Tripathi]]></dc:creator>
+		<pubDate>Thu, 10 Sep 2026 08:12:20 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Artificial Intelligence agents]]></category>
+		<category><![CDATA[Fintech Lending]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[NPCI]]></category>
+		<category><![CDATA[Payments]]></category>
+		<category><![CDATA[UPI]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336584</guid>
+
+					<description><![CDATA[<p>NPCI is examining protocols to identify and authorise AI agents on UPI, but a senior board member says AI should not control final payment approval or settlement.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/">AI agents can read intent, not approve payments: NPCI chairman at GFF 2026</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">An artificial intelligence (AI) agent may work out what a user wants. It should not be the thing that approves the payment. That was the boundary <strong>Ajay Kumar Choudhary</strong> set out in a keynote at the <strong>Global Fintech Fest 2026</strong> in Mumbai on September 10, 2026. Choudhary is non-executive chairman and independent director at the <a href="https://www.medianama.com/2026/08/223-npci-upi-autopay-interoperability/">National Payments Corporation of India (NPCI).</a></p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">NPCI, he said, &#8220;is also examining the protocols that may be required to identify and authorise digital agents within the Unified Payments Interface (UPI) ecosystem while preserving interoperability, auditability and settlement finality.&#8221;</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph"><strong>Why it matters:</strong> UPI <a href="https://www.npci.org.in/product/upi/product-statistics">processed</a> 24.51 billion transactions worth Rs 29.82 lakh crore in August 2026. No framework specific to AI agents governs those rails yet. Indian Computer Emergency Response Team (<a href="https://www.medianama.com/2026/07/223-india-cybersecurity-problems/">CERT-In</a>) has only proposed human-in-the-loop controls above defined financial thresholds in its <em><a href="https://www.pib.gov.in/PressReleasePage.aspx?PRID=2284051®=48&amp;lang=1">Digital Threat Report 2025-26</a></em>. The Reserve Bank of India&#8217;s FREE-AI committee recommendations are not binding. Choudhary was setting a <em>design constraint before a rule exists</em>.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Agents recommend, the rails authorise</strong></p>
+
+
+
+<p class="wp-block-paragraph">&#8220;Decision making and execution must remain separate,&#8221; Choudhary said. &#8220;AI may recommend, but authentication and final settlement must follow deterministic auditable rules.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph">His reasoning rests on a mismatch. AI is adaptive and its output is probabilistic. Payment infrastructure has to stay deterministic, auditable and final. A sound architecture therefore separates three things: intent, authorisation and settlement. An agent may read intent. Verifying identity, mandate, limits and consent sits with the authoriser.</p>
+
+
+
+<p class="wp-block-paragraph">The objective, he said, is not unlimited machine autonomy but autonomy that is bounded and accountable.</p>
+
+
+
+<p class="wp-block-paragraph">Interoperability &#8220;must remain non-negotiable&#8221;, he added, letting agents and tokenised platforms work across institutions &#8220;without creating new walled gardens&#8221;. That is a live question at this fest. Amazon Pay <a href="https://www.medianama.com/2026/09/223-amazon-pay-smart-wallet-agentic-upi/">launched</a> a consent-based Smart Wallet for agentic UPI payments here, but did not say whether agents built by third parties can be authorised on it.</p>
+
+
+
+<p class="wp-block-paragraph"><em>Business Standard</em> <a href="https://www.business-standard.com/finance/news/india-may-allow-agentic-ai-led-upi-transactions-under-new-npci-protocol-126070801343_1.html">reported</a> on July 9, 2026, that NPCI was building a Unified Agent Protocol to register and verify AI agents, citing four people aware of the work. NPCI did not answer the publication&#8217;s queries at the time. It is the first time MediaNama has seen an NPCI board member describe this work publicly.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>A warning about leaning on one AI stack</strong></p>
+
+
+
+<p class="wp-block-paragraph">Choudhary was specific about where the risk comes from. Integrated AI stacks that bundle compute, cloud, models and applications can speed up adoption, he said, but &#8220;dependence on a single national or commercial stack may over time reduce sovereign choices&#8221;. <a href="https://www.whitehouse.gov/presidential-actions/2025/07/promoting-the-export-of-the-american-ai-technology-stack/">Recent United States policy</a> promoting an integrated American AI technology stack makes the question particularly relevant, he said.</p>
+
+
+
+<p class="wp-block-paragraph">His prescription was portability, or the ability to move between suppliers without rebuilding. Banks and payment firms should design applications to run across multiple models and infrastructure providers wherever practicable. Data, business logic and workflows should stay portable, so an institution can switch as cost, risk or regulatory requirements change.</p>
+
+
+
+<p class="wp-block-paragraph">Open-source and open-weight models widen that choice, he said, but their capabilities are not yet sufficient.</p>
+
+
+
+<p class="wp-block-paragraph">Sovereignty, on his reading, is not about building every component in India. It is about retaining control and real choice over the critical parts of the architecture.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Questions we have sent to NPCI</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li>Is the protocol Choudhary described the Unified Agent Protocol reported in July 2026? Has it gone to the RBI for approval?</li>
+
+
+
+<li>Will agent registration be open to any developer, or only to regulated entities and their partners?</li>
+
+
+
+<li>Where does liability sit when an agent transacts within its mandate but against the user&#8217;s interest?</li>
+
+
+
+<li>What per-transaction and cumulative limits, if any, are proposed for agent-initiated payments?</li>
+
+
+
+<li>Will NPCI publish the protocol specification for public comment before it goes live?</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">MediaNama has written to NPCI seeking comment and will update this story if it responds.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also Read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/07/223-npci-agentic-payments-upi/">How NPCI should approach agentic payments</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-visa-ai-payment-security/">Visa calls for “AI in the loop” in cyber defence at GFF 2026 as India proposes human checks for AI payments</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-meta-muse-personal-ai-agent-india/">Meta launches Muse, an AI agent that acts across apps; India not in rollout</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-npci-ai-agents-upi-payments/">AI agents can read intent, not approve payments: NPCI chairman at GFF 2026</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>Banks can’t outsource accountability for algorithmic decisions: RBI Deputy Governor</title>
+		<link>https://www.medianama.com/2026/09/223-banks-accountability-algorithmic-decisions-rbi/</link>
+		
+		<dc:creator><![CDATA[Azdhan]]></dc:creator>
+		<pubDate>Wed, 09 Sep 2026 12:31:22 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Banks]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[Reserve Bank of India (RBI)]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336534</guid>
+
+					<description><![CDATA[<p>RBI Deputy Governor Rohit Jain says banks cannot outsource accountability for AI decisions, stressing explainability, proportional regulation, customer fairness and stronger oversight for high-risk AI.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-banks-accountability-algorithmic-decisions-rbi/">Banks can’t outsource accountability for algorithmic decisions: RBI Deputy Governor</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph"><strong>“An institution may outsource the computation, but it cannot outsource the consequence,”</strong> <a href="https://www.youtube.com/watch?v=wbf3MUEBQnA">said</a> Rohit Jain, Deputy Governor, Reserve Bank of India, in a keynote address at Global Fintech Fest (GFF) 2026, on why banks and other regulated entities cannot shift responsibility for algorithm or AI decisions onto the vendors or developers that build or supply the underlying models.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>AI complexity cannot excuse a lack of accountability:</strong> Jain further said that the growing sophistication, complexity or unexplainability of AI models does not lower the bar for institutions to answer for the decisions those models make.</p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">“Advanced models can identify relationships and arrive at decisions in ways that may be difficult to explain. Greater sophistication, however, cannot mean weaker accountability. An institution may outsource the computation, but it cannot outsource the consequence,” &#8211; Rohit Jain</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph"><strong>Don’t regulate all models and tools in the same way:</strong> “The second element is proportionality. Different uses of the same technology can present very different risks. A tool used to summarise an internal document cannot be treated in the same way as a system that autonomously approves credit or executes financial transactions. The greater the consequence of the use case, the stronger the expectations should be around governance, validation, oversight and intervention,” Jain said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Affected customers need more than an excuse:</strong> “A customer affected by an important financial decision deserves something more meaningful than being told that the ‘model said so’,” Jain said.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>On outsourcing to third-party AI vendors:</strong> Jain said neither an institution&#8217;s fairness obligations to customers nor its responsibility for risk changes when a third party supplies the technology.</p>
+
+
+
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph">“The obligation to treat customers fairly does not change because an algorithm influences the decision. Similarly, responsibility for managing risk does not disappear because a model or technology is supplied by a third party,” &#8211; Rohit Jain</p>
+</blockquote>
+
+
+
+<p class="wp-block-paragraph"><strong>RBI’s recommendations for responsible AI:</strong> In August 2025, the Reserve Bank of India’s (RBI) FREE-AI Committee outlined recommendations for responsible AI integration in the financial sector. Read more about it <a href="https://www.medianama.com/2025/08/223-rbi-committee-sector-specific-models-ai/">here</a>.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Recommended read:</strong> <a href="https://www.medianama.com/2025/05/223-customers-explainability-ai-models-nama/">Can customers demand explainability for AI-based financial decisions?</a></p>
+
+
+
+<p class="wp-block-paragraph">&nbsp;<strong><em>Also Read:</em></strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/09/223-rbi-gold-tokenization-gff-2026/">RBI exploring gold tokenization, says its executive director at GFF</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/09/223-maharashtra-land-tokenization-devendra-fadnavis/">Maharashtra is working on a land tokenisation act: CM Devendra Fadnavis at GFF</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-banks-accountability-algorithmic-decisions-rbi/">Banks can’t outsource accountability for algorithmic decisions: RBI Deputy Governor</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+		<item>
+		<title>Visa calls for “AI in the loop” in cyber defence at GFF 2026 as India proposes human checks for AI payments</title>
+		<link>https://www.medianama.com/2026/09/223-visa-ai-payment-security/</link>
+		
+		<dc:creator><![CDATA[Anjali Tripathi]]></dc:creator>
+		<pubDate>Wed, 09 Sep 2026 10:36:18 +0000</pubDate>
+				<category><![CDATA[News]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[Cybersecurity and Data Breaches]]></category>
+		<category><![CDATA[Fintech]]></category>
+		<category><![CDATA[GFF 2026]]></category>
+		<category><![CDATA[Payments]]></category>
+		<category><![CDATA[Visa]]></category>
+		<guid isPermaLink="false">https://www.medianama.com/?p=336477</guid>
+
+					<description><![CDATA[<p>Visa's Subra Kumaraswamy says attackers can now exploit payment system vulnerabilities in under an hour, forcing security teams to adopt more AI.</p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-visa-ai-payment-security/">Visa calls for “AI in the loop” in cyber defence at GFF 2026 as India proposes human checks for AI payments</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></description>
+										<content:encoded><![CDATA[
+<p class="wp-block-paragraph">Finding a weakness in a payment system and exploiting it took about a year and a half in 2016. It now takes under an hour, Visa&#8217;s Subra Kumaraswamy told the Global Fintech Fest. Some argue that the situation is already negative, he said. Attackers are exploiting flaws before defenders know they exist.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Why it matters:</strong> His conclusion is that security operations built around a person approving each step cannot keep pace. A security operations centre &#8220;which is human in the loop, has to move to more of AI in the loop,&#8221; he said. MeitY has separately <a href="https://www.medianama.com/2026/07/223-meity-proposes-mandatory-human-interventions-agentic-ai-payments/">proposed mandatory human-in-the-loop interventions</a> in agentic AI payments. One phrase is running two ways in the same ecosystem. On the transaction side, it is a consumer protection floor. On the defence side, he says it cannot keep pace: &#8220;we can no longer stand behind a human led cyber defence.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Two lines that are disappearing</strong></p>
+
+
+
+<p class="wp-block-paragraph">Kumaraswamy&#8217;s first claim is about convergence. &#8220;The line between cyber security and payment security is disappearing and converging into a single plane,&#8221; he said.</p>
+
+
+
+<p class="wp-block-paragraph">Visa calls the result an agentic control plane, a single layer governing the applications, code and interfaces behind a transaction.</p>
+
+
+
+<p class="wp-block-paragraph">His second point is about fraud. Fraud has been human-led, he said, with people working out how to sidestep controls. He expects it to move towards &#8220;agentic impersonation,&#8221; with &#8220;synthetic identities doing transactions on behalf of humans.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph"><strong>A new metric</strong></p>
+
+
+
+<p class="wp-block-paragraph">Kumaraswamy proposed one number companies should start tracking: mean time to adapt, or MTTA. It covers discovery, remediation and validation. That is the time to find a weakness, patch it and confirm the path is closed.</p>
+
+
+
+<p class="wp-block-paragraph">The argument for it is that discovery is no longer the constraint. AI models can find vulnerabilities and chain them into exploitable paths, he said. &#8220;That part has been solved. It&#8217;s yesterday&#8217;s problem.&#8221;</p>
+
+
+
+<p class="wp-block-paragraph"><strong>What Visa is offering</strong></p>
+
+
+
+<p class="wp-block-paragraph">Visa open-sourced the Visa Vulnerability Agentic Harness (VVAH) in June 2026 and <a href="https://corporate.visa.com/en/sites/visa-perspectives/newsroom/visa-vulnerability-agentic-harness-expanded.html">expanded it</a> on August 27. It is on GitHub and works with models from more than one provider. It now generates patches as well as finding flaws.</p>
+
+
+
+<p class="wp-block-paragraph">Visa built it after taking part in Project Glasswing, which it describes as Anthropic&#8217;s frontier AI cybersecurity initiative. It used a model called Mythos to hunt for flaws in its own network.</p>
+
+
+
+<p class="wp-block-paragraph">The point of releasing it was access, Kumaraswamy said. Not everyone had access to frontier models on those terms. The harness lets others wire whichever model they have to the same task. Visa scanned hundreds of its own applications in weeks, he said.</p>
+
+
+
+<p class="wp-block-paragraph">Visa also launched a white paper at the session, setting out what it learned.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>What was not addressed</strong></p>
+
+
+
+<p class="wp-block-paragraph">Nobody on stage said what happens when the harness is wrong. Visa&#8217;s own documentation is more cautious than the pitch. The remediation agent &#8220;proposes — and in fix mode applies — code changes,&#8221; its <a href="https://github.com/visa/visa-vulnerability-agentic-harness">repository</a> states, and remediation runs by default, editing source files in a target repository. But VVAH &#8220;does not compile, build, or run tests,&#8221; and Visa says findings and fixes &#8220;are LLM-generated triage candidates that require human review.&#8221; None of that was said from the stage.</p>
+
+
+
+<p class="wp-block-paragraph">Nor was there any discussion of what an Indian regulator would make of it. Visa operates here under RBI oversight. The pitch was made to a room of Indian payment companies.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Questions we have sent to Visa</strong></p>
+
+
+
+<p class="wp-block-paragraph">MediaNama has written to Visa&#8217;s India communications team. This post will be updated with the response.</p>
+
+
+
+<ul class="wp-block-list">
+<li>Does VVAH deploy patches to production without human review, or does a person sign off?</li>
+
+
+
+<li>Has Visa discussed the approach with the Reserve Bank of India or any Indian regulator?</li>
+
+
+
+<li>What is Visa&#8217;s own mean time to adapt, and how is it measured?</li>
+</ul>
+
+
+
+<p class="wp-block-paragraph">Visa&#8217;s communications agency wrote to MediaNama on September 9 asking for corrections to this story and it was updated as appropriate. It did not answer these questions.</p>
+
+
+
+<p class="wp-block-paragraph"><strong>Also read:</strong></p>
+
+
+
+<ul class="wp-block-list">
+<li><a href="https://www.medianama.com/2026/07/223-meity-proposes-mandatory-human-interventions-agentic-ai-payments/">MeitY proposes mandatory human-in-the-loop interventions in agentic AI payments</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/08/223-explained-ai-agents-hugging-face-openai/">Explained: how sandboxed AI agents formed a &#8216;collective&#8217; to exploit Hugging Face and OpenAI</a></li>
+
+
+
+<li><a href="https://www.medianama.com/2026/07/223-npci-agentic-payments-upi/">How NPCI should approach agentic payments</a></li>
+</ul>
+
+
+
+<p class="wp-block-paragraph"></p>
+<p>The post <a href="https://www.medianama.com/2026/09/223-visa-ai-payment-security/">Visa calls for “AI in the loop” in cyber defence at GFF 2026 as India proposes human checks for AI payments</a> appeared first on <a href="https://www.medianama.com">MEDIANAMA</a>.</p>
+]]></content:encoded>
+					
+		
+		
+			</item>
+	</channel>
+</rss>
+
+<!--
+Performance optimized by W3 Total Cache. Learn more: https://www.boldgrid.com/w3-total-cache/?utm_source=w3tc&utm_medium=footer_comment&utm_campaign=free_plugin
+
+Page Caching using Disk: Enhanced (Requested URI is rejected) 
+Minified using Disk
+
+Served from: www.medianama.com @ 2026-09-14 11:30:21 by W3 Total Cache
+-->

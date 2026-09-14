@@ -1,4 +1,5 @@
 import { diffDays } from '@/lib/date'
+import { SOURCE_REGION } from './sources'
 import { clean, decodeEntities, tag, textTag } from './xml'
 import type { FeedItem } from './types'
 
@@ -33,7 +34,15 @@ export function parseArxiv(xml: string, now: string): FeedItem[] {
     if (!id || !title || !/^\d{4}-\d{2}-\d{2}$/.test(published)) continue
     const age = diffDays(published, now)
     if (age < 0 || age > WINDOW_DAYS) continue
-    items.push({ id, title, url: id, source: 'arxiv', date: published, meta: authors(entry) || undefined })
+    items.push({
+      id,
+      title,
+      url: id,
+      source: 'arxiv',
+      region: SOURCE_REGION.arxiv,
+      date: published,
+      meta: authors(entry) || undefined,
+    })
   }
   return items
 }
