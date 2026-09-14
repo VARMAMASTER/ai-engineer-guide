@@ -27,6 +27,9 @@ export const STATIC_ROUTES = [
   '/revise',
   '/revise/sheets',
   '/settings',
+  // The component gallery. Not in the nav — it is a reference surface — but a
+  // real route, so it is held to the same bar as every other page.
+  '/kit',
   // The service worker's navigation fallback. It is a real route, so the
   // sweep holds it to the same h1-without-JS bar as every other page.
   '/offline',

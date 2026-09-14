@@ -962,6 +962,16 @@
   .card:hover {
     transform: none;
   }
+
+  /* The blanket rule above only shortens animations to 0.001ms, which for a
+     looping shimmer leaves the gradient frozen wherever it happened to stop —
+     a skeleton that reads as a rendering glitch rather than a loading state.
+     The movement is pure decoration, so it is removed outright and the plain
+     recessed block remains. */
+  .skeleton {
+    animation: none;
+    background-image: none;
+  }
 }
 
 /* Windows high-contrast and forced-colours modes: drop the glass entirely. */
@@ -976,11 +986,6 @@
 
   /* Forced colours repaint every surface the same; the hairline is then the
      only thing telling one tier from the next, so it has to be a real border. */
-  .skeleton {
-    animation: none;
-    background-image: none;
-  }
-
   .tag,
   .chip,
   .btn {
