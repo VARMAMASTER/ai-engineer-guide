@@ -2,14 +2,7 @@
 
 import { forwardRef } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
-
-/**
- * Merge class names without pulling in a dependency. Falsy entries (from a
- * ternary or `&&`) are dropped so callers can write `cx('btn', active && 'x')`.
- */
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 export type ButtonVariant = 'accent' | 'quiet' | 'danger'
 

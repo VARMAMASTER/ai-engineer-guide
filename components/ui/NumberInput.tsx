@@ -2,10 +2,7 @@
 
 import { forwardRef, useEffect, useRef, useState } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 /** A bare sign, a bare dot, or a dot-terminated number — a number mid-type. */
 function isIncomplete(raw: string): boolean {

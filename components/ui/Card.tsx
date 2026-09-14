@@ -1,10 +1,6 @@
 import * as React from 'react'
 import Link from 'next/link'
-
-/** Merge classNames without a `clsx` dependency: falsy values drop out. */
-function cx(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 /** Shallow-omit: strips keys before spreading the rest onto a DOM element. */
 function omit<T extends object, K extends keyof T>(obj: T, keys: readonly K[]): Omit<T, K> {

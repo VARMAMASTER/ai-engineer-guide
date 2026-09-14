@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Chip from '@/components/ui/Chip'
+import Dialog from '@/components/ui/Dialog'
 import Divider from '@/components/ui/Divider'
 import EmptyState from '@/components/ui/EmptyState'
 import Field from '@/components/ui/Field'
@@ -12,11 +13,15 @@ import Meter from '@/components/ui/Meter'
 import NumberInput from '@/components/ui/NumberInput'
 import Panel from '@/components/ui/Panel'
 import Select from '@/components/ui/Select'
+import Sheet from '@/components/ui/Sheet'
 import Skeleton from '@/components/ui/Skeleton'
 import Stat from '@/components/ui/Stat'
 import Switch from '@/components/ui/Switch'
+import Tabs from '@/components/ui/Tabs'
 import Tag from '@/components/ui/Tag'
 import Textarea from '@/components/ui/Textarea'
+import { ToastProvider, useToast } from '@/components/ui/Toast'
+import Tooltip from '@/components/ui/Tooltip'
 
 /**
  * The component gallery.
@@ -58,6 +63,144 @@ function Section({
 /** A row of exhibits that wraps rather than scrolling the page sideways. */
 function Row({ children }: { children: React.ReactNode }) {
   return <div className="flex min-w-0 flex-wrap items-center gap-2">{children}</div>
+}
+
+/**
+ * Overlays live in their own component because `useToast` has to be called
+ * under the `ToastProvider` that renders the live regions — a hook cannot read
+ * a provider its own component mounts.
+ */
+function Overlays() {
+  const toast = useToast()
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
+
+  return (
+    <>
+      <Section
+        title="Overlays"
+        note="Focus moves in on open and returns to the trigger on close. Escape closes. The page behind is inert, not merely hidden — an aria-hidden page is still focusable, which is the escaped-focus bug."
+      >
+        <Row>
+          <Button
+            variant="quiet"
+            aria-haspopup="dialog"
+            aria-expanded={dialogOpen}
+            onClick={() => setDialogOpen(true)}
+          >
+            Open dialog
+          </Button>
+          <Button
+            variant="quiet"
+            aria-haspopup="dialog"
+            aria-expanded={sheetOpen}
+            onClick={() => setSheetOpen(true)}
+          >
+            Open sheet
+          </Button>
+        </Row>
+
+        <Dialog
+          open={dialogOpen}
+          onClose={() => setDialogOpen(false)}
+          title="Delete this log?"
+          description="Tuesday's entry — 1,940 calories across four meals. This cannot be undone."
+          footer={
+            <>
+              <Button variant="quiet" onClick={() => setDialogOpen(false)}>
+                Keep it
+              </Button>
+              <Button variant="danger" onClick={() => setDialogOpen(false)}>
+                Delete
+              </Button>
+            </>
+          }
+        >
+          <p className="text-sm text-[var(--text-muted)]">
+            Tab around — focus is trapped here and wraps at both ends. Escape closes, and focus
+            lands back on the button that opened this.
+          </p>
+        </Dialog>
+
+        <Sheet
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+          title="Add a meal"
+          description="The same overlay engine as the dialog, presented from the bottom edge."
+          footer={
+            <Button variant="accent" onClick={() => setSheetOpen(false)}>
+              Save meal
+            </Button>
+          }
+        >
+          <div className="flex min-w-0 flex-col gap-4">
+            <Field label="What did you eat?">
+              <Input placeholder="Dal and two rotis" />
+            </Field>
+            <Field label="Calories">
+              <Input inputMode="decimal" placeholder="420" />
+            </Field>
+          </div>
+        </Sheet>
+      </Section>
+
+      <Section title="Tabs" note="Arrow keys move between tabs, Home and End jump to the ends, and Tab leaves the tablist entirely.">
+        <Tabs
+          label="Nutrition breakdown"
+          items={[
+            {
+              id: 'today',
+              label: 'Today',
+              content: (
+                <Panel tier="solid" className="flex flex-col gap-4 p-4">
+                  <Meter value={62} label="Protein today" showValue />
+                  <Meter value={81} label="Calories today" showValue />
+                </Panel>
+              ),
+            },
+            {
+              id: 'week',
+              label: 'This week',
+              content: (
+                <Panel tier="solid" className="p-4">
+                  <p className="text-sm text-[var(--text-muted)]">
+                    Averaging 2,180 calories against a 2,050 target.
+                  </p>
+                </Panel>
+              ),
+            },
+            { id: 'locked', label: 'Month', content: <p>Not enough data yet.</p>, disabled: true },
+          ]}
+        />
+      </Section>
+
+      <Section
+        title="Toasts and tooltips"
+        note="A toast announces without stealing focus. A tooltip opens on keyboard focus too — tab to the button below rather than hovering it."
+      >
+        <Row>
+          <Button variant="quiet" onClick={() => toast.show({ message: 'Meal logged.' })}>
+            Show toast
+          </Button>
+          <Button
+            variant="quiet"
+            onClick={() =>
+              toast.show({
+                message: 'Could not reach the server. Your entry is saved locally.',
+                tone: 'error',
+                action: { label: 'Retry', onClick: () => undefined },
+              })
+            }
+          >
+            Show error toast
+          </Button>
+          <Tooltip label="Body mass index, from your latest weight and height.">
+            <Button variant="quiet">What is BMI?</Button>
+          </Tooltip>
+        </Row>
+      </Section>
+    </>
+  )
 }
 
 export default function KitPage() {
@@ -236,6 +379,10 @@ export default function KitPage() {
           <Switch checked={notify} onCheckedChange={setNotify} aria-label="Evening reminder" />
         </Panel>
       </Section>
+
+      <ToastProvider>
+        <Overlays />
+      </ToastProvider>
 
       <Section title="Loading and empty" note="An empty state always says what to do next. A dead end is a bug.">
         <Panel tier="solid" className="flex flex-col gap-3 p-4">

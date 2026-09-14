@@ -1,9 +1,5 @@
 import * as React from 'react'
-
-/** Merge classNames without a `clsx` dependency: falsy values drop out. */
-function cx(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 export interface StatProps extends React.ComponentPropsWithoutRef<'div'> {
   /** The number (or short string) that is the point of the block. */

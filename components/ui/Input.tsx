@@ -2,10 +2,7 @@
 
 import { forwardRef } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 export type InputProps = ComponentPropsWithoutRef<'input'>
 

@@ -90,6 +90,26 @@ describe('Field', () => {
     expect(weight.id).not.toBe(height.id)
   })
 
+  it("keeps the control's own aria-describedby instead of replacing it", () => {
+    // The regression this guards: Field wires the hint and error ids onto the
+    // control by cloning it, and an earlier version wrote the attribute rather
+    // than appending to it. A consumer that described its own control lost that
+    // description silently — nothing rendered differently, nothing threw, and
+    // only a screen reader would ever have noticed.
+    render(
+      <>
+        <p id="outside">Weigh yourself before breakfast.</p>
+        <Field label="Weight" hint="Kilograms." error="Too low.">
+          <Input readOnly value="70" aria-describedby="outside" />
+        </Field>
+      </>,
+    )
+    const input = screen.getByLabelText('Weight')
+    const ids = input.getAttribute('aria-describedby')!.split(' ')
+    expect(ids).toContain('outside')
+    expect(ids).toHaveLength(3)
+  })
+
   it('merges className on the wrapping .field element', () => {
     render(
       <Field label="Weight" className="extra">

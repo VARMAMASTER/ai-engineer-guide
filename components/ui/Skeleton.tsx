@@ -1,9 +1,5 @@
 import * as React from 'react'
-
-/** Merge classNames without a `clsx` dependency: falsy values drop out. */
-function cx(...parts: Array<string | false | null | undefined>): string {
-  return parts.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 export type SkeletonProps = React.ComponentPropsWithoutRef<'div'>
 

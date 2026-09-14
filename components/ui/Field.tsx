@@ -2,10 +2,7 @@
 
 import { cloneElement, isValidElement, useId } from 'react'
 import type { ReactElement, ReactNode } from 'react'
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(' ')
-}
+import { cx } from './cx'
 
 export interface FieldProps {
   label: ReactNode
@@ -36,7 +33,26 @@ export default function Field({ label, hint, error, className, children }: Field
   const hintId = `${baseId}-hint`
   const errorId = `${baseId}-error`
 
-  const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ') || undefined
+  // The consumer's own aria-describedby is KEPT and appended to, not replaced.
+  // Overwriting it silently drops whatever else described the control — the
+  // kind of accessibility bug that never shows up visually and never fails a
+  // render test.
+  const ownDescribedBy = isValidElement(children)
+    ? (children.props as { 'aria-describedby'?: string })['aria-describedby']
+    : undefined
+
+  const describedBy =
+    [ownDescribedBy, hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ') ||
+    undefined
+
+  if (process.env.NODE_ENV !== 'production' && !isValidElement(children)) {
+    // Loud in development, because the failure is otherwise silent: the label's
+    // htmlFor would point at an id that no element carries, so clicking the
+    // label does nothing and a screen reader announces an unlabelled control.
+    console.error(
+      'Field expects a single React element as its child — the form control it labels.',
+    )
+  }
 
   const control = isValidElement(children)
     ? cloneElement(children, {
