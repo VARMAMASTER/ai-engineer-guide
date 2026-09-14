@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Settings from '@/components/Settings'
 
 export const metadata: Metadata = {
-  title: 'Settings | AI Engineer Practice Guide',
+  title: 'Settings | Unyfide',
 }
 
 export default function SettingsPage() {

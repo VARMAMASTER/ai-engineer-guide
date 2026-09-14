@@ -22,7 +22,7 @@ export async function generateMetadata({
   const { slug } = await params
   const guide = resolve(slug)
   if (!guide) return {}
-  return { title: `${guide.name} | Companies | AI Engineer Practice Guide` }
+  return { title: `${guide.name} | Companies | Unyfide` }
 }
 
 export default async function CompanyPage({ params }: { params: Promise<{ slug: string }> }) {

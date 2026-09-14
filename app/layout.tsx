@@ -24,10 +24,10 @@ const mono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'AI Engineer Practice Guide',
+  title: 'Unyfide',
   description:
     'A 180-day practice program for AI engineering interviews: DSA, system design, AI/ML depth, and six shipped projects.',
-  applicationName: 'AI Engineer Practice Guide',
+  applicationName: 'Unyfide',
   // Emits <link rel="manifest">, without which Chrome never evaluates the
   // manifest at all and the install prompt never appears.
   manifest: '/manifest.webmanifest',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: 'AI Guide',
+    title: 'Unyfide',
     // The app paints its own dark ground under the status bar.
     statusBarStyle: 'black-translucent',
   },

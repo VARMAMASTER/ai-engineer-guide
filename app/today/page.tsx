@@ -1,6 +1,6 @@
 import TodayTasks from '@/components/TodayTasks'
 
-export const metadata = { title: 'Today | AI Engineer Practice Guide' }
+export const metadata = { title: 'Today | Unyfide' }
 
 export default function TodayPage() {
   return <TodayTasks />

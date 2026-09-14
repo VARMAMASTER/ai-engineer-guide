@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import AppPlaceholder from '@/components/AppPlaceholder'
 
 export const metadata: Metadata = {
-  title: 'Train | AI Engineer Practice Guide',
+  title: 'Train | Unyfide',
 }
 
 export default function TrainPage() {

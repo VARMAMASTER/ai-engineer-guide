@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: 'Not found | AI Engineer Practice Guide' }
+export const metadata = { title: 'Not found | Unyfide' }
 
 /**
  * Without this file Next.js falls back to its built-in 404, which ships an

@@ -32,7 +32,7 @@ export default function Settings() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `ai-engineer-guide-progress-${todayIso()}.json`
+    a.download = `unyfide-progress-${todayIso()}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)

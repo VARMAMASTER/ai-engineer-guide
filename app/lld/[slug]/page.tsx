@@ -48,7 +48,7 @@ export async function generateMetadata({
   const found = resolve(slug)
   if (!found) return {}
   const name = found.kind === 'pattern' ? found.pattern.name : found.question.name
-  return { title: `${name} | LLD | AI Engineer Practice Guide` }
+  return { title: `${name} | LLD | Unyfide` }
 }
 
 export default async function LldSlugPage({ params }: { params: Promise<{ slug: string }> }) {

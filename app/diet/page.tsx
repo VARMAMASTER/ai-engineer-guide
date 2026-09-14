@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import AppPlaceholder from '@/components/AppPlaceholder'
 
 export const metadata: Metadata = {
-  title: 'Diet | AI Engineer Practice Guide',
+  title: 'Diet | Unyfide',
 }
 
 export default function DietPage() {

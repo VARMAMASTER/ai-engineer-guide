@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import FeedBoard from '@/components/FeedBoard'
 
 export const metadata: Metadata = {
-  title: 'AI Feed | AI Engineer Practice Guide',
+  title: 'AI Feed | Unyfide',
 }
 
 /**

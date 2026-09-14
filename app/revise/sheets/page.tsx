@@ -1,6 +1,6 @@
 import CheatSheets from '@/components/CheatSheets'
 
-export const metadata = { title: 'Cheat sheets | AI Engineer Practice Guide' }
+export const metadata = { title: 'Cheat sheets | Unyfide' }
 
 /**
  * Six dense sheets (spec 6.7b), server-rendered with no client JavaScript.

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { DeckPicker } from '@/components/ReviseDeck'
 import { deckSummaries } from './decks'
 
-export const metadata = { title: 'Revise | AI Engineer Practice Guide' }
+export const metadata = { title: 'Revise | Unyfide' }
 
 /**
  * The deck picker (spec 6.7b).

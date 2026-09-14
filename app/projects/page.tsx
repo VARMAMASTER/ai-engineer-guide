@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import ProjectIndex from '@/components/ProjectIndex'
 
 export const metadata: Metadata = {
-  title: 'Projects | AI Engineer Practice Guide',
+  title: 'Projects | Unyfide',
 }
 
 export default function ProjectsPage() {

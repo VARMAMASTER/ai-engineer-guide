@@ -10,7 +10,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ topic: string }> }) {
   const { topic: slug } = await params
   const topic = content.csTopics.find((t) => t.id === idFromSlug('cst', slug))
-  return { title: topic ? `${topic.name} | AI Engineer Practice Guide` : 'CS Fundamentals' }
+  return { title: topic ? `${topic.name} | Unyfide` : 'CS Fundamentals' }
 }
 
 export default async function CsTopicPage({ params }: { params: Promise<{ topic: string }> }) {

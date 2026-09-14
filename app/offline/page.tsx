@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: 'Offline | AI Engineer Practice Guide' }
+export const metadata = { title: 'Offline | Unyfide' }
 
 /**
  * The service worker's navigation fallback: what a request for a page that was

@@ -17,10 +17,10 @@ import type { MetadataRoute } from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'AI Engineer Practice Guide',
-    short_name: 'AI Guide',
+    name: 'Unyfide',
+    short_name: 'Unyfide',
     description:
-      'A 180-day practice program for AI engineering interviews: DSA, system design, AI/ML depth, and six shipped projects.',
+      'One system for Learn, Diet, Train and Ops — a 180-day AI engineering practice program plus daily diet and training tracking, tied together by a single AI across all four.',
     // `/` only redirects to `/today`; pointing start_url at the redirect is a
     // classic silent installability failure, so it names the real page.
     start_url: '/today',

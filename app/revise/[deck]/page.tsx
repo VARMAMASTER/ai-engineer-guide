@@ -9,7 +9,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ deck: string }> }) {
   const { deck: slug } = await params
   const deck = findDeck(slug)
-  return { title: deck ? `${deck.title} — Revise | AI Engineer Practice Guide` : 'Revise' }
+  return { title: deck ? `${deck.title} — Revise | Unyfide` : 'Revise' }
 }
 
 /**

@@ -20,7 +20,7 @@ export async function generateMetadata({
   const { pattern: slug } = await params
   const pattern = resolvePattern(slug)
   if (!pattern) return {}
-  return { title: `${pattern.name} | System Design | AI Engineer Practice Guide` }
+  return { title: `${pattern.name} | System Design | Unyfide` }
 }
 
 export default async function SystemDesignPatternPage({

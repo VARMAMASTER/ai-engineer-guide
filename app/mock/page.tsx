@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { MockHistory } from '@/components/MockRunner'
 
 export const metadata: Metadata = {
-  title: 'Mock | AI Engineer Practice Guide',
+  title: 'Mock | Unyfide',
 }
 
 /**

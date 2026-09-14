@@ -7,7 +7,7 @@ import type { Metadata } from 'next'
  * has one.
  */
 export const metadata: Metadata = {
-  title: 'Component kit | AI Engineer Practice Guide',
+  title: 'Component kit | Unyfide',
   description: 'Every UI primitive the guide is built from, in the states that matter.',
 }
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import CompanyIndex from '@/components/CompanyIndex'
 
 export const metadata: Metadata = {
-  title: 'Companies | AI Engineer Practice Guide',
+  title: 'Companies | Unyfide',
 }
 
 export default function CompaniesPage() {

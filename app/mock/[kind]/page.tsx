@@ -28,19 +28,19 @@ interface Copy {
 const COPY: Record<MockKind, Copy> = {
   coding: {
     h1: 'Coding drill',
-    title: 'Coding drill | Mock | AI Engineer Practice Guide',
+    title: 'Coding drill | Mock | Unyfide',
     lede:
       'One random problem from a pattern you pick, twenty-five minutes on the clock, and the communication script running beside it. The signal, the approach, the complexity and the solution are not on this page while the clock runs — they are added to the DOM when you end the drill.',
   },
   design: {
     h1: 'System design drill',
-    title: 'System design drill | Mock | AI Engineer Practice Guide',
+    title: 'System design drill | Mock | Unyfide',
     lede:
       'One random question at its own length, with the question’s phase budget ticking beside the session clock. Candidates lose design rounds by spending twenty minutes on requirements and four on the architecture, so the number that matters here is the one on the phase, not the one on the round.',
   },
   behavioural: {
     h1: 'Behavioural drill',
-    title: 'Behavioural drill | Mock | AI Engineer Practice Guide',
+    title: 'Behavioural drill | Mock | Unyfide',
     lede:
       'One random question and two minutes to answer it out loud, standing up, without notes. The probes that follow — the follow-ups where the round is actually decided — and the traps specific to the question appear once you stop.',
   },

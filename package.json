@@ -1,6 +1,7 @@
 {
-  "name": "ai-engineer-guide",
+  "name": "unyfide",
   "version": "0.1.0",
+  "description": "Unyfide — one system for Learn, Diet, Train and Ops, tied together by a single AI that reads across all four.",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,6 +16,8 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.116.0",
     "mermaid": "^11.17.2",
     "next": "16.3.4",
     "react": "19.2.8",

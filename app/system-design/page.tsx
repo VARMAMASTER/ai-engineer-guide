@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import SdIndex from '@/components/SdIndex'
 
 export const metadata: Metadata = {
-  title: 'System Design | AI Engineer Practice Guide',
+  title: 'System Design | Unyfide',
 }
 
 export default function SystemDesignPage() {

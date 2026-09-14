@@ -27,7 +27,7 @@ export async function generateMetadata({
   const { topic: slug } = await params
   const topic = resolve(slug)
   if (!topic) return {}
-  return { title: `${topic.name} | GPU / Hardware | AI Engineer Practice Guide` }
+  return { title: `${topic.name} | GPU / Hardware | Unyfide` }
 }
 
 export default async function HardwareTopicPage({

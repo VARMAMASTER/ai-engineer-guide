@@ -1,6 +1,6 @@
 import HardwareIndex from '@/components/HardwareIndex'
 
-export const metadata = { title: 'GPU / Hardware | AI Engineer Practice Guide' }
+export const metadata = { title: 'GPU / Hardware | Unyfide' }
 
 export default function HardwarePage() {
   return <HardwareIndex />
