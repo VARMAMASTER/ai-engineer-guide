@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import ReviseDeck from '@/components/ReviseDeck'
 import { decks, findDeck } from '../decks'
@@ -25,12 +24,6 @@ export default async function ReviseDeckPage({ params }: { params: Promise<{ dec
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="flex min-w-0 flex-col gap-1">
-        <Link
-          href="/revise"
-          className="eyebrow inline-flex min-h-11 w-fit items-center hover:text-[var(--accent)]"
-        >
-          Revise
-        </Link>
         <h1 className="break-words">{deck.title}</h1>
         <p className="text-sm break-words text-[var(--text-muted)]">{deck.subtitle}</p>
       </div>

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import CheatSheets from '@/components/CheatSheets'
 
 export const metadata = { title: 'Cheat sheets | AI Engineer Practice Guide' }
@@ -12,13 +11,6 @@ export default function CheatSheetsPage() {
   return (
     <div className="flex min-w-0 flex-col gap-5">
       <div className="flex min-w-0 flex-col gap-1">
-        <Link
-          href="/revise"
-          className="eyebrow inline-flex min-h-11 w-fit items-center hover:text-[var(--accent)]"
-          data-print-hide
-        >
-          Revise
-        </Link>
         <h1>Cheat sheets</h1>
         <p className="text-sm text-[var(--text-muted)]">
           The numbers and formulas that go missing under pressure. Dense on purpose, and built to
