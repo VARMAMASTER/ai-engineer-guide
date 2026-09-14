@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs'
 import { content, REVIEW_IDS, completionKey } from '@/lib/content/index'
+import { coursePath, courses } from '@/content/courses/index'
+import { allSections, parseCourse } from '@/lib/courses/parse'
+import { OUTLINE_FILE, outlines, renderOutlineModule } from './generate-course-outlines'
 import {
   dsaPatternSchema, dsaProblemSchema, sdPatternSchema, sdQuestionSchema,
   lldPatternSchema, lldQuestionSchema,
@@ -285,8 +289,68 @@ export function validate(c: ValidatableContent): string[] {
   return errors
 }
 
+/**
+ * The courses, which are Markdown rather than typed records.
+ *
+ * Two things can go wrong with a document nobody validates: its structure can
+ * stop parsing the way the routes assume (a renamed `# PART` heading, a
+ * duplicated section number), and the generated outline the command palette
+ * indexes can drift away from it. Both are silent — the build succeeds and the
+ * reader finds a 404 or a palette entry that goes nowhere — so both are
+ * checked here, before `next build` runs.
+ */
+export function validateCourses(): string[] {
+  const errors: string[] = []
+
+  for (const meta of courses) {
+    let markdown = ''
+    try {
+      markdown = readFileSync(coursePath(meta), 'utf8')
+    } catch {
+      errors.push(`${meta.slug}: cannot read ${coursePath(meta)}`)
+      continue
+    }
+
+    const course = parseCourse(markdown)
+    if (course.parts.length === 0) errors.push(`${meta.slug}: no parts found`)
+
+    const numbers = allSections(course)
+      .map(({ section }) => section.number)
+      .filter((n): n is number => n !== null)
+      .sort((a, b) => a - b)
+
+    if (new Set(numbers).size !== numbers.length) {
+      errors.push(`${meta.slug}: a section number is used twice`)
+    }
+    numbers.forEach((n, i) => {
+      if (n !== i + 1) errors.push(`${meta.slug}: section numbering jumps at §${n}`)
+    })
+
+    for (const part of course.parts) {
+      const anchors = part.sections.map((s) => s.anchor)
+      if (new Set(anchors).size !== anchors.length) {
+        errors.push(`${meta.slug}/${part.slug}: two sections share an anchor`)
+      }
+    }
+  }
+
+  let current = ''
+  try {
+    current = readFileSync(OUTLINE_FILE, 'utf8')
+  } catch {
+    current = ''
+  }
+  if (current !== renderOutlineModule(outlines())) {
+    errors.push(
+      `${OUTLINE_FILE} is out of date — run: pnpm tsx scripts/generate-course-outlines.ts`,
+    )
+  }
+
+  return errors
+}
+
 function main(): void {
-  const errors = validate(content as ValidatableContent)
+  const errors = [...validate(content as ValidatableContent), ...validateCourses()]
   if (errors.length > 0) {
     console.error(`content validation failed with ${errors.length} error(s):`)
     for (const e of errors) console.error(`  - ${e}`)
@@ -302,8 +366,13 @@ function main(): void {
       `${content.companyGuides.length} company guides, ` +
       `${content.csTopics.length} cs fundamentals topics, ${content.csQuestions.length} cs fundamentals questions, ` +
       `${content.hwTopics.length} hardware topics, ${content.hwQuestions.length} hardware questions, ` +
-      `${content.days.length} days`,
+      `${content.days.length} days, ` +
+      `${courses.length} course(s) with ${courseSectionCount()} sections`,
   )
+}
+
+function courseSectionCount(): number {
+  return outlines().reduce((n, c) => n + c.parts.reduce((m, p) => m + p.sections.length, 0), 0)
 }
 
 if (process.argv[1]?.includes('validate-content')) main()
