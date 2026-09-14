@@ -20,6 +20,11 @@ describe('diet module boundaries', () => {
   it('has the modules the domain was split into', () => {
     expect(FILES.sort()).toEqual([
       'aggregate.ts',
+      // The persistence CONTRACT — row shapes and codecs — but not the
+      // queries. It is in here so that `entryToRow` and friends are held to
+      // the same purity and no-I/O bar as the arithmetic; the Supabase calls
+      // that use them live in `app/diet/_data/`, outside this module.
+      'data.ts',
       'energy.ts',
       'forecast.ts',
       'index.ts',
