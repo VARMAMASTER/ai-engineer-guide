@@ -38,8 +38,9 @@ const PATHS: Record<string, React.ReactNode> = {
       <circle cx="12" cy="18.2" r="1.5" />
     </>
   ),
-  // Today — a day cell inside the calendar month.
-  '/today': (
+  // Today — a day cell inside the calendar month. Keyed by app id, not by
+  // route: Today is an app now, and `/today` is no longer a section anywhere.
+  today: (
     <>
       <rect x="3" y="5" width="18" height="16" rx="2.5" />
       <path d="M3 10h18M8 3v4M16 3v4" />
@@ -169,6 +170,15 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
 }
+
+/**
+ * Every key that has a glyph.
+ *
+ * Exported so a test can hold the nav model against it. A missing key renders
+ * nothing at all — which is exactly how the Today tab shipped iconless for one
+ * commit, visible only to someone actually looking at the tab bar.
+ */
+export const NAV_ICON_NAMES = Object.keys(PATHS)
 
 export default function NavIcon({ name, className }: { name: string; className?: string }) {
   const path = PATHS[name]

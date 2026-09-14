@@ -9,6 +9,7 @@ import {
   isAppActive,
   sectionFor,
 } from '@/lib/nav'
+import { NAV_ICON_NAMES } from '@/components/NavIcon'
 
 describe('nav apps', () => {
   it('is the five apps of the system, in tab-bar order', () => {
@@ -73,6 +74,29 @@ describe('nav destinations', () => {
     expect(NAV_DESTINATIONS).toEqual(
       expect.arrayContaining(['/today', '/diet', '/train', '/ops', '/settings']),
     )
+  })
+})
+
+describe('nav icons', () => {
+  it('draws a glyph for every app and every section', () => {
+    // NavIcon renders nothing for a key it does not know, so a typo here is
+    // invisible in every test that only reads the DOM — it is only visible to
+    // someone looking at the tab bar. Assert the set instead.
+    for (const app of NAV_APPS) {
+      expect(NAV_ICON_NAMES, `the ${app.id} tab has no icon`).toContain(app.id)
+    }
+    for (const section of [...LEARN_SECTIONS, SETTINGS_ITEM]) {
+      expect(NAV_ICON_NAMES, `${section.href} has no icon`).toContain(section.href)
+    }
+  })
+
+  it('carries no glyph nothing in the nav asks for', () => {
+    const used = new Set([
+      ...NAV_APPS.map((a) => a.id),
+      ...LEARN_SECTIONS.map((s) => s.href),
+      SETTINGS_ITEM.href,
+    ])
+    expect(NAV_ICON_NAMES.filter((name) => !used.has(name))).toEqual([])
   })
 })
 
