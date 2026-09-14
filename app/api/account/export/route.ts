@@ -58,6 +58,27 @@ const SOURCES = [
       'id, title, target, unit, current_value, start_date, deadline, linked_task_ids, created_at',
   },
   { table: 'ops_reminder', columns: 'id, task_id, offset_minutes, created_at' },
+  // Web push. The endpoint and keys are included because they are this
+  // account's own rows and an export that omits a table is worse than no
+  // export — but they are a capability to wake this person's devices, so the
+  // file they land in is the one the response already marks `private, no-store`.
+  {
+    table: 'push_subscription',
+    columns: 'endpoint, p256dh, auth, timezone, created_at, updated_at',
+  },
+  { table: 'push_delivery', columns: 'delivery_key, created_at, sent_at, outcome' },
+  // The advisory agent. `payload` is the whole brief — what it observed, what
+  // it proposed, and the sentence the model wrote — because an export whose
+  // point is that the account is leavable cannot omit the one part of the app
+  // that formed an opinion about you.
+  {
+    table: 'agent_brief',
+    columns: 'brief_date, payload, generation_count, generated_at, model, created_at',
+  },
+  {
+    table: 'agent_proposal',
+    columns: 'id, brief_date, title, body, apps, severity, state, decided_at, created_at',
+  },
 ] as const
 
 export async function GET() {
