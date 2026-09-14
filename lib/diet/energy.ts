@@ -33,7 +33,7 @@ import {
 } from './types'
 import { diffDays, trailingDates } from './time'
 import { dailyTotals, totalsByDate } from './aggregate'
-import { dailyMeanWeights, trendChange, weightTrend } from './trend'
+import { dailyMeanWeights, trendChange, trendOn, weightTrend } from './trend'
 
 /** Energy in one kilogram of body mass. The conventional 7,700 kcal. */
 export const KCAL_PER_KG = 7700
@@ -263,7 +263,14 @@ export function measureTdee(input: MeasureTdeeInput): TdeeEstimate {
   }
 
   const series = weightTrend(weights)
-  const change = trendChange(series, dates[0], asOf)
+  // Normally the window's first day; if every reading falls later in the
+  // window, measure from the earliest reading inside it rather than refusing.
+  let fromDate = dates[0]
+  if (!trendOn(series, fromDate)) {
+    const firstInWindow = series.find((p) => dateSet.has(p.date))
+    if (firstInWindow) fromDate = firstInWindow.date
+  }
+  const change = trendChange(series, fromDate, asOf)
   if (!change) {
     const reason = 'Weight readings do not span enough days to measure a trend change.'
     return profile ? formulaEstimate(profile, cov, reason, 0) : unavailable(reason)
