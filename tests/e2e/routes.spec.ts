@@ -1,6 +1,6 @@
 import { expect, test, type ConsoleMessage, type Page } from '@playwright/test'
 import { ALL_ROUTES, DYNAMIC_ROUTES, STATIC_ROUTES, seedDayOne, todayIso } from './helpers'
-import { NAV_ITEMS } from '../../lib/nav'
+import { NAV_DESTINATIONS } from '../../lib/nav'
 
 /**
  * Coverage sweep: every URL the app serves, walked as a real document load.
@@ -59,10 +59,11 @@ test.describe('every route loads', () => {
     // so the sweep silently under-reported what it was covering.
     expect(ALL_ROUTES).toHaveLength(STATIC_ROUTES.length + DYNAMIC_ROUTES.length)
     expect(new Set(ALL_ROUTES).size).toBe(ALL_ROUTES.length)
-    // Every section in the nav model must appear in the sweep, so a new page
-    // cannot ship without route coverage.
-    for (const item of NAV_ITEMS) {
-      expect(ALL_ROUTES, `${item.href} is in the nav but not in the route sweep`).toContain(item.href)
+    // Every destination in the nav model must appear in the sweep, so neither a
+    // new section nor a new app tab can ship without route coverage — a tab
+    // that leads to a 404 is worse than no tab.
+    for (const href of NAV_DESTINATIONS) {
+      expect(ALL_ROUTES, `${href} is in the nav but not in the route sweep`).toContain(href)
     }
   })
 

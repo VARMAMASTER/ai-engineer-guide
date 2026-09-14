@@ -7,12 +7,15 @@ import { useModalOverlay } from './Dialog'
 /* ============================================================================
    Sheet — a modal panel anchored to the bottom edge.
    ----------------------------------------------------------------------------
-   The generalisation of the More sheet in components/BottomNav.tsx: same
-   role="dialog" + aria-modal, same Escape, same `data-sheet="open"` blur
-   switch, same `.raised` tier, same inset-x-2 / safe-area geometry. It shares
-   Dialog's `useModalOverlay`, so it also gets the three things that component
-   does not have yet — a focus trap, focus return to the trigger, and a body
-   scroll lock. BottomNav is not touched here; it gets migrated separately.
+   role="dialog" + aria-modal, Escape, the `data-sheet="open"` blur switch, the
+   `.raised` tier, inset-x-2 / safe-area geometry. It shares Dialog's
+   `useModalOverlay`, so it also gets a focus trap, focus return to the trigger,
+   and a body scroll lock.
+
+   It generalises the More sheet the nav used to carry. That sheet is gone — the
+   two-level nav gives every section a home, so there is nothing left to
+   overflow — and this is the surface anything else modal and bottom-anchored
+   should be built on.
 
    390px is the primary case: the panel is full width minus a gutter, its body
    scrolls internally rather than growing past the viewport, and it sits above

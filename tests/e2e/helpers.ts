@@ -1,16 +1,22 @@
 import { expect, type Locator, type Page, type TestInfo } from '@playwright/test'
+import { LEARN_SECTIONS, NAV_APPS, SETTINGS_ITEM } from '../../lib/nav'
 
 /** The raw key the zustand persist middleware writes under. */
 export const STORAGE_KEY = 'aeg.progress.v1'
 
 /**
- * Every URL the app serves a page at: the nine static routes plus one concrete
- * example of each of the four dynamic segments. Thirteen in total, which is the
- * set spec section 11.2 requires the route and responsive specs to walk.
+ * Every URL the app serves a page at: the static routes plus one concrete
+ * example of each dynamic segment — the set spec section 11.2 requires the
+ * route and responsive specs to walk. Counts are asserted by derivation in
+ * routes.spec.ts rather than written out here.
  */
 export const STATIC_ROUTES = [
   '/',
   '/today',
+  // The three apps that have a tab and a landing page but no features yet.
+  '/diet',
+  '/train',
+  '/ops',
   '/roadmap',
   '/dsa',
   '/system-design',
@@ -152,33 +158,43 @@ export function isMobile(testInfo: TestInfo): boolean {
  * client-side transition, and a `goto` would hide a store that only agrees
  * because it re-read storage.
  */
-export const SECONDARY_HREFS = [
-  '/feed',
-  '/cs-fundamentals',
-  '/hardware',
-  '/lld',
-  '/ai-ml',
-  '/reading',
-  '/behavioural',
-  '/companies',
-  '/mock',
-  '/revise',
-  '/settings',
-]
+/**
+ * The hrefs that live one level down, inside an app.
+ *
+ * Derived from the nav model rather than hand-copied — the list this replaced
+ * was a literal that had drifted to a third of the sections it claimed to
+ * cover. The More sheet these used to hide behind is gone; they are reached
+ * through the section strip (mobile) or the expanded rail group (desktop).
+ */
+export const SECTION_HREFS = LEARN_SECTIONS.map((s) => s.href)
+
+/** The app each section belongs to, and where its tab lands. */
+const LEARN_APP = NAV_APPS.find((a) => a.sections.length > 0)!
+export const APP_HREFS = NAV_APPS.map((a) => a.href)
 
 export async function navigateInApp(page: Page, testInfo: TestInfo, href: string): Promise<void> {
-  if (isMobile(testInfo)) {
-    // The three secondary sections have no tab-bar slot; they live in the sheet.
-    if (SECONDARY_HREFS.includes(href)) {
-      await page.getByTestId('more-tab').click()
-      await expect(page.getByTestId('more-sheet')).toBeVisible()
-      await page.getByTestId('more-sheet').locator(`a[href="${href}"]`).click()
-    } else {
-      await page.getByTestId('bottom-nav').locator(`a[href="${href}"]`).click()
-    }
-  } else {
-    await page.getByTestId('side-nav').locator(`a[href="${href}"]`).click()
+  // Settings belongs to no app; it hangs off the top bar at every width.
+  if (href === SETTINGS_ITEM.href) {
+    await page.getByTestId('settings-link').click()
+    await page.waitForURL(`**${href}`)
+    return
   }
+
+  const nav = page.getByTestId(isMobile(testInfo) ? 'bottom-nav' : 'side-nav')
+
+  if (SECTION_HREFS.includes(href)) {
+    // Two levels, two taps: open the app that owns the section, then pick it.
+    // The section list is only rendered while you are inside that app.
+    const sections = page.getByTestId(isMobile(testInfo) ? 'section-tabs' : 'side-nav-sections')
+    if ((await sections.count()) === 0) {
+      await nav.locator(`a[href="${LEARN_APP.href}"]`).click()
+      await expect(sections).toBeVisible()
+    }
+    await sections.locator(`a[href="${href}"]`).click()
+  } else {
+    await nav.locator(`a[href="${href}"]`).click()
+  }
+
   await page.waitForURL(`**${href}`)
 }
 

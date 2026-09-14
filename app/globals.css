@@ -8,14 +8,15 @@
      Ground  page background. Opaque base + one soft radial wash. Never blurred.
      Panel   cards, nav rail, tab bar, top bar, question rows. Translucent fill,
              backdrop blur, 1px hairline border, inner top highlight.
-     Raised  the More sheet, modals, popovers, hover. Panel + more blur,
-             stronger border, drop shadow.
+     Raised  sheets, modals, popovers, hover. Panel + more blur, stronger
+             border, drop shadow.
 
    Blur budget: at most TWO stacked blurred layers on screen. That means a glass
    panel must never contain another glass panel — page code nests plain
    `.surface-solid` blocks instead. The top bar or tab bar over one card is the
-   allowed stack. Opening the More sheet drops every other glass to solid so the
-   sheet is the only blurred layer.
+   allowed stack, which is also why the section strip between them is solid
+   rather than glass. Opening a modal overlay drops every other glass to solid
+   so the overlay is the only blurred layer.
 
    Palette values are declared once as `--d-*` (dark) and `--l-*` (light) on
    bare :root, then bound to semantic tokens. The dark binding is repeated under
@@ -906,7 +907,7 @@
 
 /* ===== blur budget ======================================================= */
 
-/* While the More sheet is open it is the only blurred layer on screen. */
+/* While a modal overlay is open it is the only blurred layer on screen. */
 :root[data-sheet="open"] .panel,
 :root[data-sheet="open"] .card {
   -webkit-backdrop-filter: none;

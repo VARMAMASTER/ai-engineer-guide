@@ -48,17 +48,53 @@ for (const theme of THEMES) {
   }
 }
 
-test('axe is clean on the More sheet, the one modal surface', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== 'mobile', 'the sheet only exists below 768px')
+/**
+ * The More sheet used to be checked here — it was the app's one modal surface.
+ * It is gone: the two-level nav gives every section a home, so nothing
+ * overflows into a drawer any more. What replaced it as the thing most likely
+ * to go wrong is the section strip, a fourteen-item horizontal navigation with
+ * a roving tabindex, so that is what gets its own axe pass.
+ */
+test('axe is clean on the section strip, the busiest piece of nav', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'the strip only exists below 768px')
   await seedDayOne(page)
-  await page.goto('/today')
-
-  await page.getByTestId('more-tab').click()
-  await expect(page.getByTestId('more-sheet')).toBeVisible()
+  await page.goto('/dsa')
+  await expect(page.getByTestId('section-tabs')).toBeVisible()
 
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
   const blocking = results.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')
   expect(blocking, summarise(blocking)).toEqual([])
+})
+
+test('the section strip is one arrow-key strip, not fourteen tab stops', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile', 'the strip only exists below 768px')
+  await seedDayOne(page)
+  await page.goto('/dsa')
+
+  const strip = page.getByTestId('section-tabs')
+  await expect(strip).toBeVisible()
+
+  // Roving tabindex: exactly one link is in the page's tab order.
+  const tabindexes = await strip.locator('a').evaluateAll((els) =>
+    els.map((el) => el.getAttribute('tabindex')),
+  )
+  expect(tabindexes.filter((t) => t !== '-1')).toHaveLength(1)
+
+  // Arrows move focus along the strip; they do NOT navigate, because these are
+  // links and a route change on every arrow press would be unusable.
+  await strip.locator('a[aria-current="page"]').focus()
+  const url = page.url()
+  await page.keyboard.press('ArrowRight')
+  await expect(strip.locator('a').nth(2)).toBeFocused()
+  expect(page.url()).toBe(url)
+
+  await page.keyboard.press('Home')
+  await expect(strip.locator('a').first()).toBeFocused()
+  await page.keyboard.press('End')
+  await expect(strip.locator('a').last()).toBeFocused()
+  expect(page.url()).toBe(url)
 })
 
 /* -------------------------------------------------------------------------

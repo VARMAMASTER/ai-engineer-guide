@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { NAV_ITEMS, isActive } from '@/lib/nav'
+import { NAV_APPS, isActive, isAppActive } from '@/lib/nav'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
 import { weekNumber } from '@/lib/progress/selectors'
@@ -11,6 +11,41 @@ import NavIcon from './NavIcon'
 
 const TOTAL_WEEKS = 26
 
+const ROW =
+  'relative flex min-h-11 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors'
+
+function rowClass(active: boolean): string {
+  return [
+    ROW,
+    active
+      ? 'nav-pill font-medium'
+      : 'text-[var(--text-muted)] hover:bg-[var(--track)] hover:text-[var(--text)]',
+  ].join(' ')
+}
+
+/** The 2px accent tick that marks the active row. */
+function Tick({ active }: { active: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={[
+        'absolute left-0 h-4 w-[2px] rounded-full',
+        active ? 'bg-[var(--accent)]' : 'bg-transparent',
+      ].join(' ')}
+    />
+  )
+}
+
+/**
+ * The desktop rail: the same two-level model the phone shows, with room to
+ * open one of the levels.
+ *
+ * Apps are the top level. The app you are currently in stops being a link and
+ * becomes a group heading with its sections listed beneath it — which is also
+ * what keeps exactly one `aria-current="page"` in this nav: an expanded Learn
+ * would otherwise render `/roadmap` twice, once as the app's landing and once
+ * as its first section.
+ */
 export default function SideNav() {
   const pathname = usePathname() ?? ''
   const hydrated = useHydrated()
@@ -20,7 +55,7 @@ export default function SideNav() {
   return (
     <nav
       data-testid="side-nav"
-      aria-label="Sections"
+      aria-label="Apps"
       className="panel panel-flush sticky top-0 hidden h-dvh w-[var(--rail-w)] shrink-0 flex-col rounded-none border-y-0 border-l-0 md:flex"
     >
       <div className="px-5 pt-6 pb-5">
@@ -33,30 +68,54 @@ export default function SideNav() {
       </div>
 
       <ul className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-3 pb-4">
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(pathname, item.href)
+        {NAV_APPS.map((app) => {
+          const active = isAppActive(pathname, app)
+
+          if (active && app.sections.length > 0) {
+            return (
+              <li key={app.id} className="mt-1 first:mt-0">
+                <p className="eyebrow flex items-center gap-2 px-3 pt-2 pb-1.5">
+                  <NavIcon name={app.id} className="h-[14px] w-[14px] shrink-0" />
+                  {app.label}
+                </p>
+                <ul data-testid="side-nav-sections" className="flex flex-col gap-0.5">
+                  {app.sections.map((section) => {
+                    const on = isActive(pathname, section.href)
+                    return (
+                      <li key={section.href}>
+                        <Link
+                          href={section.href}
+                          aria-current={on ? 'page' : undefined}
+                          data-active={on ? 'true' : 'false'}
+                          className={rowClass(on)}
+                        >
+                          <Tick active={on} />
+                          <NavIcon
+                            name={section.href}
+                            className="h-[18px] w-[18px] shrink-0"
+                          />
+                          <span className="truncate">{section.label}</span>
+                        </Link>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </li>
+            )
+          }
+
           return (
-            <li key={item.href}>
+            <li key={app.id} className="mt-1 first:mt-0">
               <Link
-                href={item.href}
+                href={app.href}
                 aria-current={active ? 'page' : undefined}
                 data-active={active ? 'true' : 'false'}
-                className={[
-                  'relative flex min-h-11 items-center gap-3 rounded-[var(--radius-sm)] px-3 text-sm transition-colors',
-                  active
-                    ? 'nav-pill font-medium'
-                    : 'text-[var(--text-muted)] hover:bg-[var(--track)] hover:text-[var(--text)]',
-                ].join(' ')}
+                data-app={app.id}
+                className={rowClass(active)}
               >
-                <span
-                  aria-hidden="true"
-                  className={[
-                    'absolute left-0 h-4 w-[2px] rounded-full',
-                    active ? 'bg-[var(--accent)]' : 'bg-transparent',
-                  ].join(' ')}
-                />
-                <NavIcon name={item.href} className="h-[18px] w-[18px] shrink-0" />
-                <span className="truncate">{item.label}</span>
+                <Tick active={active} />
+                <NavIcon name={app.id} className="h-[18px] w-[18px] shrink-0" />
+                <span className="truncate">{app.label}</span>
               </Link>
             </li>
           )

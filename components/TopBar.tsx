@@ -1,11 +1,14 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useProgress } from '@/lib/progress/store'
 import { useHydrated } from '@/lib/progress/useHydrated'
 import { dayNumber, streak, weekNumber, weekProgress } from '@/lib/progress/selectors'
 import { addDays, todayIso } from '@/lib/date'
+import { SETTINGS_ITEM, isActive } from '@/lib/nav'
 import Meter from './Meter'
+import NavIcon from './NavIcon'
 import ThemeToggle from './ThemeToggle'
 
 const TOTAL_DAYS = 180
@@ -17,6 +20,7 @@ function pad(n: number, width: number): string {
 }
 
 export default function TopBar() {
+  const pathname = usePathname() ?? ''
   const hydrated = useHydrated()
   const startDate = useProgress((s) => s.startDate)
   const completed = useProgress((s) => s.completed)
@@ -90,6 +94,24 @@ export default function TopBar() {
           <div className="hidden w-52 md:block">
             <Meter label="Hours this week" done={hoursDone} target={WEEKLY_HOURS_TARGET} />
           </div>
+
+          {/* Settings belongs to the whole system rather than to any one app,
+              so it hangs off the top bar instead of taking a tab-bar slot. */}
+          <Link
+            href={SETTINGS_ITEM.href}
+            aria-label={SETTINGS_ITEM.label}
+            aria-current={isActive(pathname, SETTINGS_ITEM.href) ? 'page' : undefined}
+            data-testid="settings-link"
+            className={[
+              'flex min-h-11 min-w-11 items-center justify-center rounded-[var(--radius-sm)] border border-transparent transition-colors',
+              'hover:border-[var(--panel-border)] hover:bg-[var(--track)] hover:text-[var(--text)]',
+              isActive(pathname, SETTINGS_ITEM.href)
+                ? 'text-[var(--accent)]'
+                : 'text-[var(--text-muted)]',
+            ].join(' ')}
+          >
+            <NavIcon name={SETTINGS_ITEM.href} className="h-[18px] w-[18px]" />
+          </Link>
 
           <ThemeToggle />
         </div>
