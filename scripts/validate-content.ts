@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs'
 import { content, REVIEW_IDS, completionKey } from '@/lib/content/index'
 import { coursePath, courses } from '@/content/courses/index'
 import { allSections, parseCourse } from '@/lib/courses/parse'
-import { OUTLINE_FILE, outlines, renderOutlineModule } from './generate-course-outlines'
+import {
+  OUTLINE_FILE,
+  outlineModuleMatches,
+  outlines,
+  renderOutlineModule,
+} from './generate-course-outlines'
 import {
   dsaPatternSchema, dsaProblemSchema, sdPatternSchema, sdQuestionSchema,
   lldPatternSchema, lldQuestionSchema,
@@ -340,7 +345,7 @@ export function validateCourses(): string[] {
   } catch {
     current = ''
   }
-  if (current !== renderOutlineModule(outlines())) {
+  if (!outlineModuleMatches(current, renderOutlineModule(outlines()))) {
     errors.push(
       `${OUTLINE_FILE} is out of date — run: pnpm tsx scripts/generate-course-outlines.ts`,
     )

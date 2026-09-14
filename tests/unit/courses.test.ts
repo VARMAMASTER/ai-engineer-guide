@@ -15,7 +15,12 @@ import { buildOutline } from '@/lib/courses/outline'
 import { coursePath, courses } from '@/content/courses/index'
 import { courseOutlines } from '@/content/courses/outlines.generated'
 import { buildCourseItems, search } from '@/lib/search/index'
-import { outlines, renderOutlineModule, OUTLINE_FILE } from '@/scripts/generate-course-outlines'
+import {
+  OUTLINE_FILE,
+  outlineModuleMatches,
+  outlines,
+  renderOutlineModule,
+} from '@/scripts/generate-course-outlines'
 
 /* The real document, not a fixture, wherever the assertion is about the real
    document's structure — 21 parts, 144 sections and a `§` numbering the prose
@@ -268,8 +273,11 @@ describe('the generated outline', () => {
     // The palette indexes the outline, not the document — the document is
     // 365KB and read with `node:fs`. This is the check that keeps the two the
     // same thing; `pnpm validate` runs it again before every build.
+    // Line endings normalised: git checks this file out with CRLF on Windows
+    // and the generator writes LF, so a byte comparison fails on a fresh clone
+    // — and `pnpm validate` would fail the build over a file nobody edited.
     const current = readFileSync(OUTLINE_FILE, 'utf8')
-    expect(current).toBe(renderOutlineModule(outlines()))
+    expect(outlineModuleMatches(current, renderOutlineModule(outlines()))).toBe(true)
   })
 
   it('carries every part and every section, and no prose', () => {

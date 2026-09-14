@@ -44,6 +44,19 @@ export function renderOutlineModule(built: CourseOutline[]): string {
   return `${HEADER}${JSON.stringify(built, null, 2)}\n`
 }
 
+/**
+ * Is the committed module still the one this document produces?
+ *
+ * Compared with line endings normalised, because git checks this file out with
+ * CRLF on Windows while the generator writes LF. A byte comparison fails on a
+ * fresh clone — and since `pnpm validate` runs this check, it would fail the
+ * BUILD, over a file nobody had touched. Found exactly that way: the first run
+ * of the drift check in a clean worktree failed for this and nothing else.
+ */
+export function outlineModuleMatches(current: string, next: string): boolean {
+  return current.replace(/\r\n/g, '\n') === next.replace(/\r\n/g, '\n')
+}
+
 function main(): void {
   const root = process.cwd()
   const next = renderOutlineModule(outlines(root))
@@ -56,7 +69,7 @@ function main(): void {
     } catch {
       current = ''
     }
-    if (current !== next) {
+    if (!outlineModuleMatches(current, next)) {
       console.error(
         `${OUTLINE_FILE} is out of date. Run: pnpm tsx scripts/generate-course-outlines.ts`,
       )
