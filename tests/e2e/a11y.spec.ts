@@ -90,10 +90,21 @@ test('the section strip is one arrow-key strip, not fourteen tab stops', async (
 
   // Arrows move focus along the strip; they do NOT navigate, because these are
   // links and a route change on every arrow press would be unusable.
+  //
+  // The next stop is derived from where DSA actually sits, not a bare index.
+  // This asserted `.nth(2)` literally, which was correct only while DSA was
+  // the strip's second link — true until Courses was inserted right after
+  // Roadmap and pushed DSA one place over. That is the same hardcoded-position
+  // drift this suite has already hit twice for section counts; deriving it is
+  // the fix that stops it recurring a third time under a new name.
+  const links = strip.locator('a')
+  const activeIndex = await links.evaluateAll((els) =>
+    els.findIndex((el) => el.getAttribute('aria-current') === 'page'),
+  )
   await strip.locator('a[aria-current="page"]').focus()
   const url = page.url()
   await page.keyboard.press('ArrowRight')
-  await expect(strip.locator('a').nth(2)).toBeFocused()
+  await expect(links.nth(activeIndex + 1)).toBeFocused()
   expect(page.url()).toBe(url)
 
   await page.keyboard.press('Home')

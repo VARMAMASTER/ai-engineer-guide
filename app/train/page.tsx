@@ -37,7 +37,17 @@ export default function TrainPage() {
       <ul className="grid gap-3 md:grid-cols-3">
         {TRAIN_SECTIONS.map((section) => (
           <li key={section.href} className="min-w-0">
-            <Card href={section.href} className="flex h-full flex-col gap-2 p-4">
+            {/* Every TRAIN_SECTIONS target is behind a session. Next's default
+                <Link> prefetches on viewport entry, which chases the proxy's
+                redirect to sign-in for a page a signed-out visitor here
+                usually hasn't opened yet, and aborts loudly if the sweep
+                moves on before it settles. Not prefetching costs nothing —
+                the destination was never reachable from here without one. */}
+            <Card
+              href={section.href}
+              prefetch={false}
+              className="flex h-full flex-col gap-2 p-4"
+            >
               <span className="font-[family-name:var(--font-display)] text-base">{section.label}</span>
               <span className="text-sm text-[var(--text-muted)]">{section.blurb}</span>
             </Card>

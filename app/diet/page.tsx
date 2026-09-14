@@ -52,6 +52,12 @@ const SHORTCUTS: { href: string; label: string; blurb: string }[] = [
     label: 'Setup',
     blurb: 'Your targets, your eating window, and the food library that makes logging a tap.',
   },
+  {
+    href: '/food',
+    label: 'Search any food',
+    blurb:
+      'The full nutrition database behind Diet’s food library — public, no account needed. See a dish’s recipe and why its numbers are what they are.',
+  },
 ]
 
 const RULES: { title: string; body: string }[] = [
@@ -90,9 +96,23 @@ export default function DietPage() {
         <h2 id="diet-shortcuts" className="eyebrow">
           Go to
         </h2>
+        {/* Five of these six lead behind a session, where prefetch chases the
+            proxy's redirect to sign-in; the sixth (the food database) is
+            public and never redirects. Both still get suppressed, because the
+            failure mode is broader than the redirect case alone: ANY in-flight
+            prefetch that has not settled by the time a visitor (or the route
+            sweep) navigates away shows up as an aborted request, gated or not.
+            None of these six benefit from an eager fetch a reader will not act
+            on for several seconds regardless — they are reading the blurb
+            first, not racing a prefetch. */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {SHORTCUTS.map((shortcut) => (
-            <Card key={shortcut.href} href={shortcut.href} className="flex flex-col gap-1.5 p-4">
+            <Card
+              key={shortcut.href}
+              href={shortcut.href}
+              prefetch={false}
+              className="flex flex-col gap-1.5 p-4"
+            >
               <span className="font-medium text-[var(--text)]">{shortcut.label}</span>
               <span className="text-sm text-[var(--text-muted)]">{shortcut.blurb}</span>
             </Card>

@@ -220,16 +220,27 @@ describe('rendering', () => {
     expect(out).not.toContain('katex')
   })
 
-  it('gives every table its own scroll container', () => {
+  it('gives every table its own scroll container, keyboard-reachable', () => {
     const out = html('| a | b |\n|---|---|\n| 1 | 2 |')
-    expect(out).toContain('<div class="course-scroll"><table class="course-table">')
+    // tabindex+role+aria-label were added after axe caught the plain
+    // `overflow-x: auto` div as a serious WCAG 2.1.1 violation on a real
+    // wide table (`§55`'s hyperparameter table) — a scrollable region a mouse
+    // can drag but a keyboard cannot reach at all.
+    expect(out).toContain(
+      '<div class="course-scroll" tabindex="0" role="region" aria-label="Table, scrolls sideways"><table class="course-table">',
+    )
     expect(out).toContain('<th>a</th>')
     expect(out).toContain('<td>1</td>')
   })
 
-  it('renders code as a solid, scrollable block', () => {
+  it('renders code as a solid, scrollable, keyboard-reachable block', () => {
     const out = html('```python\nx = 1  # <b>not html</b>\n```')
-    expect(out).toContain('<pre class="code-block" data-lang="python">')
+    // Same reasoning as the table above: this course has genuinely long
+    // Python lines, so `.code-block`'s overflow is load-bearing here in a way
+    // it rarely was for the app's shorter snippets, and needs the same fix.
+    expect(out).toContain(
+      '<pre class="code-block" tabindex="0" role="region" aria-label="python code, scrolls sideways" data-lang="python">',
+    )
     expect(out).toContain('&lt;b&gt;not html&lt;/b&gt;')
   })
 

@@ -41,7 +41,18 @@ export default function OpsPage() {
       <ul className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
         {OPS_SECTIONS.map((section) => (
           <li key={section.href} className="min-w-0">
-            <Card href={section.href} className="flex h-full min-w-0 flex-col gap-1 p-4">
+            {/* Every OPS_SECTIONS target is behind a session, and this page is
+                the one place a signed-out visitor sees it. Next's default
+                <Link> prefetches on viewport entry, which chases the proxy's
+                redirect to sign-in for a page most visitors here haven't
+                opened yet — and aborts, loudly, if the sweep moves on first.
+                Nothing is lost by not prefetching a destination this page
+                cannot get you into anyway. */}
+            <Card
+              href={section.href}
+              prefetch={false}
+              className="flex h-full min-w-0 flex-col gap-1 p-4"
+            >
               <span className="text-sm font-medium">{section.label}</span>
               <span className="text-sm text-[var(--text-muted)]">{section.intro}</span>
             </Card>
@@ -54,7 +65,9 @@ export default function OpsPage() {
         <p className="text-sm text-[var(--text-muted)]">
           Everything inside Ops needs a session, and signing in carries you back to whichever
           section you were heading for.{' '}
-          <Link href="/sign-in?next=%2Fops%2Ftoday" className="underline">
+          {/* Not worth prefetching from a page nobody taps this on instantly
+              — same reasoning as the shortcut cards above. */}
+          <Link href="/sign-in?next=%2Fops%2Ftoday" prefetch={false} className="underline">
             Sign in
           </Link>
           .

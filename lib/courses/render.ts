@@ -75,6 +75,13 @@ function escapeHtml(text: string): string {
  * The default `htmlAndMathml` output is kept rather than trimmed to `html`:
  * the MathML half is what a screen reader reads, and dropping it would make
  * every equation in the course announce as a run of loose glyphs.
+ *
+ * `tabindex`/`role`/`aria-label`, same reasoning as the table and code
+ * wrappers: `.course-math` also carries `overflow-x: auto`, and the DPO loss
+ * (`§55`) is wide enough at 390px to need it for real, not hypothetically.
+ * `aria-label` names it a formula rather than "region" — a screen reader user
+ * tabbing through should be told what kind of scrollable thing this is before
+ * they land inside it and hear the MathML spelled out.
  */
 export function renderMath(tex: string): string {
   const html = katex.renderToString(tex, {
@@ -83,7 +90,7 @@ export function renderMath(tex: string): string {
     strict: false,
     trust: false,
   })
-  return `<div class="course-math">${html}</div>`
+  return `<div class="course-math" tabindex="0" role="region" aria-label="Formula, scrolls sideways">${html}</div>`
 }
 
 /* --- markdown ------------------------------------------------------------- */
@@ -191,6 +198,12 @@ export function pageRenderer(ctx: RenderContext) {
        * whole document scroll sideways, which `tests/e2e/responsive.spec.ts`
        * fails the build over — correctly, because a page that slides under your
        * thumb while you read is unusable.
+       *
+       * `tabindex="0"` plus `role="region"` and a real label is not decoration
+       * — axe caught its absence as a serious violation (WCAG 2.1.1) on a
+       * hyperparameter table wide enough to actually overflow at 390px. A div
+       * with `overflow-x: auto` and no way to focus it is unreachable by
+       * keyboard: a mouse or a touchscreen can drag it, a Tab key cannot.
        */
       table(
         this: { parser: { parseInline: (t: Tokens.Generic[]) => string } },
@@ -207,16 +220,25 @@ export function pageRenderer(ctx: RenderContext) {
                 .join('')}</tr>`,
           )
           .join('')
-        return `<div class="course-scroll"><table class="course-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>\n`
+        return `<div class="course-scroll" tabindex="0" role="region" aria-label="Table, scrolls sideways"><table class="course-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>\n`
       },
 
-      /** Code is solid and scrolls inside itself — `.code-block`, spec 13.3. */
+      /**
+       * Code is solid and scrolls inside itself — `.code-block`, spec 13.3.
+       *
+       * Same `tabindex`/`role`/`aria-label` reasoning as the table above: this
+       * course has genuinely long Python lines (`pol_chosen =
+       * get_sequence_log_probs(...)`), so `.code-block`'s `overflow-x: auto`
+       * is load-bearing here in a way it rarely was for the shorter snippets
+       * elsewhere in the app, and the same keyboard gap applies.
+       */
       code(token: Tokens.Code) {
         const text = token.escaped ? token.text : escapeHtml(token.text)
         const lang = token.lang?.trim().split(/\s+/)[0] ?? ''
         const attr = lang ? ` data-lang="${escapeHtml(lang)}"` : ''
         const cls = lang ? ` class="language-${escapeHtml(lang)}"` : ''
-        return `<pre class="code-block"${attr}><code${cls}>${text}</code></pre>\n`
+        const label = lang ? `${lang} code, scrolls sideways` : 'Code, scrolls sideways'
+        return `<pre class="code-block" tabindex="0" role="region" aria-label="${escapeHtml(label)}"${attr}><code${cls}>${text}</code></pre>\n`
       },
     },
   })

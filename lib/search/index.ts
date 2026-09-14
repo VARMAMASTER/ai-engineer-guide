@@ -305,6 +305,10 @@ const OWN_DESTINATIONS: Array<{ href: string; label: string; subtitle: string }>
   { href: '/mock/design', label: 'System design drill', subtitle: 'One question with a phase budget' },
   { href: '/mock/behavioural', label: 'Behavioural drill', subtitle: 'One prompt and its probes' },
   { href: '/settings', label: 'Settings', subtitle: 'Start date, export, reset' },
+  // Public, and not owned by any single mini-app (`lib/food` is a shared
+  // reference layer, per spec 4.2), so it belongs here rather than in Diet's
+  // own section list or `lib/nav.ts`.
+  { href: '/food', label: 'Food database', subtitle: 'Search any food’s full nutrition panel' },
 ]
 
 interface MinimalNavItem {

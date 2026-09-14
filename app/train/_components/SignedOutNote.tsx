@@ -43,7 +43,15 @@ export default function SignedOutNote() {
       </p>
       {DB_CONFIGURED ? (
         <p>
-          <Link href={signInUrlFor('/train/session')} className="chip" data-testid="train-sign-in">
+          {/* Not worth an eager prefetch from a page nobody taps this on
+              instantly — see the note in Diet's SignedOutNote, which has the
+              same pair of links and the same reasoning. */}
+          <Link
+            href={signInUrlFor('/train/session')}
+            prefetch={false}
+            className="chip"
+            data-testid="train-sign-in"
+          >
             Sign in to start
           </Link>
         </p>

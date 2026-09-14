@@ -16,7 +16,7 @@ test.describe('progress persistence', () => {
     await seedDayOne(page)
   })
 
-  test('a checked task survives a reload and lights the streak', async ({ page }) => {
+  test('a checked task survives a reload and lights the streak', async ({ page }, testInfo) => {
     await page.goto('/today')
     await waitForToday(page)
 
@@ -32,8 +32,14 @@ test.describe('progress persistence', () => {
     await expectChecked(page, DAY_1.firstProblemId, true)
     await expect(page.getByText('1 day streak')).toBeVisible()
 
-    // The top bar carries the same streak, zero-padded.
-    await expect(page.locator('header').getByText('01d')).toBeVisible()
+    // The top bar carries the same streak, zero-padded — but only from `md:`
+    // up. It was hidden below that to make room once the app switcher joined
+    // the bar (TopBar.tsx: `hidden md:inline-flex`), which is deliberate: the
+    // page's own "1 day streak" text above already proves the value survived
+    // the reload, on every width.
+    if (testInfo.project.name !== 'mobile') {
+      await expect(page.locator('header').getByText('01d')).toBeVisible()
+    }
 
     const stored = await readStoredBlob(page)
     expect(stored.completed[DAY_1.firstProblemId]).toBe(todayIso())

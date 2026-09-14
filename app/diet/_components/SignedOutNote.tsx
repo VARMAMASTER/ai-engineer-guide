@@ -22,12 +22,21 @@ export default function SignedOutNote() {
 
   return (
     <p className="text-sm text-[var(--text-muted)]" data-testid="diet-signed-out-note">
+      {/* Neither link benefits from an eager prefetch here — nobody reads
+          this sentence and taps in the same instant a background fetch would
+          need to beat them by. Left prefetching, the route sweep caught these
+          as an aborted request whenever it navigated on before the fetch
+          settled: a real race, just not one worth paying bandwidth to avoid. */}
       Your food, weight and targets are private to your account.{' '}
-      <Link href="/sign-in?next=%2Fdiet%2Flog" className="underline underline-offset-4">
+      <Link
+        href="/sign-in?next=%2Fdiet%2Flog"
+        prefetch={false}
+        className="underline underline-offset-4"
+      >
         Sign in
       </Link>{' '}
       or{' '}
-      <Link href="/sign-up" className="underline underline-offset-4">
+      <Link href="/sign-up" prefetch={false} className="underline underline-offset-4">
         create an account
       </Link>{' '}
       to start logging.

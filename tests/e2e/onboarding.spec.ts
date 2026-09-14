@@ -12,7 +12,10 @@ test.describe('onboarding', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: 'Set your start date' })).toBeVisible()
     await expect(page.getByText('Day 1 must be a Monday so the weekly rhythm lines up.')).toBeVisible()
-    await expect(page.getByRole('link', { name: 'SET START DATE' })).toBeVisible()
+    // The top bar shortens this to "SET DATE" under `md:` to stop it wrapping
+    // onto two lines once the app switcher shares the bar (see TopBar.tsx) —
+    // the full "SET START DATE" only renders at desktop width.
+    await expect(page.getByRole('link', { name: /^SET (START )?DATE$/ })).toBeVisible()
 
     // Nothing is scheduled yet, so no task rows exist at all.
     await expect(page.locator('label[data-item-id]')).toHaveCount(0)
