@@ -7,6 +7,9 @@ import { useHydrated } from '@/lib/progress/useHydrated'
 import { dayNumber, streak, weekNumber, weekProgress } from '@/lib/progress/selectors'
 import { addDays, todayIso } from '@/lib/date'
 import { SETTINGS_ITEM, isActive } from '@/lib/nav'
+import { useUser } from '@/lib/auth/useUser'
+import { ACCOUNT_PATH } from '@/lib/auth/routes'
+import { DB_CONFIGURED } from '@/lib/db/env'
 import AppSwitcher from './AppSwitcher'
 import Meter from './Meter'
 import NavIcon from './NavIcon'
@@ -29,6 +32,7 @@ export default function TopBar() {
   const startDate = useProgress((s) => s.startDate)
   const completed = useProgress((s) => s.completed)
   const hours = useProgress((s) => s.hours)
+  const { user } = useUser()
 
   const today = todayIso()
   const day = hydrated ? dayNumber(startDate, today) : null
@@ -114,6 +118,34 @@ export default function TopBar() {
           <div className="hidden w-52 md:block">
             <Meter label="Hours this week" done={hoursDone} target={WEEKLY_HOURS_TARGET} />
           </div>
+
+          {/* The one visible confirmation that signing in did something.
+              Settings already carries the full account section (email,
+              export, sign out, delete) — that placement was deliberate, so a
+              daily study visitor never sees anything account-shaped. But
+              "buried in Settings" reads as "not there at all" once you HAVE
+              signed in and are looking for it, which is exactly what was
+              reported: a real gap, not over-caution to walk back. So it also
+              gets one permanent, always-visible icon here, at every width,
+              conditioned on nothing but actually being signed in — a
+              signed-out visitor (the study half, most of this app's traffic)
+              sees no change whatsoever. */}
+          {DB_CONFIGURED && user ? (
+            <Link
+              href={ACCOUNT_PATH}
+              aria-label="Account"
+              aria-current={isActive(pathname, ACCOUNT_PATH) ? 'page' : undefined}
+              prefetch={false}
+              data-testid="account-nav-link"
+              className={[
+                'flex min-h-11 min-w-11 items-center justify-center rounded-[var(--radius-sm)] border border-transparent transition-colors',
+                'hover:border-[var(--panel-border)] hover:bg-[var(--track)] hover:text-[var(--text)]',
+                isActive(pathname, ACCOUNT_PATH) ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]',
+              ].join(' ')}
+            >
+              <NavIcon name="/account" className="h-[18px] w-[18px]" />
+            </Link>
+          ) : null}
 
           {/* Settings belongs to the whole system rather than to any one app,
               so it hangs off the top bar instead of taking a tab-bar slot. */}

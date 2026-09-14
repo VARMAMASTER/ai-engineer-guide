@@ -176,6 +176,14 @@ const PATHS: Record<string, React.ReactNode> = {
       <circle cx="8" cy="17" r="2.1" />
     </>
   ),
+  // Account — a person. Shown in the top bar only once signed in, so this
+  // glyph is the one visible confirmation that logging in did something.
+  '/account': (
+    <>
+      <circle cx="12" cy="8.2" r="3.4" />
+      <path d="M4.8 20.2c1.1-3.9 4-5.9 7.2-5.9s6.1 2 7.2 5.9" />
+    </>
+  ),
 }
 
 /**

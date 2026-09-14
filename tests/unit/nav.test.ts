@@ -96,6 +96,12 @@ describe('nav icons', () => {
       ...NAV_APPS.map((a) => a.id),
       ...LEARN_SECTIONS.map((s) => s.href),
       SETTINGS_ITEM.href,
+      // Not a nav destination in the two-level sense — same as Settings,
+      // which this set already carries for the identical reason: it hangs
+      // off the top bar as chrome rather than living in NAV_APPS or
+      // LEARN_SECTIONS. TopBar renders it directly, conditioned on being
+      // signed in, so this test cannot see it as "used" any other way.
+      '/account',
     ])
     expect(NAV_ICON_NAMES.filter((name) => !used.has(name))).toEqual([])
   })
