@@ -1,15 +1,11 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import Card from '@/components/ui/Card'
-import { getCurrentUser } from '@/lib/auth/user'
-import { signInUrlFor } from '@/lib/auth/routes'
-import { DB_CONFIGURED } from '@/lib/db/env'
+import SignedOutNote from './_components/SignedOutNote'
 import { TRAIN_SECTIONS } from './sections'
 
 export const metadata: Metadata = {
   title: 'Train | Unyfide',
 }
-
 /**
  * The Train app's landing page — public, by the rule in `lib/auth/routes.ts`.
  *
@@ -20,12 +16,14 @@ export const metadata: Metadata = {
  * are signed in; following one signed out lands on sign-in carrying the
  * destination, which is a truthful answer rather than a hidden door.
  *
- * A server component with no client hooks, so the `<h1>` is in the raw HTML
- * with JavaScript off — the bar `tests/e2e/routes.spec.ts` holds every route to.
+ * A server component with no session read, so the route stays STATIC and the
+ * `<h1>` is in the raw HTML with JavaScript off — the bar
+ * `tests/e2e/routes.spec.ts` holds every route to. The one signed-out line is a
+ * client component for the reason given in `_components/SignedOutNote.tsx`:
+ * reading the session here made this the only dynamic nav destination, and its
+ * prefetch aborted against the proxy's redirect.
  */
-export default async function TrainPage() {
-  const user = await getCurrentUser()
-
+export default function TrainPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -36,7 +34,6 @@ export default async function TrainPage() {
           load, and what they add up to. Every number here comes from what you logged here.
         </p>
       </div>
-
       <ul className="grid gap-3 md:grid-cols-3">
         {TRAIN_SECTIONS.map((section) => (
           <li key={section.href} className="min-w-0">
@@ -47,24 +44,7 @@ export default async function TrainPage() {
           </li>
         ))}
       </ul>
-
-      {!user ? (
-        <div className="surface-solid flex flex-col gap-2 rounded-[var(--radius-lg)] p-4">
-          <h2 className="text-base">Your training is yours</h2>
-          <p className="text-sm text-[var(--text-muted)]">
-            {DB_CONFIGURED
-              ? 'Sessions and plans live in your account, so nothing here is visible until you sign in.'
-              : 'Accounts are unavailable in this environment, so the training log cannot be opened here.'}
-          </p>
-          {DB_CONFIGURED ? (
-            <p>
-              <Link href={signInUrlFor('/train/session')} className="chip" data-testid="train-sign-in">
-                Sign in to start
-              </Link>
-            </p>
-          ) : null}
-        </div>
-      ) : null}
+      <SignedOutNote />
     </div>
   )
 }
